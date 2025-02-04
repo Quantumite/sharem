@@ -6,7 +6,7 @@ import binascii
 import os
 import ctypes
 from ctypes import *
-from typing import Literal
+from typing import Literal, Optional
 import copy
 
 import time
@@ -25,6 +25,7 @@ import textwrap3
 import traceback
 
 from sharem.sharem.helper.variable import Variables
+from sharem.sharem.assemblyx86 import retR32
 from sharem.sharem.helper.jsonPrinting import jsonPrint
 from sharem.sharem.helper.foundbooleans import foundBooleans
 from sharem.sharem.helper.shellcodeClass import shellcode
@@ -34,7 +35,7 @@ from sharem.sharem.helper.printingOutput import PrintingOutput
 from sharem.sharem.helper.emuHelpers import ord2
 from sharem.sharem.parseconf import Configuration
 from sharem.sharem.modules import em
-from sharem.sharem.lists import SYSCALL_BOOL_DICT, FFInstructions, PEB_WALK, FSTENV_GET_BASE
+from sharem.sharem.lists import SYSCALL_BOOL_DICT, FFInstructions, PEB_WALK, FSTENV_GET_BASE, PEB_WALK_MOV_64
 from sharem.sharem.DLLs.emu_helpers.sharem_filesystem import Directory_system
 from sharem.sharem.DLLs.hookAPIs import art, conr
 from sharem.sharem.ui import (
@@ -138,150 +139,32 @@ class patterns:
             self.variable_pattern,
         )
 class shellHash:
-    def __init__(self, md5=None, sha256=None, ssdeep=None):
-        # print ("init")
-        self.md5 = md5
-        self.sha256 = sha256
-        self.ssdeep = ssdeep
-        self.unecryptedMd5 = None
-        self.unecryptedSha256 = None
-        self.unecryptedSsdeep = None
-        self.decoderStubSha256 = None
-        self.decoderStubMd5 = None
-        self.decoderStubSsdeep = None
-        self.unecryptedBodyMd5 = None
-        self.unecryptedBodySha256 = None
-        self.unecryptedBodySsdeep = None
+    def __init__(self, shell=None, mode=None):
+        self.ssdeep = ssdeep.hash(shell)  # @TODO data must be binary or text
+        self.md5sum = hashlib.md5(shell).hexdigest()
+        self.sha256 = hashlib.sha256(shell).hexdigest()
+        self.mode = mode
 
-    def setMd5(self, md5, mode=None):
-        # print ("setMd5")
-        if mode == None:
-            self.md5 = md5
-            # print ("self.md5", self.md5)
-        elif mode == unencryptedShell:
-            self.unecryptedMd5 = md5
-            # print ("self.unecryptedMd5", self.unecryptedMd5)
-        elif mode == decoderShell:
-            self.decoderStubMd5 = md5
-            # print ("self.decoderStubMd5", self.decoderStubMd5)
-        elif mode == unencryptedBodyShell:
-            self.unecryptedBodyMd5 = md5
-            # print ("self.unecryptedBodyMd5", self.unecryptedBodyMd5)
-
-    def setSha256(self, sha256, mode=None):
-        # print("setSha256")
-        if mode == None:
-            self.sha256 = sha256
-            # print ("self.sha256", self.sha256)
-        elif mode == unencryptedShell:
-            self.unecryptedSha256 = sha256
-            # print ("self.unecryptedSha256", self.unecryptedSha256)
-        elif mode == decoderShell:
-            self.decoderStubSha256 = sha256
-            # print ("self.decoderStubSha256", self.decoderStubSha256)
-        elif mode == unencryptedBodyShell:
-            self.unecryptedBodySha256 = sha256
-            # print ("self.unecryptedBodySha256", self.unecryptedBodySha256)
-
-    def setSsdeep(self, ssdeepHash, mode=None):
-        if mode == None:
-            # print("setSsdeep")
-            self.ssdeep = ssdeepHash
-            # print ("self.ssdeep", self.ssdeep)
-        elif mode == unencryptedShell:
-            self.unecryptedSsdeep = ssdeepHash
-            # print ("self.unecryptedSsdeep", self.unecryptedSsdeep)
-        elif mode == decoderShell:
-            self.decoderStubSsdeep = ssdeepHash
-            # print ("self.decoderStubSsdeep", self.decoderStubSsdeep)
-        elif mode == unencryptedBodyShell:
-            self.unecryptedBodySsdeep = ssdeepHash
-            # print ("self.unecryptedBodySsdeep", self.unecryptedBodySsdeep)
-
-    def show(self, mode=None):
-        if mode == None:
+    def show(self):
+        if self.mode is None:
             out = constants.MAGENTA + "Shellcode hashes\n" + constants.RESET
-            out += constants.YELLOW + "\tmd5: " + constants.RESET + self.md5 + "\n"
-            out += (
-                constants.YELLOW + "\tsha256: " + constants.RESET + self.sha256 + "\n"
-            )
-            out += (
-                constants.YELLOW + "\tssdeep: " + constants.RESET + self.ssdeep + "\n"
-            )
-        elif mode == unencryptedBodyShell:
-            out = "Decoded shellcode body hashes\n"
-            out += (
-                constants.YELLOW
-                + "\tmd5: "
-                + constants.RESET
-                + self.unecryptedBodyMd5
-                + "\n"
-            )
-            out += (
-                constants.YELLOW
-                + "\tsha256: "
-                + constants.RESET
-                + self.unecryptedBodySha256
-                + "\n"
-            )
-            out += (
-                constants.YELLOW
-                + "\tssdeep: "
-                + constants.RESET
-                + self.unecryptedBodySsdeep
-                + "\n"
-            )
-        elif mode == decoderShell:
-            out = "Shellcode decoder stub hashes\n"
-            out += (
-                constants.YELLOW
-                + "\tmd5: "
-                + constants.RESET
-                + self.decoderStubMd5
-                + "\n"
-            )
-            out += (
-                constants.YELLOW
-                + "\tsha256: "
-                + constants.RESET
-                + self.decoderStubSha256
-                + "\n"
-            )
-            out += (
-                constants.YELLOW
-                + "\tssdeep: "
-                + constants.RESET
-                + self.decoderStubSsdeep
-                + "\n"
-            )
-        elif mode == unencryptedShell:
-            out = "Decoded shellcode (all) hashes\n"
-            out += (
-                constants.YELLOW
-                + "\tmd5: "
-                + constants.RESET
-                + self.unecryptedMd5
-                + "\n"
-            )
-            out += (
-                constants.YELLOW
-                + "\tsha256: "
-                + constants.RESET
-                + self.unecryptedSha256
-                + "\n"
-            )
-            out += (
-                constants.YELLOW
-                + "\tssdeep: "
-                + constants.RESET
-                + self.unecryptedSsdeep
-                + "\n"
-            )
+        elif self.mode == unencryptedBodyShell:
+            out = constants.MAGENTA + "Decoded shellcode body hashes\n" + constants.RESET
+        elif self.mode == decoderShell:
+            out = constants.MAGENTA + "Shellcode decoder stub hashes\n" + constants.RESET
+        elif self.mode == unencryptedShell:
+            out = constants.MAGENTA + "Decoded shellcode (all) hashes\n" + constants.RESET
 
+        out += constants.YELLOW + "\tmd5: " + constants.RESET + self.md5 + "\n"
+        out += (
+            constants.YELLOW + "\tsha256: " + constants.RESET + self.sha256 + "\n"
+        )
+        out += (
+            constants.YELLOW + "\tssdeep: " + constants.RESET + self.ssdeep + "\n"
+        )
         return out
  
 
-iatList: list[IATS] = []
 m = {}  # start modules dicitonary
 
 mBool = {}  # start modules dicitonary
@@ -429,11 +312,9 @@ allObject = 0x5
 gDirectory = ""  # #used to hold original directory --immutable
 debugging = False
 
-shHash = shellHash()
 emuObj = None
 patt = patterns()
 sBy = None
-sh = None
 IATs: FoundIATs = None
 
 syscallRawHexOverride = False
@@ -481,208 +362,173 @@ bdeobfCodeFound = False
 
 bfindShell = True
 bfindShellFound = False
-bComments = True
 shellBit = 32
 ##add in the current directory later, as right now this will only output to the logs folder
 
 jsonP = jsonPrint(filename=filename, rawHex=rawHex)
 
-#####SAME AS FROM SHAREM
-filename = ""
-
-
-def isPE(file_path):
-    hnd = open(file_path, "rb")
-    # print("First 2 bytes: ", repr(hnd.read(2)))
-    # print("First 2 bytes: ", repr(hnd.read(2)))
-
+def isPE(file_path: str) -> bool:
+    """Check for MZ bytes in file given by file_path."""
     mz = b"\x4d\x5a"
+    with open(file_path, "rb") as hnd:
+        mzFile = hnd.read(2)
+    return mzFile == mz
 
-    mzFile = hnd.read(2)
-    # print("Two bytes ", mzFile)
-    hnd.close()
-    if mzFile == mz:  # PE file
-        # print(constants.YELLOW + "Found EXE file" + res, file_path)
-        return True
-    else:
-        return False
+class SharemContext():
+    """Class holding context values for running SHAREM."""
+    fullFileName:str
+    baseFileName:str
+    shellcodeArch:Optional[Literal[32,64]]
+    peArch:Optional[Literal[32,64]]
+    fileExtension:str  # if txt extension, treat as rawHex
+    rawData:bytes
+    platformType:str
+    confFile:str
 
 
-def CliParser(args: Namespace):
-    global gName
-    global peName
-    global rawData2
-    global filename
-    global bit32
-    global shellBit
-    global rawBin
-    global rawHex
-    global conFile
-    global workDir
-    global useDirectory
-    global bit32_argparse
-    global known_arch
+def CliParser(args: Namespace) -> SharemContext:
+    """Parse command-line arguments into SharemContext."""
+
+    sharemContext = SharemContext()
+    sharemContext.platformType = platform.uname()[0]
 
     if args.r or args.r64 or args.r32:
         if args.r:
-            file2Check = args.r
-            bit32 = True
-            # bit32_argparse = True
-            shellBit = 32
+            sharemContext.fullFileName = args.r
+            sharemContext.shellcodeArch = 32
+
         if args.r32:
-            file2Check = args.r32
-            bit32 = True
-            bit32_argparse = True
-            shellBit = 32
+            sharemContext.fullFileName = args.r32
+            sharemContext.shellcodeArch = 32
 
         elif args.r64:
-            # print("64 bit <---")
-            file2Check = args.r64
+            sharemContext.fullFileName = args.r64
+            sharemContext.shellcodeArch = 64
 
-            bit32 = False
-            bit32_argparse = True
-            shellBit = 64
+        if os.path.isfile(sharemContext.fullFileName):
+            sharemContext.baseFileName = os.path.basename(sharemContext.fullFileName)
+            if len(sharemContext.fullFileName) > 3:
+                sharemContext.fileExtension = sharemContext.baseFileName[-3:]
 
-        if os.path.isfile(file2Check):
-            shellFile = os.path.basename(file2Check)
-            gName = shellFile
-            if len(shellFile) > 3:
-                ext = shellFile[-3:]
-                if ext == "txt":
-                    rawHex = True
-                    filename = file2Check
-
-                else:
-                    f = open(file2Check, "rb")
-                    filename = file2Check
-                    rawData2 = f.read()
-                    f.close()
-                    rawHex = True
-                    rawBin = True
 
         else:
-            print(args.r, "file doesn't exist")
-            sys.exit()
+            raise FileNotFoundError(f"{sharemContext.fullFileName} file doesn't exist")
 
     if args.pe:
         if os.path.isfile(args.pe):
-            gName = os.path.basename(args.pe)
-            peName = args.pe
-            if platformType == "Windows":
+            sharemContext.fullFileName = args.pe
+            sharemContext.baseFileName = os.path.basename(args.pe)
+            if sharemContext.platformType == "Windows":
                 if win32file.GetBinaryType(args.pe) == 6:
-                    bit32 = False
+                    sharemContext.peArch = 64
                 else:
-                    bit32 = True
+                    sharemContext.peArch = 32
             else:
-                bit32 = True
-            gDirectory, tail = os.path.split(peName)  # leave this here
-            PE_path = gDirectory
+                sharemContext.peArch = 32
         else:
-            print(args.pe, "file doesn't exist3")
-            sys.exit()
+            raise FileNotFoundError(f"{args.pe} file does not exist.")
 
     if args.c:
         if os.path.isfile(args.c):
-            conFile = args.c
-            print("Config path is: ", conFile)
+            sharemContext.confFile = args.c
+            print(f"Config path is: {sharemContext.confFile}")
         else:
-            print(args.c, "file doesn't exist")
-            sys.exit()
+            raise FileNotFoundError(f"{args.c} file does not exist.")
 
-    if args.d:
-        useDirectory = True
-        if os.path.isdir(args.d):
-            workingDir = args.d
-            workDir = True
-            for path in os.listdir(workingDir):
-                full_path = os.path.join(workingDir, path)
-                if os.path.isfile(full_path):
-                    if isPE(full_path):
-                        if platformType == "Windows":
-                            if win32file.GetBinaryType(full_path) == 6:
-                                bit32 = False
-                                list_of_pe64.append(full_path)
+    # @TODO re-enable analysis in directory later
+    # if args.d:
+        # useDirectory = True
+        # if os.path.isdir(args.d):
+            # workingDir = args.d
+            # workDir = True
+            # for path in os.listdir(workingDir):
+                # full_path = os.path.join(workingDir, path)
+                # if os.path.isfile(full_path):
+                    # if isPE(full_path):
+                        # if platformType == "Windows":
+                            # if win32file.GetBinaryType(full_path) == 6:
+                                # bit32 = False
+                                # list_of_pe64.append(full_path)
 
-                            else:
-                                bit32 = True
-                                list_of_pe32.append(full_path)
+                            # else:
+                                # bit32 = True
+                                # list_of_pe32.append(full_path)
 
-                            peName = full_path
-                            gName = path
+                            # peName = full_path
+                            # gName = path
 
-                        else:
-                            bit32 = True
-                            list_of_pe32.append(full_path)
-                            peName = full_path
-                            gName = path
+                        # else:
+                            # bit32 = True
+                            # list_of_pe32.append(full_path)
+                            # peName = full_path
+                            # gName = path
 
-                    else:
-                        if not known_arch:
-                            rawHex = True
-                            gName = path
-                            filename = full_path
-                            list_of_unk_files.append(full_path)
+                    # else:
+                        # if not known_arch:
+                            # rawHex = True
+                            # gName = path
+                            # filename = full_path
+                            # list_of_unk_files.append(full_path)
 
-                elif pathlib.Path(full_path).is_dir():
-                    dirName = os.path.basename(full_path)
-                    if "32" in dirName:
-                        for f in os.listdir(full_path):
-                            ext = f[-3:]
-                            if ext == "txt":
-                                rawHex = True
-                                rawBin = False
+                # elif pathlib.Path(full_path).is_dir():
+                    # dirName = os.path.basename(full_path)
+                    # if "32" in dirName:
+                        # for f in os.listdir(full_path):
+                            # ext = f[-3:]
+                            # if ext == "txt":
+                                # rawHex = True
+                                # rawBin = False
 
-                                bit32 = True
-                                full_file_path = os.path.join(full_path, f)
-                                filename = full_file_path
-                                gName = f
-                                list_of_files32.append(full_file_path)
-                            else:
-                                rawHex = True
-                                rawBin = True
-                                bit32 = True
-                                fp = open(f, "rb")
-                                rawData2 = fp.read()
-                                fp.close()
-                                full_file_path = os.path.join(full_path, f)
-                                filename = full_file_path
-                                gName = f
-                                list_of_files32.append(full_file_path)
+                                # bit32 = True
+                                # full_file_path = os.path.join(full_path, f)
+                                # filename = full_file_path
+                                # gName = f
+                                # list_of_files32.append(full_file_path)
+                            # else:
+                                # rawHex = True
+                                # rawBin = True
+                                # bit32 = True
+                                # fp = open(f, "rb")
+                                # rawData2 = fp.read()
+                                # fp.close()
+                                # full_file_path = os.path.join(full_path, f)
+                                # filename = full_file_path
+                                # gName = f
+                                # list_of_files32.append(full_file_path)
 
-                    elif "64" in dirName:
-                        for f in os.listdir(full_path):
-                            ext = f[-3:]
-                            if ext == "txt":
-                                rawHex = True
-                                rawBin = False
-                                filename = f
-                                bit32 = False
-                                full_file_path = os.path.join(full_path, f)
-                                list_of_files64.append(full_file_path)
-                            else:
-                                rawHex = True
-                                rawBin = True
-                                filename = f
-                                bit32 = False
-                                fp = open(f, "rb")
-                                rawData2 = fp.read()
-                                fp.close()
-                                full_file_path = os.path.join(full_path, f)
-                                list_of_files64.append(full_file_path)
+                    # elif "64" in dirName:
+                        # for f in os.listdir(full_path):
+                            # ext = f[-3:]
+                            # if ext == "txt":
+                                # rawHex = True
+                                # rawBin = False
+                                # filename = f
+                                # bit32 = False
+                                # full_file_path = os.path.join(full_path, f)
+                                # list_of_files64.append(full_file_path)
+                            # else:
+                                # rawHex = True
+                                # rawBin = True
+                                # filename = f
+                                # bit32 = False
+                                # fp = open(f, "rb")
+                                # rawData2 = fp.read()
+                                # fp.close()
+                                # full_file_path = os.path.join(full_path, f)
+                                # list_of_files64.append(full_file_path)
 
-                    else:
-                        print("Directory ", full_path, "isn't 32 or 64 bit")
-                        continue
-        else:
-            print(args.d, "directory doesn't exist")
-            sys.exit()
+                    # else:
+                        # print("Directory ", full_path, "isn't 32 or 64 bit")
+                        # continue
+        # else:
+            # print(args.d, "directory doesn't exist")
+            # sys.exit()
+    return sharemContext
 
 
 def clearConsole():
-    command = "clear"
-    if os.name in ("nt", "dos"):  # If Machine is running on Windows, use cls
-        command = "cls"
-    os.system(command)
+    """Run `cls` in windows and `clear` in *nix."""
+    os.system(f"{'cls' if os.name in ('nt', 'dos') else 'clear'}")
 
 
 class OSVersion:
@@ -776,33 +622,32 @@ class MyBytes:
         return self.sha256
 
 
-# end classs
-
-
-
 
 def findDecoderStubEnd(test1, test2):
-    t = 0
-    for each in test1:
+    for t, each in enumerate(test1):
         if each != test2[t]:
             return t
-        t += 1
 
 
-def emuDeobfuSuccess(emBytes, mode):
+def emuDeobfuSuccess(shell_code:shellcode, emBytes, mode:constants.ModeEnum) -> tuple[Optional[shellHash], Optional[shellHash], Optional[shellHash]]:
     print("  This may be self-modifying code. Switching to decoded shellcode.")
-    sh.setDecoded(emBytes)
-    sh.decryptSuccess = True
+    decoderstub_hash = None
+    decodedfullbody_hash = None
+    unencrypted_shell_hash = None
+
+    shell_code.setDecoded(emBytes)
+    shell_code.decryptSuccess = True
     if mode == "stub":
-        hashShellcode(sh.decoderStub, decoderShell)
-        hashShellcode(sh.decodedFullBody, unencryptedBodyShell)
+        decoderstub_hash = shellHash(shell_code.decoderStub, constants.ModeEnum.DECODERSHELL)
+        decodedfullbody_hash = shellHash(shell_code.decodedFullBody, constants.ModeEnum.UNENCRYPTEDBODYSHELL)
     else:
-        hashShellcode(emBytes, unencryptedShell)
-        # create newModule for decrypted shellcode
+        unencrypted_shell_hash = shellHash(emBytes, constants.ModeEnum.UNENCRYPTEDSHELL)
+
     newModule(
         constants.SHELLCODE_DECODED_FULL_LABEL, emBytes
     )  # This feels like it should be stub and full but it's not in the code so optimizing as-is
     o = constants.SHELLCODE_DECODED_FULL_LABEL
+    return (decoderstub_hash, decodedfullbody_hash, unencrypted_shell_hash)
 
 
 class DisassemblyBytes:
@@ -853,8 +698,6 @@ def clearDisassemblyBytesClass():
     global sBy
     sBy.offsets.clear()
     sBy.values.clear()
-    # sBy.instructions.clear()
-    # sBy.data.clear()
     sBy.ranges.clear()
     sBy.bytesType.clear()
     sBy.strings.clear()
@@ -865,7 +708,6 @@ def clearDisassemblyBytesClass():
     sBy.boolPushString.clear()
     sBy.specialVal.clear()
     sBy.boolspecial.clear()
-    # sBy.specialType.clear()
     sBy.specialStart.clear()
     sBy.specialEnd.clear()
     sBy.comments.clear()
@@ -932,25 +774,25 @@ def newModule(
     # print ("mBool", mBool, "len", len(mBool))
 
 
-def newSection():
-    global s
-    global gName
-    obj = MyBytes("pe", 0, gName)
-    s.append(obj)
+def newSection(filename:str, my_bytes_list:list):
+    obj = MyBytes("pe", 0, filename)
+    my_bytes_list.append(obj)
 
 
-def newIAT():
-    global iatList
+def newIAT(iatList:list):
     obj = IATS()
     iatList.append(obj)
 
 
 def stripWhite(str1):
-    str1 = str1.strip(b"\x00\x0a\x0d")
+    if isinstance(str1, str):
+        str1 = str1.strip(b"\x00\x0a\x0d")
+        return str1
     return str1
 
 
 def stripSpec(str1):
+    print("stripSpec")
     str1 = str1.strip("\x17")
     return str1
 
@@ -1375,24 +1217,19 @@ def lookInsideDeeper(currentDll):
                             truth = lookInsideDeeper(currentDll)
 
 
-def getDLLs():
-    global PE_DLLS
+def getDLLs(pe:pefile.PE, iatList:list, PE_DLLS:list):
     name = ""
-    newIAT()
+    iatList.append(IATs())
     iatList[0].name = "IAT"
 
     try:
         for entry in pe.DIRECTORY_ENTRY_IMPORT:
             iatList[0].entries.append(entry.dll)
-            # print entry.dll
             name = entry.dll
             name = name.decode()
             PE_DLLS.append(name)
     except:
         pass
-
-
-deeper = 0
 
 
 def digDeeper(PE_DLL):
@@ -1425,16 +1262,11 @@ def digDeeper(PE_DLL):
             peFound = True
             if platformType == "Windows":
                 newpath = extractDLLNew(dll)
-                # print("Newpath", newpath)
-                # input()
-                # print(newpath)
-                # input("newpath")
                 doneAlready0.append(dll)
                 paths.append(newpath)
                 try:
                     pe = pefile.PE(newpath)
                 except:
-                    # print ("Invalid path found for " + dll + "\nResults, thus, will be inaccurate.")
                     peFound = False
                     name = "Invalid path for " + dll + " "
                     iatList[c].entries.append(name)
@@ -1445,7 +1277,7 @@ def digDeeper(PE_DLL):
             if peFound:
                 cont = False
                 if not searchIATName(dll):
-                    newIAT()
+                    iatList.append(IATs())
                     c = curIAT()
                     iatList[c].name = dll
                     cont = True
@@ -1489,8 +1321,6 @@ def digDeeper2():
         newpath = ""
         if dll not in doneAlready:
             newpath = extractDLLNew(dll)
-            # print(newpath)
-            # input("newpath")
             doneAlready.append(dll)
             paths.append(newpath)
             pe = pefile.PE(newpath)
@@ -1498,7 +1328,7 @@ def digDeeper2():
         try:
             cont = False
             if not searchIATName(dll):
-                newIAT()
+                iatList.append(IATs())
                 c = curIAT()
                 iatList[c].name = dll
                 cont = True
@@ -1523,26 +1353,23 @@ def digDeeper2():
             pass
 
 
-def ObtainAndExtractSections():
-    getDLLs()
-    global peName
-    global PE_DLLS
+def ObtainAndExtractSections(filename:str, iat_list:list, pe_dlls:list, sections:list, my_bytes_list:list):
     global o
     global t
-    global sections
-    global pe
 
-    pe = pefile.PE(peName)
+    pe = pefile.PE(filename)
+
+    getDLLs(pe, iatList, pe_dlls)
+
     for sec in pe.sections:
         sections.append(sec.Name)
+
     for t, x in enumerate(pe.sections):
-        newSection()
-        # print(constants.RED + "S: after --> " + res, s)
+        newSection(peName, my_bytes_list)
         s[t].modName = peName
         s[t].entryPoint = pe.OPTIONAL_HEADER.AddressOfEntryPoint
 
         s[t].VirtualAdd = pe.sections[t].VirtualAddress
-        # print pe.sections[t].VirtualAddress
         s[t].ImageBase = pe.OPTIONAL_HEADER.ImageBase
         s[t].vSize = pe.sections[t].Misc_VirtualSize
         s[t].startLoc = s[t].VirtualAdd + s[t].ImageBase
@@ -1554,9 +1381,7 @@ def ObtainAndExtractSections():
         s[t].Hash_sha256_section = pe.sections[t].get_hash_md5()
         s[t].Hash_md5_section = pe.sections[t].get_hash_sha256()
         tem = 0
-        # print("Extraction: ", t, type(pe.sections[t].get_data()[0:]))
         s[t].data2 = pe.sections[t].get_data()[0:]
-        # print("Checking", type(s[t].data2))
         s[t].protect = str(peName) + "\t"
         s[t].depStatus = str(dep())
         s[t].aslrStatus = str(aslr())
@@ -3275,35 +3100,8 @@ def disHerePushRet64(
 
         if ret and not retf and not retNum and foundPush:
             foundRet = True
-            # points += 1
             retOffset = addb
 
-        # print("val is",val)
-    # stop = timeit.default_timer()
-    # print("Time 2: " + str(stop - start))
-
-    # input("enter..")
-
-    # points = 0
-    # disString = val5
-
-    # for line in disString:
-
-    # 	##############################################
-    # 	push = re.match("^push ((e|r)((ax)|(bx)|(cx)|(dx)|(di)|(si)|(bp)|(sp)|(8|9|(1([0-5])))))", line, re.IGNORECASE)
-    # 	ret = re.match("^ret", line, re.IGNORECASE)
-
-    # 	if(push):
-    # 		points += 1
-
-    # 	if(ret):
-    # 		points += 1
-
-    # if(ret):
-    # 	# print("ret matches")
-    # 	points += 1
-
-    # print("Points are: ", points, push, ret)
     if (foundPush) and (foundRet):
         if rawHex:
             modSecName = peName
@@ -3648,8 +3446,6 @@ def printSavedPushRet(
                         + " | Section name: "
                         + modSecName.decode()
                     )
-                    # if(secNum != 0):
-                    # 	trash = raw_input("enter...")
 
                 else:
                     outString += " | Module: " + modSecName
@@ -3700,47 +3496,12 @@ def printSavedPushRet(
                         break
                     else:
                         val5.append(val)
-                    # checkRet= re.search( retOffset, val, re.M|re.I)
-                    # # if "ret" in val:
-                    # # 	val5.append(val)
-                    # # 	break
-                    # # else:
-                    # # 	val5.append(val)
-
-                    # if checkRet:
-                    # 	if not stopRet:
-                    # 		val5.append(val)
-                    # 		stopRet = True
-                    # 	else:
-                    # 		pass
-                    # if not stopRet:
-                    # 	val5.append(val)
-                    # val5.append(val)
-                # if bit == 64:
-                # 	for i in cs64.disasm(CODED3, address):
-                # 		add = hex(int(i.address))
-                # 		addb = hex(int(i.address +  section.VirtualAdd))
-                # 		add2 = str(add)
-                # 		add3 = hex (int(i.address + section.startLoc	))
-                # 		add4 = str(add3)
-                # 		val =  i.mnemonic + " " + i.op_str + "\t\t\t\t"  + add4 + " (offset " + addb + ")"
-                # 		val2.append(val)
-                # 		val3.append(add2)
-                # 		val5.append(val)
-                # print (val)
-                # print ("\n")
                 t = 0
                 for each in val5:
-                    # if (t<2):
-                    # 	print(each)
                     print(constants.GREEN + each + res)
-                    # if(addb == retOffset):
-                    # break
                     t += 1
 
                 j += 1
-                # print str(type(m[o].data2))
-                # trash = raw_input("enter...")
 
 
 def get_FSTENV(NumOpsDis, NumOpsBack, bytesToMatch, secNum, data2):
@@ -3968,7 +3729,6 @@ def FSTENVrawhex(address, linesBack2, secNum, data):
         ):  # iterate through all opcodes representing combinations of registers
             get_FSTENV(10, 15, match, secNum, data)
 
-    # print ("o", o)
     if rawHex:
         m[o].save_FSTENV_info = list(set((m[o].save_FSTENV_info)))
     else:
@@ -4110,9 +3870,6 @@ def printSavedFSTENV(
                     + str(FSTENV_offset)
                 )
 
-                # if(secNum != 0):
-                # 	trash = raw_input("enter...")
-
             else:
                 outString += (
                     " | Module: "
@@ -4207,8 +3964,6 @@ def printSavedFSTENV(
                         + " | FSTENV Offset: "
                         + str(FSTENV_offset)
                     )
-                    # if(secNum != 0):
-                    # 	trash = raw_input("enter...")
 
                 else:
                     outString += (
@@ -4252,29 +4007,12 @@ def printSavedFSTENV(
                     else:
                         print(constants.GREEN + val + res)
 
-                # if bit == 64:
-                # 	for i in cs64.disasm(CODED3, address):
-                # 		add = hex(int(i.address))
-                # 		addb = hex(int(i.address +  section.VirtualAdd - NumOpsBack))
-                # 		add2 = str(add)
-                # 		add3 = hex (int(i.address + section.startLoc	- NumOpsBack))
-                # 		add4 = str(add3)
-                # 		val =  i.mnemonic + " " + i.op_str + "\t\t\t\t"  + add4 + " (offset " + addb + ")"
-                # 		val2.append(val)
-                # 		val3.append(add2)
-                # 		val5.append(val)
-                # 		print (constants.GREEN + val + res)
                 print("\n")
                 j += 1
-                # print str(type(m[o].data2))
-                # trash = raw_input("enter...")
 
 
 def get_Callpop(NumOpsDis, bytesToMatch, secNum, data2, distance):
     # change to work off of data2 - add param - get rid of secNum
-
-    # dprint2('in get')
-
     global o
     foundCount = 0
     numOps = NumOpsDis
@@ -4770,8 +4508,6 @@ def printSavedCallPop(
                 outString += (
                     " | Section: " + str(secNum) + " | Section name: " + str(modSecName)
                 )
-                # if(secNum != 0):
-                # 	trash = raw_input("enter...")
 
             else:
                 outString += (
@@ -5100,7 +4836,7 @@ def trackRegs(
     ebpOffset = 0
     espOffset = 0
 
-	def _instructionMatch(inst: str, line: str) -> Optional[str]:
+    def _instructionMatch(inst: str, line: str) -> Optional[str]:
         """Use regex to match assembly instruction."""
         return re.match(
             f"^({inst}) (e((ax)|(bx)|(cx)|(dx)|(di)|(si)|(bp)|(sp)))", line, re.ignorecase
@@ -7238,9 +6974,6 @@ def printSavedHeaven(
                         + "\n"
                     )
 
-                    # if(secNum != 0):
-                    # 	trash = raw_input("enter...")
-
                 else:
                     outString += (
                         " | Module: "
@@ -7309,7 +7042,6 @@ def printSavedHeaven(
                 destLocation = item[7]
                 converted = item[8]
                 pivottype = item[9]
-                # print("here is pushOffset in print: ", pushOffset)
 
                 outString = "\n\nHeaven Item: " + str(j)
                 if secNum != -1:
@@ -7321,8 +7053,6 @@ def printSavedHeaven(
                         + " | Heaven's Gate offset: "
                         + str(offset)
                     )
-                    # if(secNum != 0):
-                    # 	trash = raw_input("enter...")
 
                 else:
                     outString += (
@@ -7407,9 +7137,6 @@ def printSavedHeaven(
                         + "\n"
                     )
 
-                    # if(secNum != 0):
-                    # 	trash = raw_input("enter...")
-
                 else:
                     outString += (
                         " | Module: "
@@ -7466,9 +7193,6 @@ def printSavedHeaven(
                     print(constants.GREEN + val + res)
 
                 j += 1
-                # print("\n")
-                # print str(type(m[o].data2))
-                # trash = raw_input("enter...")
 
 
 def convertStringToTrack(dis, offsets):
@@ -7477,9 +7201,7 @@ def convertStringToTrack(dis, offsets):
     dprint2(offsets)
     t = 0
     result = [""]
-    # val =('{:<6s} {:<32s} {:<8s} {:<10}'.format(i.mnemonic, i.op_str, add4, "(offset " + addb + ")"))
     for item in dis:
-        # outstr = '{:<35s} {:<20s} {:<20s}'.format(item, hex(offsets[t]), " (offset " + hex(offsets[t]) + ")")
         outstr = (
             item
             + "\t\t\t\t"
@@ -7547,12 +7269,9 @@ def printSavedSyscall(
                 eax = item[5]
                 c0_offset = item[6]
 
-                # print("NUMBACK = " + str(NumOpsBack))
                 outString = "\n\nItem: " + str(j)
                 if secNum != -1:
                     outString += " | Section: " + modSecName.decode()
-                    # if(secNum != 0):
-                    # 	trash = raw_input("enter...")
 
                 else:
                     outString += " | Module: " + modSecName
@@ -7607,10 +7326,7 @@ def printSavedSyscall(
 
                 outString = "\n\nItem: " + str(j)
                 if secNum != -1:
-                    # outString += " | Section number: " + str(secNum) + " | Section name: " + str(modSecName)
                     outString += " | Section name: " + str(modSecName)
-                    # if(secNum != 0):
-                    # 	trash = raw_input("enter...")
 
                 else:
                     outString += " | Module: " + modSecName
@@ -7664,8 +7380,6 @@ def printSavedSyscall(
                 outString = "\n\nItem: " + str(j)
                 if secNum != -1:
                     outString += " | Section: " + modSecName.decode()
-                    # if(secNum != 0):
-                    # 	trash = raw_input("enter...")
 
                 else:
                     outString += " | Module: " + modSecName
@@ -7709,8 +7423,6 @@ def printSavedSyscall(
                 j += 1
                 if eax != "unknown":
                     getSyscallRecent(int(eax, 0))
-                # print str(type(m[o].data2))
-                # trash = raw_input("enter...")
 
 
 def saveBasePEBWalk(
@@ -7949,10 +7661,6 @@ def findAllPushRet(data2, secNum):  ################## AUSTIN ##################
     else:
         for match in PUSH_RET.values():
             optimized_find(4, match, secNum, data2, "disHerePushRet")
-            # get_PushRet_start(4, match, secNum, data2)
-
-    # for match in PUSH_RET.values():
-    # 	get_PushRet_start(4, match, secNum, data2)
 
 
 def findStrings(binary, Num):  # ,t):
@@ -7962,7 +7670,6 @@ def findStrings(binary, Num):  # ,t):
     global stringsTemp
     newop = " 0x00\t"
     newAscii = ""
-    # newUnicode=""
     old = 0
     offset = 0
     word = ""
@@ -7975,7 +7682,7 @@ def findStrings(binary, Num):  # ,t):
         for v in binary:
             i = ord2(v)
             newop += " " + show1(i)
-            if inProgress == False:
+            if not inProgress:
                 test = chr(i)
                 if test.isalpha() == False:
                     skip = True
@@ -7983,7 +7690,7 @@ def findStrings(binary, Num):  # ,t):
                 if test.isalpha():
                     skip = False
             if (i > 31) & (i < 127) & (skip == False):
-                if inProgress == False:
+                if not inProgress:
                     offset = x
                 inProgress = True
                 word += "" + chr(i)
@@ -8010,23 +7717,20 @@ def findStrings(binary, Num):  # ,t):
             y += 1
             if x == len(binary):  # last byte, final end
                 wordSize = len(word)
-                # dprint2 (word, hex(offset), wordSize)
                 if wordSize > 0:
                     try:
                         s[t].Strings.append(tuple((word, offset, wordSize)))
                     except:
-                        # print("6949", word)
-                        # print ("saving string", word.encode("utf-8"))
                         stringsTemp.append(tuple((word, offset, wordSize)))
 
     except Exception as e:
         print("*String finding error1!!!")
         print(e)
 
-    # print (stringsTemp)
 
 
 def stripPeriod(word):
+    print("stripPeriod")
     wordNodots = word.replace(".", "")
     return wordNodots
 
@@ -8396,13 +8100,6 @@ def findPushAsciiMixed(binary, Num, index=None):
                                 zz = chr(zz)
                             altWord += zz  # stripWhite(zz)#chr(zz)
                         end = ""
-                        t3 = 0
-                        validPushString = True
-                        t2 = 1
-                        tem = ""
-                        spec = []
-                        old = ""
-                        cnt = 0
                         checkedString = False
                         if len(word2) > 2:
                             done = False
@@ -8822,7 +8519,7 @@ def disCheckStrings(address, NumOpsDis, secNum, mode):  #
             ):
                 zz = ""
             old = zz
-            res += zz  # stripWhite(zz)#chr(zz)
+            res += zz  
         asciiPerLine.append(res)
         # print res
         # print ans
@@ -9043,7 +8740,6 @@ def checkedString1(altWord):
     old2 = ""
     old3 = ""
     old4 = ""
-    old5 = ""
     cnt = 0
     checkedString = False
     word2 = altWord
@@ -9054,24 +8750,20 @@ def checkedString1(altWord):
     for letter in word2:
         tem += letter
         if (
-            (t2 == 2) and (old == "j") and (done == False)
-        ):  # or ((t2==2) and (old =="h") and (done==False)):
-            tem = tem[1::]
-            # print tem
+            (t2 == 2) and (old == "j") and not done
+        ):  
+            tem = tem[1:]
             spec.append(stripWhite(tem))
             tem = ""
             t2 = 0
             checkedString = True
-        elif (t2 == 5) and (old4 == "h") and (done == False):
-            # print tem
-            tem = tem[1::]
+        elif (t2 == 5) and (old4 == "h") and not done:
+            tem = tem[1:]
             spec.append(stripWhite(tem))
             tem = ""
             t2 = 0
             checkedString = True
-            # print "t2=4"
-        elif (t2 == 1) and (letter == "P") and (done == False):
-            # print ("push EAX")
+        elif (t2 == 1) and (letter == "P") and (not done):
             tem = "^^^^"
             if mode:
                 tem = retR32("eax", "n")
@@ -9080,7 +8772,7 @@ def checkedString1(altWord):
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 1) and (letter == "S") and (done == False):
+        elif (t2 == 1) and (letter == "S") and (not done):
             dprint2("push EBX2")
             tem = "^^^^"
             if mode:
@@ -9089,8 +8781,7 @@ def checkedString1(altWord):
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 1) and (letter == "Q") and (done == False):
-            # print ("push ECX")
+        elif (t2 == 1) and (letter == "Q") and (not done):
             tem = "^^^^"
             if mode:
                 tem = retR32("ecx", "n")
@@ -9099,8 +8790,7 @@ def checkedString1(altWord):
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 1) and (letter == "R") and (done == False):
-            # print "push EDX"
+        elif (t2 == 1) and (letter == "R") and (not done):
             tem = ""
             tem = "^^^^"
             if mode:
@@ -9109,8 +8799,7 @@ def checkedString1(altWord):
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 1) and (letter == "V") and (done == False):
-            # print "push ESI"
+        elif (t2 == 1) and (letter == "V") and (not done):
             tem = "^^^^"
             if mode:
                 tem = retR32("esi", "n")
@@ -9118,8 +8807,7 @@ def checkedString1(altWord):
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 1) and (letter == "W") and (done == False):
-            # print "push EDI"
+        elif (t2 == 1) and (letter == "W") and (not done):
             tem = "^^^^"
             if mode:
                 tem = retR32("edi", "n")
@@ -9127,7 +8815,6 @@ def checkedString1(altWord):
             spec.append((tem))
             t2 = 0
             tem = ""
-            # investigate esp
         elif t2 == 1 and letter == "T" and not done:
             if checkedString:
                 word4 = ""
@@ -9144,7 +8831,7 @@ def checkedString1(altWord):
                     Valid = True
                 return Valid, word4, checkedString
 
-        elif (t2 == 1) and (letter == "U") and (done == False):
+        elif (t2 == 1) and (letter == "U") and (not done):
             # print "push EBP"
             tem = "^^^^"
             if mode:
@@ -9153,49 +8840,49 @@ def checkedString1(altWord):
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 2) and (old == "f") and (letter == "P") and (done == False):
+        elif (t2 == 2) and (old == "f") and (letter == "P") and (not done):
             # print "push ax"
             tem = "``"
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 2) and (old == "f") and (letter == "S") and (done == False):
+        elif (t2 == 2) and (old == "f") and (letter == "S") and (not done):
             # print "push bx"
             tem = "``"
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 2) and (old == "f") and (letter == "Q") and (done == False):
+        elif (t2 == 2) and (old == "f") and (letter == "Q") and (not done):
             # print "push cx"
             tem = "``"
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 2) and (old == "f") and (letter == "R") and (done == False):
+        elif (t2 == 2) and (old == "f") and (letter == "R") and (not done):
             # print "push dx"
             tem = "``"
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 2) and (old == "f") and (letter == "V") and (done == False):
+        elif (t2 == 2) and (old == "f") and (letter == "V") and (not done):
             # print "push si"
             tem = "``"
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 2) and (old == "f") and (letter == "W") and (done == False):
+        elif (t2 == 2) and (old == "f") and (letter == "W") and (not done):
             # print "push di"
             tem = "``"
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 2) and (old == "f") and (letter == "T") and (done == False):
+        elif (t2 == 2) and (old == "f") and (letter == "T") and (not done):
             # print "push sp"
             tem = "``"
             spec.append((tem))
             t2 = 0
             tem = ""
-        elif (t2 == 2) and (old == "f") and (letter == "U") and (done == False):
+        elif (t2 == 2) and (old == "f") and (letter == "U") and (not done):
             # print "push bp"
             tem = "``"
             spec.append((tem))
@@ -9553,15 +9240,9 @@ def splitRemoveAssemblyComments(word):
 def readShellcode(
     shellcode,
 ):  #  ADDED: get rid of newline (0d0a) - get rid of assembly comments   ---   ; comments -- added SplitNewline and the .join
-    dprint2("readShellcodeTest")
-    # print("Shellcode ----> ", shellcode)
-    dprint2("Shellcode : ", shellcode)
-    file1 = open(shellcode, "r")
-    shells = file1.read()
-    # print(shells)
-    # input()
-    # print("\nshells\n")
-    # shells=splitRemoveAssemblyComments(shells)
+    with open(shellcode, "rb") as file1:
+        shells = file1.read()
+
     shells = splitNewline(shells)
     shells = re.sub(rf"[{string.punctuation}]", "", shells)
     dprint2(shells)
@@ -9571,11 +9252,7 @@ def readShellcode(
 
     shells = "".join(shells.split())
     shells = shells.upper()
-    # print("\nshells2\n")
-
-    # print(shells)
     shells = fromhexToBytes(shells)
-    # printBytes(shells)
     dprint2("\n\n\nend\n")
     return shells
 
@@ -13246,17 +12923,15 @@ def decodeShellcodeXOR(target, XORval):
 
 
 ##### START
-def init2(filename):
-    # print("init2")
-    global gName
-    global rawData2
+def init2(filename:str, iat_list:list, pe_dlls:list, sections:list, my_bytes_list:list, rawHex:bool):
     if not rawHex:
-        ObtainAndExtractSections()
+        ObtainAndExtractSections(filename, iat_list, pe_dlls, sections, my_bytes_list)
     else:
         if (
-            filename[-4:] == ".txt"
+            filename[-3:] in ("txt", )
         ):  # don't need to call readShellcode if it is a binary file
             rawData2 = readShellcode(filename)
+    return rawData2
 
 
 def saveBinAscii():
@@ -14274,14 +13949,11 @@ def printDecryptHelpUI():
     )
 
 
-def toggleDecodedModule():
-    global sh
+def toggleDecodedModule(shell_code):
     global o
     global m
 
-    # hashShellcodeTestShow2()
-
-    if sh == None or sh.decryptSuccess == False:
+    if shell_code is None or not shell_code.decryptSuccess:
         print(
             'No shellcode has been decoded. To decode an obfuscated shellcode, use the "b - Brute-force deobfuscation of shellcode." option.'
         )
@@ -14302,7 +13974,6 @@ def toggleDecodedModule():
             print(
                 "  Currently performing operations on deobfuscated shellcode. Switch back to obfuscated shellcode?"
             )
-            # print("o = <<<", o,">>>")
             while True:
                 userAns = input("y/n>")
                 if userAns == "y" or userAns == "Y":
@@ -15890,17 +15561,11 @@ def emulationEntryPoint():
             print(" Please enter an integer")
 
 
-def emuCheckDeobfSuccess():
+def emuCheckDeobfSuccess(shell_code:shellcode):
     if fRaw.status():
-        # print ("emulated!", fRaw.status())
-        # print(fRaw.status())
         ssdeepHash1 = ssdeep.hash(fRaw.originalRaw)
         ssdeepHash2 = ssdeep.hash(fRaw.merged2)
 
-        # print ("SSDeep")
-        # print (ssdeepHash1)
-        # print (ssdeepHash2)
-        # print(ssdeep.compare(ssdeepHash1,ssdeepHash2))
         percent = ssdeep.compare(ssdeepHash1, ssdeepHash2)
         if percent < 60:
             t = 0
@@ -15908,33 +15573,25 @@ def emuCheckDeobfSuccess():
             notEqual = False
             decoderEnd = 0
             try:
-                for each in fRaw.originalRaw:
-                    # if awmerged[:t] == 	aworiginal[:t]:
-                    # print ("equal")
-                    # print (hex(t), "\t", binaryToStr(fRaw.merged2[t:t+1]), binaryToStr(fRaw.originalRaw[t:t+1]))
+                for t,each in enumerate(fRaw.originalRaw):
                     if fRaw.merged2[:t] != fRaw.originalRaw[:t]:
                         if not notEqual:
-                            # print ("************stops", hex(t), hex(t-1))
                             notEqual = True
                             mode = "stub"
                             decoderEnd = t - 1
-                            # print(binaryToStr(fRaw.originalRaw[:decoderEnd]))
                             break
-                    t += 1
             except:
                 stop = True
                 mode = "notstub"  # maybe build this later?
 
             if not stop:
                 print("  SSDeep: Only " + str(percent) + "% of the original shellcode.")
-                # print ("fRaw.originalRaw[:decoderEnd]", len(fRaw.originalRaw[:decoderEnd]))
-                # print ("fRaw.merged2[decoderEnd:]", len(fRaw.merged2[decoderEnd:]))
-                sh.setDecoderStubEnd(decoderEnd)
-                sh.setDecoderStub(fRaw.originalRaw[:decoderEnd])
-                sh.setDecodedBody(fRaw.merged2[decoderEnd:])
-                sh.isEncoded = True
+                shell_code.setDecoderStubEnd(decoderEnd)
+                shell_code.setDecoderStub(fRaw.originalRaw[:decoderEnd])
+                shell_code.setDecodedBody(fRaw.merged2[decoderEnd:])
+                shell_code.isEncoded = True
 
-            emuDeobfuSuccess(fRaw.merged2, mode)
+    (decoderstub_hash, decodedfullbody_hash, unencrypted_shell_hash) = emuDeobfuSuccess(fRaw.merged2, mode)
 
 
 def emuCCCSubmenu():
@@ -16375,7 +16032,7 @@ def notAvailable(rawHex: bool):
         )
 
 
-def ui():  # UI menu loop
+def ui(shell_code):  # UI menu loop
     global maxDistance  # Max distance that a callpop can call
     # Disassembly option variables
     global linesForward
@@ -16503,7 +16160,7 @@ def ui():  # UI menu loop
 
             elif userIN[0:1] == "U" or userIN[0:1] == "u":
                 if rawHex:
-                    toggleDecodedModule()
+                    toggleDecodedModule(shell_code)
                 else:
                     notAvailable(rawHex)
 
@@ -18844,20 +18501,20 @@ def findAll():  # Find everything
         if len(FoundApisName) > 0:
             mBool[o].bEvilImportsFound = True
 
-    if rawHex:
-        pass
-    else:
+    if not rawHex:
         runInMem()
 
     if bPrintEmulation and not mBool[o].bEmulationFound:
         newTime = discoverEmulation(max_len)
         elapsed_time += newTime
+        
     if not mBool[o].bStringsFound:
         print("Finding strings.\n")
-
         discoverAsciiStrings(max_len)
+
     if not mBool[o].bWideStringFound:
         discoverUnicodeStrings(max_len)
+
     if not mBool[o].bPushStringsFound:
         discoverStackStrings(max_len)
 
@@ -18891,7 +18548,6 @@ def findAll():  # Find everything
         newTime = discoverDisassembly(max_len)
 
     print("\n")
-    # print(".........................\n")
     print(" Search completed.\n")
 
 
@@ -18901,11 +18557,8 @@ def emuSyscallSelectionsSubMenu():  # Select osversions for syscalls
     global configOptions
     global emuSyscallCode
 
-    x = ""
-
     # currently modified to only work for one version.
     print("\nEnter code for desired syscall ID version.\n\tE.g. v3\n")
-    # while x != 'e':
     print(
         constants.CYAN
         + " Sharem>"
@@ -18985,15 +18638,13 @@ def syscallSelectionsSubMenu():  # Select osversions for syscalls
                     for ver in syscallSelection:
                         if not (ver.category == "server Column multiselect variables"):
                             ver.toggle = False
-                    t = 0
                     currentCategory = ""
-                    for ver in syscallSelection:
+                    for t, ver in enumerate(syscallSelection):
                         if t == 0:
                             currentCategory = ver.category
                         elif currentCategory != ver.category:
                             currentCategory = ver.category
                             syscallSelection[t - 1].toggle = True
-                        t += 1
                 if osv.code == "d":  # Only current win10
                     osv.toggle = True
                     for ver in syscallSelection:
@@ -19026,11 +18677,6 @@ def syscallSelectionsSubMenu():  # Select osversions for syscalls
 
 
 def clearInstructions():  # Clears
-    # clear our lists of found instructions
-
-    # print("S --> before clear", s)
-
-    global rawHex
     for secNum in s:
         secNum.save_PEB_info.clear()
         secNum.save_FSTENV_info.clear()
@@ -19039,7 +18685,6 @@ def clearInstructions():  # Clears
         secNum.save_Callpop_info.clear()
         secNum.save_PushRet_info.clear()
 
-    # o = 0
     for d in m:
         m[d].save_PEB_info.clear()
         m[d].save_FSTENV_info.clear()
@@ -19047,11 +18692,6 @@ def clearInstructions():  # Clears
         m[d].save_Heaven_info.clear()
         m[d].save_Callpop_info.clear()
         m[d].save_PushRet_info.clear()
-        # o+= 1
-    # s.clear()
-    # print("S --> after clear", s)
-    # m.clear()
-    # sections.clear()
 
     clearFoundBooleans()
 
@@ -19100,7 +18740,6 @@ def clearStrings():
         mBool[d].bWideStringFound = False
         mBool[d].bPushStringsFound = False
     try:
-        t = 0
         for sec in s:
             sec.Strings.clear()
             sec.wideStrings.clear()
@@ -19118,9 +18757,6 @@ def clearStrings():
 def clearImports():
     FoundApisName.clear()
     mBool[o].bEvilImportsFound = False
-
-
-#
 
 
 def build_emu_results(apiList):
@@ -19144,10 +18780,7 @@ def build_emu_results(apiList):
         api_params_types.append(i[5])
         api_params_names.append(i[6])
         api_bruteforce.append(i[7])
-        # try:
-        # 	dll_name.append(i[8])
-        # except:
-        # 	dll_name.append("")
+
         if len(i) > 8:
             sysCallID.append(i[8])
 
@@ -19287,13 +18920,7 @@ def emulation_txt_out(apiList, logged_syscalls):
 
     if bPrintEmulation:
         if len(apiList) > 0 or len(logged_syscalls) > 0:
-            try:
-                print(txt_output)
-
-                # new= (textwrap3.fill(txt_output, width=85))
-                # print (new)
-            except:
-                print(txt_output)
+            print(txt_output)
         else:
             print(
                 constants.GREEN
@@ -19333,9 +18960,6 @@ def printToJson(bpAll, outputData):  # Output data to json
 
 
 def formatPrint(i, add4, addb, pe=False, syscall=False):
-    # print('{1:>{0}}'.format(length, string))
-    # print("---------> ", len(i.op_str))
-
     if print_style == "right":
         length = 35
 
@@ -21489,20 +21113,14 @@ def SharemMainResetGlobals():
     linesBack = 10
     bytesForward = 15
     bytesBack = 15
-    unencryptedShell = 0x0
-    decoderShell = 0x1
-    unencryptedBodyShell = 0x3
-    sample = 0x4
-    allObject = 0x5
+    
     gDirectory = ""  # #used to hold original directory --immutable
     # debugging=True
     debugging = False
 
-    shHash = shellHash()
     # emuObj=None
     patt = patterns()
     sBy = None
-    sh = None
     IATs = None
 
     syscallRawHexOverride = False
@@ -21586,43 +21204,48 @@ def SharemMainResetGlobals():
 
 
 def SharemMain(parserNamespace: Namespace):
-    global shHash
     global emuObj
     global patt
     global sBy
-    global sh
-    global IATs
+    IATs: FoundIATs = FoundIATs()
+    sBy = DisassemblyBytes()
+    emuObj = emulationOptions()
+    iatList: list[IATS] = []
+    PE_DLLS:list = []
+    SECTIONS:list = []
+    MY_BYTES_LIST:list = []
 
-    CliParser(parserNamespace)
+    sharemContext = CliParser(parserNamespace)
+    with open(sharemContext.fullFileName, "rb") as f:
+        rawData = f.read()
 
-    init2(filename)
-    if rawHex:
-        newModule(o, rawData2, gName)
+    if sharemContext.fileExtension in ('txt',):
+        rawHex = True
     else:
-        newModule(peName, rawData2, gName)
+        rawHex = False
+
+    init2(sharemContext.fullFileName, iatList, PE_DLLS, SECTIONS, MY_BYTES_LIST, rawHex)
+
+    if rawHex:
+        newModule(constants.SHELLCODE_LABEL, rawData, sharemContext.fullFileName)
+    else:
+        newModule(sharemContext.baseFileName, rawData, sharemContext.fullFileName)
         Extraction()
 
     try:
-        shHash = shellHash()
+        shellcode_hash = shellHash(rawData)
     except Exception as e:
         print(e)
         exit()
-    sh = shellcode(rawData2)
-    IATs = FoundIATs()
-    sBy = DisassemblyBytes()
-    emuObj = emulationOptions()
+    shell_code = shellcode(rawData)
+    shell_code_deobfuscation = sharDeobf(rawData)
 
-    fRaw.giveSize(rawData2)
+    shell_code_deobfuscation.giveSize(rawData)
 
     if rawHex:
         hashShellcode(m[o].rawData2, sample)  # if comes after args parser
         if useHash:
             filename2 = shHash.md5sum
-
-        if bit32:
-            shellBit = 32
-        elif bit32 == False:
-            shellBit = 64
 
         if not readConf():
             ui()

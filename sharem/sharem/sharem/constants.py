@@ -1,5 +1,7 @@
 """Constants used throughout SHAREM."""
 
+from enum import IntEnum
+
 RED = "\u001b[31;1m"
 GREEN = "\u001b[32;1m"
 YELLOW = "\u001b[33;1m"
@@ -13,6 +15,17 @@ SHELLCODE_LABEL = "shellcode"
 SHELLCODE_DECODED_BODY_LABEL = "decoded body"
 SHELLCODE_DECODED_STUB_LABEL = "decoded stub"
 SHELLCODE_DECODED_FULL_LABEL = "decoded shellcode (full)"
+
+
+class ModeEnum(IntEnum):
+    """Enum for input mode."""
+
+    UNENCRYPTEDSHELL = 0x0
+    DECODERSHELL = 0x1
+    UNENCRYPTEDBODYSHELL = 0x3
+    SAMPLE = 0x4
+    ALLOBJECT = 0x5
+
 
 SYSCALL_NAME_STRINGS = [
     "NA  Windows XP",

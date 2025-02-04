@@ -392,7 +392,7 @@ def padDLL(dllPath, dllName, expandedDLLsPath):
     pe.write(tmpPath)
 
     # Add padding to dll, then save it.
-    with open(tmpPath, 'r') as f:
+    with open(tmpPath, 'rb') as f:
         out = f.read()
     final = insertIntoBytes(out, 0x40, padding, 0x00)
     newBin = open(tmpPath, "wb")

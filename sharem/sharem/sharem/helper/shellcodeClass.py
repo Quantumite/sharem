@@ -30,6 +30,3 @@ class shellcode:
 		return self.hasDecoderStub
 	def isEncoded(self):
 		return self.isEncoded
-
-
-sh=shellcode()
