@@ -1,44 +1,28 @@
-import sys
-import re
 import colorama
 import itertools
+from typing import Literal, Optional
+from abc import abstractmethod
 
-from sharem.sharem.parseconf import Configuration
-from .helper import get_max_length
-from .helper import foundBooleans
-from .sharemu import *
+from .parseconf import Configuration
+import sharem.sharem.constants as constants
+from sharem.sharem.helper.listhelpers import get_max_length
+from sharem.sharem.helper.foundbooleans import foundBooleans
+from sharem.sharem.helper.variable import Variables
+
 colorama.init()
-# readRegs()
-# testingAssembly()
-
-red ='\u001b[31;1m'
-gre = '\u001b[32;1m'
-yel = '\u001b[33;1m'
-blu = '\u001b[34;1m'
-mag = '\u001b[35;1m'
-cya = '\u001b[36;1m'
-whi = '\u001b[37m'
-res = '\u001b[0m'
-res2 = '\u001b[0m'
 
 
+def banner() -> str:
+    """
+    #   ("`-''-/").___..--''"`-._
+    #    `6_ 6  )   `-.  (     ).`-.__.`)
+    #    (_Y_.)'  ._   )  `._ `. ``-..-'
+    #  _..`--'_..-_/  /--'_.' ,'
+    # (il),-''  (li),'  ((!.-'
 
-def bannerOld():
-	text = '''
-
-  ____  _   _    _    ____  _____ __  __ 
- / ___|| | | |  / \  |  _ \| ____|  \/  |
- \___ \| |_| | / _ \ | |_) |  _| | |\/| |
-  ___) |  _  |/ ___ \|  _ <| |___| |  | |
- |____/|_| |_/_/   \_\_| \_\_____|_|  |_|
- 
-
-'''
-	return text
-
-
-def banner():
-	text = '''
+    # Felix Lee <flee@cse.psu.edu>
+    """
+    text = """
 
   ____  _   _    _    ____  _____ __  __       ("`-''-/").___..--''"`-._          
  / ___|| | | |  / \  |  _ \| ____|  \/  |       `6_ 6  )   `-.  (     ).`-.__.`)  
@@ -47,1267 +31,2161 @@ def banner():
  |____/|_| |_/_/   \_\_| \_\_____|_|  |_|    (il),-''  (li),'  ((!.-'             
  
 
-'''
-	return text
+"""
+    return text
 
-  
-   #   ("`-''-/").___..--''"`-._          
-   #    `6_ 6  )   `-.  (     ).`-.__.`)  
-   #    (_Y_.)'  ._   )  `._ `. ``-..-'   
-   #  _..`--'_..-_/  /--'_.' ,'           
-   # (il),-''  (li),'  ((!.-'             
+class Screen:
+    """Base class of print the UI to the screen."""
+    def __init__(self):
+        """Initialize Screen Class."""
+        pass
 
-   # Felix Lee <flee@cse.psu.edu>
+    @abstractmethod
+    def __repr__(self):
+        """Display content to screen."""
 
-
-def showOptions(shellBit, rawHex, name,hMd5):
-	if rawHex:
-		showType="shellcode"
-		showType2="\n\tShellcode: "
-	else:
-		showType="PE file"
-		showType2="\n\tPE file: "
-	print(gre + banner() + res)
-	print (whi+"  Shellcode Analysis & Emulation Framework, v. 1.024"+res)
-	
-	print (gre+showType2+ cya+name+gre +"\tMd5: "+cya+hMd5+res)
-	optionsLabel = """
+class ImportScreen(Screen):
+    """Parent class of the import menu screen."""
+    OPTIONS_LABEL = constants.YELLOW + """
   .............
      Options
   .............
-"""
+""" + constants.RESET
 
-	optionsLabel = yel + optionsLabel + res
-	if not rawHex:
-		options = cya+"""
-   h		{}
-   s		{}
-   z		{}
-   p		{}
-   k		{}
-   m		{}
-   e		{}
-   i		{}
-   a		{}
-   c		{}
-   q		{}
-   x		{}
-	""".format( res +"Display options."+cya, 
-				res+"Find Assembly instructions associated with shellcode."+cya,
-				res+"Do everything with current selections."+cya,
-				res+"Print Menu - print outputs to file"+cya,	
-				res+"Find strings."+cya,
-				res+"Find modules in the IAT and beyond."+cya,
-				res+"Find imports."+cya,
-				res+"Show basic "+showType+" info."+cya,
-				res+"Change architecture, 32-bit or 64-bit."+yel +" [ "+cya+str(shellBit)+"-bit"+yel+" ]"+cya,
-				res +"Save current configuration."+cya,
-				res+"Quick find all."+cya,
-				res+"Exit."+cya,
-				)
-	else:
-		options = cya+"""
-   h		{}
-   l		{}
-   z		{}
-   s		{}
-   D		{}
-   d		{}
-   p		{}
-   b		{}
-   U		{}
-   k		{}
-   o		{}
-   i		{}
-   a		{}
-   c		{}
-   q		{}
-   x		{}
-	""".format( res +"Display options."+cya, 
-				res+ "Shellcode Emulator"+cya, 
-				res+"Do everything with current selections."+cya,
-				res+"Find Assembly instructions associated with shellcode."+cya,
-				res+ "Disassemble shellcode"+cya, 
-				res+ "Disassembly of shellcode submenu"+cya, 
-				res+"Print Menu - print outputs to file"+cya,
-				res+"Brute-force deobfuscation of shellcode." +cya,
-				res+"Toggle between actions on obfuscated/deobfuscated shellcode." +cya,
-				res+"Find strings."+cya,
-				res+"Output bins and ASCII text."+cya,
-				res+"Show basic "+showType+" info."+cya,
-				res+"Change architecture, 32-bit or 64-bit."+yel +" [ "+cya+str(shellBit)+"-bit"+yel+" ]"+cya,
-				res +"Save current configuration."+cya,
-				res+"Quick find all."+cya,
-				res+"Exit."+cya,
-				)		
+    def __init__(self, shellBit: Literal[32,64], name:str, hMd5:str) -> None:
+        """Initialize common values for Screen."""
+        self.shellBit: Literal[32,64] = shellBit
+        self.name = name
+        self.hMd5 = hMd5
+        self.showType: str = ""
+        self.output: str = ""
+        self._init_output()
 
-	print(optionsLabel, options)
+    def _format_showType(self) -> str:
+        """Format showType for screen. If None, does nothing."""
+        if self.showType:
+            return f"\n\t{self.showType}: "
+        return ""
+        
+    def _init_output(self) -> None:
+        """Initialize output with constant values."""
+        self.output += constants.GREEN + banner() + constants.RESET
+        self.output += constants.WHITE + "  Shellcode Analysis & Emulation Framework, v. 1.024" + constants.RESET
+        self.output += (
+            constants.GREEN + 
+            self._format_showType() + 
+            constants.CYAN + 
+            self.name + 
+            constants.GREEN + 
+            "\tMd5: " + 
+            constants.CYAN + 
+            self.hMd5 + 
+            constants.RESET
+        )
+
+    @abstractmethod
+    def _set_options_content(self) -> None:
+        """Set options content for Screen."""
+
+    def _append_output(self, content:str) -> None:
+        """Append content to the screen output."""
+        self.output += content
+
+class RawHexScreen(ImportScreen):
+    """Class to handle displaying screens for Raw Hex inputs."""
+    def __init__(self, shellBit: Literal[32,64], name: str, hMd5:str) -> None:
+        super().__init__(shellBit, name, hMd5)
+        self.showType = "Shellcode"
+
+    def _set_options_content(self) -> None:
+        """Create options menu for Raw Hex input."""
+        self._append_output(
+        constants.CYAN
+        + f"""
+   h		{constants.RESET + "Display options." + constants.CYAN}
+   l		{constants.RESET + "Shellcode Emulator" + constants.CYAN}
+   z		{constants.RESET + "Do everything with current selections." + constants.CYAN}
+   s		{constants.RESET + "Find Assembly instructions associated with shellcode." + constants.CYAN}
+   D		{constants.RESET + "Disassemble shellcode" + constants.CYAN}
+   d		{constants.RESET + "Disassembly of shellcode submenu" + constants.CYAN}
+   p		{constants.RESET + "Print Menu - print outputs to file" + constants.CYAN}
+   b		{constants.RESET + "Brute-force deobfuscation of shellcode." + constants.CYAN}
+   U		{constants.RESET + "Toggle between actions on obfuscated/deobfuscated shellcode." + constants.CYAN}
+   k		{constants.RESET + "Find strings." + constants.CYAN}
+   o		{constants.RESET + "Output bins and ASCII text." + constants.CYAN}
+   i		{constants.RESET + "Show basic " + self.showType + " info." + constants.CYAN}
+   a		{constants.RESET + "Change architecture, 32-bit or 64-bit." + constants.YELLOW + " [ " + constants.CYAN + str(self.shellBit) + "-bit" + constants.YELLOW + " ]" + constants.CYAN}
+   c		{constants.RESET + "Save current configuration." + constants.CYAN}
+   q		{constants.RESET + "Quick find all." + constants.CYAN}
+   x		{constants.RESET + "Exit." + constants.CYAN}
+    """)
+
+    def __repr__(self):
+        """String representation of Raw Hex Screen."""
+        self._set_options_content()
+        return ImportScreen.OPTIONS_LABEL + self.output
+
+class PEFileScreen(ImportScreen):
+    """Class to handle displaying options screen for PE File inputs."""
+    def __init__(self, shellBit: Literal[32,64], name:str, hMd5:str) -> None:
+        """Initialize PEFileScreen."""
+        super().__init__(shellBit, name, hMd5)
+        self.showType = "PE File"
+
+    def _set_options_content(self) -> None:
+        """Create options menu for PE File input."""
+        self._append_output(
+            constants.CYAN
+            + f"""
+   h		{constants.RESET + "Display options." + constants.CYAN}
+   s		{constants.RESET + "Find Assembly instructions associated with shellcode." + constants.CYAN}
+   z		{constants.RESET + "Do everything with current selections." + constants.CYAN}
+   p		{constants.RESET + "Print Menu - print outputs to file" + constants.CYAN}
+   k		{constants.RESET + "Find strings." + constants.CYAN}
+   m		{constants.RESET + "Find modules in the IAT and beyond." + constants.CYAN}
+   e		{constants.RESET + "Find imports." + constants.CYAN}
+   i		{constants.RESET + "Show basic " + self.showType + " info." + constants.CYAN}
+   a		{constants.RESET + "Change architecture, 32-bit or 64-bit." + constants.YELLOW + " [ "+ constants.CYAN + str(self.shellBit) + "-bit" + constants.YELLOW+ " ]" + constants.CYAN}
+   c		{constants.RESET + "Save current configuration." + constants.CYAN}
+   q		{constants.RESET + "Quick find all." + constants.CYAN}
+   x		{constants.RESET + "Exit." + constants.CYAN}
+    """)
+
+    def __repr__(self):
+        """String representation of PE File Screen."""
+        self._set_options_content()
+        return ImportScreen.OPTIONS_LABEL + self.output
+
+class BitMenuScreen(Screen):
+    """Bit Menu Screen."""
+    def __init__(self):
+        """Initialize BitMenu Screen."""
+        super().__init__()
+
+    def __repr__(self):
+        """Content to print to the BitMenu Screen."""
+        return (
+            "\nChange bit mode, "
+            + constants.YELLOW
+            + "32-bit "
+            + constants.RESET
+            + "or"
+            + constants.RED
+            + " 64-bit\n"
+            + constants.RESET
+            + "Enter 32 or 64: "
+        )
+
+def showOptions(shellBit: Literal[32,64], rawHex, name, hMd5):
+    if rawHex:
+        print(RawHexScreen(shellBit, name, hMd5))
+    else:
+        print(PEFileScreen(shellBit, name, hMd5))
+
 
 def printBitMenu():
-	bitMenu = "\nChange bit mode, "+yel+"32-bit "+res+ "or"+red+ " 64-bit\n" + res
-	bitMenu +="Enter 32 or 64: "
-	print(bitMenu)
+    print(BitMenuScreen())
 
-def displayCurrentInstructions(bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, bAll): #Display current shellcode instruction selections
-	
-	iMenu = "\n"
-	iMenu += " Shellcode instructions to find:\n"
-	iMenu += cya +"\tpr"+res+" -"+yel+" Push ret\t\t\t"+res+"[" 
-	iMenu += cya +"x" +res if bPushRet else " "
-	iMenu += "]\n"
-	iMenu += cya +"\tcp"+res+" -"+yel+" Call pop / GetPC\t\t"+res+"[" 
-	iMenu += cya +"x" +res if bCallPop else " "
-	iMenu += "]\n"
-	iMenu += cya + "\tfe"+res+" -"+yel+" Fstenv / GetPC\t\t"+res+"[" 
-	iMenu += cya +"x"+res if bFstenv else  " "
-	iMenu += "]\n"
-	iMenu += cya +"\tsy"+res+" -"+yel+" Windows syscall\t\t"+res+"[" 
-	iMenu += cya +"x"+res if bEgg else " "
-	iMenu += "]\n"
-	iMenu += cya + "\thg"+res+" -"+yel+" Heaven's gate\t\t"+res+"[" 
-	iMenu += cya +"x"+res if bHeaven else " "
-	iMenu += "]\n"
-	iMenu += cya +"\tpb"+res+" -"+yel+" Walking the PEB\t\t"+res+"[" 
-	iMenu += cya +"x"+res if bPEB else " "
-	iMenu += "]\n"
-	iMenu += cya +"\tfd"+res+" -"+yel+" Find disassembly\t\t"+res+"["
-	iMenu += cya +"x"+res if bDisass else " "
-	iMenu += "]\n"
-	iMenu += cya +"\tall"+res+" -"+yel+" All selections\t\t"+res+"["
-	iMenu += cya +"x"+res if bAll else " "
-	iMenu += "]\n\t\t*Default\n\n"
-	# print(iMenu)
-	return iMenu
+
+def displayCurrentInstructions(
+    bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, bAll
+):  # Display current shellcode instruction selections
+    iMenu = "\n"
+    iMenu += " Shellcode instructions to find:\n"
+    iMenu += (
+        constants.CYAN
+        + "\tpr"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Push ret\t\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bPushRet else " "
+    iMenu += "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tcp"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Call pop / GetPC\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bCallPop else " "
+    iMenu += "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tfe"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Fstenv / GetPC\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bFstenv else " "
+    iMenu += "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tsy"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Windows syscall\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bEgg else " "
+    iMenu += "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\thg"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Heaven's gate\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bHeaven else " "
+    iMenu += "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tpb"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Walking the PEB\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bPEB else " "
+    iMenu += "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tfd"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Find disassembly\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bDisass else " "
+    iMenu += "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tall"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " All selections\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bAll else " "
+    iMenu += "]\n\t\t*Default\n\n"
+    # print(iMenu)
+    return iMenu
+
 
 # goodone
-def displayCurrentSelections(bpPushRet, bpCallPop, bpFstenv, bpSyscall, bpHeaven, bpPEB, bpStrings, bpEvilImports, bpModules, bpPushStrings, bDisass, bPrintEmulation,bpAll): #Displays current print selections
-	iMenu = " Selections to print:\n"
-	iMenu += cya + "\tpr"+res+" -"+yel+" Push rets\t\t\t"+res+"[" 
-	iMenu += cya + "x" + res if bpPushRet else " "
-	iMenu += res +"]\n" 
-	iMenu += cya + "\tcp"+res+" -"+yel+" Call pop / GetPC\t\t"+res+"[" 
-	iMenu += cya + "x" + res if bpCallPop else " "
-	iMenu += res +"]\n" 
-	iMenu += cya + "\tfe"+res+" -"+yel+" Fstenv / GetPC\t\t"+res+"[" 
-	iMenu += cya + "x" + res if bpFstenv else  " "
-	iMenu += res +"]\n" 
+def displayCurrentSelections(
+    bpPushRet,
+    bpCallPop,
+    bpFstenv,
+    bpSyscall,
+    bpHeaven,
+    bpPEB,
+    bpStrings,
+    bpEvilImports,
+    bpModules,
+    bpPushStrings,
+    bDisass,
+    bPrintEmulation,
+    bpAll,
+):  # Displays current print selections
+    iMenu = " Selections to print:\n"
+    iMenu += (
+        constants.CYAN
+        + "\tpr"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Push rets\t\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpPushRet else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tcp"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Call pop / GetPC\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpCallPop else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tfe"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Fstenv / GetPC\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpFstenv else " "
+    iMenu += constants.RESET + "]\n"
 
-	iMenu += cya + "\tsy"+res+" -"+yel+" Windows syscall\t\t"+res+"[" 
-	iMenu += cya + "x" + res if bpSyscall else " "
-	iMenu += res +"]\n" 
-	iMenu += cya + "\thg"+res+" -"+yel+" Heaven's gate\t\t"+res+"[" 
-	iMenu += cya + "x" + res if bpHeaven else " "
-	iMenu += res +"]\n" 
-	iMenu += cya + "\tpb"+res+" -"+yel+" Walking the PEB\t\t"+res+"[" 
-	iMenu += cya + "x" + res if bpPEB else " "
-	iMenu += res +"]\n" 
-	iMenu += cya + "\tim"+res+" -"+yel+" Imports\t\t\t"+res+"[" 
-	iMenu += cya + "x" + res if bpEvilImports else " "
-	iMenu += res +"]\n" 
-	iMenu += cya + "\tlm"+res+" -"+yel+" Loaded modules\t\t"+res+"[" 
-	iMenu += cya + "x" + res if bpModules else " "
-	iMenu += res +"]\n" 
-	iMenu += cya + "\tst"+res+" -"+yel+" Strings \t\t\t"+res+"["
-	iMenu += cya + "x" + res if bpStrings else " "
-	iMenu += res +"]\n" 	
-	iMenu += cya + "\tps"+res+" -"+yel+" Push Stack Strings \t"+res+"["
-	iMenu += cya + "x" + res if bpPushStrings else " "
-	iMenu += res +"]\n" 
-	iMenu += cya + "\tfd"+res+" -"+yel+" Find disassembly\t\t"+res+"["
-	iMenu += cya + "x" + res if bDisass else " "
-	iMenu += res +"]\n" 
-	iMenu += cya + "\tem"+res+" -"+yel+" print emulation\t\t"+res+"["
-	iMenu += cya + "x" + res if bPrintEmulation else " "
-	iMenu += res +"]\n"
-	iMenu += cya + "\tall"+res+" -"+yel+" All selections\t\t"+res+"["
-	iMenu += cya + "x" + res if bpAll else " "
+    iMenu += (
+        constants.CYAN
+        + "\tsy"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Windows syscall\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpSyscall else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\thg"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Heaven's gate\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpHeaven else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tpb"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Walking the PEB\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpPEB else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tim"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Imports\t\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpEvilImports else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tlm"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Loaded modules\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpModules else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tst"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Strings \t\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpStrings else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tps"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Push Stack Strings \t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpPushStrings else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tfd"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Find disassembly\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bDisass else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tem"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " print emulation\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bPrintEmulation else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tall"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " All selections\t\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bpAll else " "
 
-	iMenu += "]\n\t\t"+red+"*Default\n\n" + res
-	# print(iMenu)
-	return iMenu
+    iMenu += "]\n\t\t" + constants.RED + "*Default\n\n" + constants.RESET
+    # print(iMenu)
+    return iMenu
 
-#ui Discover Menu text
+
+# ui Discover Menu text
 def instructionsMenu(bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, bAll):
-	iMenu=displayCurrentInstructions(bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, bAll)
-	iMenu += gre +"\n h"+res+whi+" - Show options.\n"
-	iMenu += gre + " g"+res+whi+" - Toggle selections.\n"
-	iMenu += gre + " c"+res+whi+" - Clear all selections.\n"
-	iMenu += gre +" t"+res+whi+" - Change technical setttings for finding shellcode instructions.\n"
-	iMenu += gre + " z"+res+whi+" - Find instructions.\n"
-	iMenu += gre + " r"+res+whi+" - Reset found instructions.\n"
-	iMenu += gre + " x"+res+whi+" - Exit.\n" + res
-	print(iMenu)
+    iMenu = displayCurrentInstructions(
+        bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, bAll
+    )
+    iMenu += constants.GREEN + "\n h" + constants.RESET + constants.WHITE + " - Show options.\n"
+    iMenu += constants.GREEN + " g" + constants.RESET + constants.WHITE + " - Toggle selections.\n"
+    iMenu += (
+        constants.GREEN + " c" + constants.RESET + constants.WHITE + " - Clear all selections.\n"
+    )
+    iMenu += (
+        constants.GREEN
+        + " t"
+        + constants.RESET
+        + constants.WHITE
+        + " - Change technical setttings for finding shellcode instructions.\n"
+    )
+    iMenu += constants.GREEN + " z" + constants.RESET + constants.WHITE + " - Find instructions.\n"
+    iMenu += (
+        constants.GREEN
+        + " r"
+        + constants.RESET
+        + constants.WHITE
+        + " - reset found instructions.\n"
+    )
+    iMenu += (
+        constants.GREEN + " x" + constants.RESET + constants.WHITE + " - Exit.\n" + constants.RESET
+    )
+    print(iMenu)
+
+
+class InstructionSelectScreen(Screen):
+    """Class for the Instruction Select Menu."""
+    def __init__(self):
+        """Initialize Instruction Select Menu Screen."""
+        super().__init__()
+
+    def __repr__(self):
+        """String representation of screen."""
+        return (
+            "\n\n ...................\n"
+            " Toggle Instructions"
+            "\n ...................\n"
+            " Enter each instruction set code to toggle, delimitied by a space.\n"
+            "\t e.g. cp, fe, peb, all, none\n\n"
+            " x to exit.\n\n"
+        )
 
 def instructionSelectMenu():
-	iSMenu = "\n\n ...................\n"
-	iSMenu += " Toggle Instructions"
-	iSMenu += "\n ...................\n"
-	iSMenu += " Enter each instruction set code to toggle, delimitied by a space.\n"
-	iSMenu +="\t e.g. cp, fe, peb, all, none\n\n"
-	iSMenu +=" x to exit.\n\n"
-	print(iSMenu)
+    print(InstructionSelectScreen())
+
 
 def techSettingsMenu(bytesForward, bytesBack, linesForward, linesBack, rawHex):
-	tMenu =  "\n"
-	if not rawHex:
-		tMenu += " Global PE settings:\n"
-		tMenu += cya + "\t Max bytes to dissassemble forward:  " + yel + str(bytesForward) + res
-		tMenu += "\n"
-		tMenu += cya + "\t Max bytes to dissassemble backward: " + yel + str(bytesBack) + res
-	else:
-		tMenu += " Global Shellcode settings:\n"
+    tMenu = "\n"
+    if not rawHex:
+        tMenu += " Global PE settings:\n"
+        tMenu += (
+            constants.CYAN
+            + "\t Max bytes to dissassemble forward:  "
+            + constants.YELLOW
+            + str(bytesForward)
+            + constants.RESET
+        )
+        tMenu += "\n"
+        tMenu += (
+            constants.CYAN
+            + "\t Max bytes to dissassemble backward: "
+            + constants.YELLOW
+            + str(bytesBack)
+            + constants.RESET
+        )
+    else:
+        tMenu += " Global Shellcode settings:\n"
 
-		tMenu += cya + "\t Max instructions to check forward:  " + yel + str(linesForward) + res
-		tMenu += "\n"
-		tMenu += cya + "\t Max instructions to check backward: " + yel + str(linesBack) + res
-	tMenu += "\n\n\n"
-	tMenu += "  "+gre+"h"+res+" - Display options.\n"
-	tMenu += "  "+gre+"g"+res+" - Global settings.\n"
-	tMenu += "  "+gre+"c"+res+" - Call pop / GetPC.\n"
-	tMenu += "  "+gre+"p"+res+" - Walking the PEB.\n"
-	tMenu += "  "+gre+"k"+res+" - Change minimum length of strings.\n"
-	tMenu += "  "+gre+"x"+res+" - Exit.\n"
-	print(tMenu)
+        tMenu += (
+            constants.CYAN
+            + "\t Max instructions to check forward:  "
+            + constants.YELLOW
+            + str(linesForward)
+            + constants.RESET
+        )
+        tMenu += "\n"
+        tMenu += (
+            constants.CYAN
+            + "\t Max instructions to check backward: "
+            + constants.YELLOW
+            + str(linesBack)
+            + constants.RESET
+        )
+    tMenu += "\n\n\n"
+    tMenu += "  " + constants.GREEN + "h" + constants.RESET + " - Display options.\n"
+    tMenu += "  " + constants.GREEN + "g" + constants.RESET + " - Global settings.\n"
+    tMenu += "  " + constants.GREEN + "c" + constants.RESET + " - Call pop / GetPC.\n"
+    tMenu += "  " + constants.GREEN + "p" + constants.RESET + " - Walking the PEB.\n"
+    tMenu += (
+        "  "
+        + constants.GREEN
+        + "k"
+        + constants.RESET
+        + " - Change minimum length of strings.\n"
+    )
+    tMenu += "  " + constants.GREEN + "x" + constants.RESET + " - Exit.\n"
+    print(tMenu)
+
 
 def globalTechMenu(bytesForward, bytesBack, linesForward, linesBack, rawHex):
-	if not rawHex:
-		gtMenu =  "\nModify global PE file settings:\n"
-		gtMenu += gre+"\tfb " + res + "- Max bytes to dissassemble forward:  " + yel + str(bytesForward) + res
-		gtMenu += "\n"
-		gtMenu += gre+"\tbb " + res + "- Max bytes to dissassemble backward: " + yel + str(bytesBack) + res
-		gtMenu += "\n\n"+res
+    if not rawHex:
+        gtMenu = "\nModify global PE file settings:\n"
+        gtMenu += (
+            constants.GREEN
+            + "\tfb "
+            + constants.RESET
+            + "- Max bytes to dissassemble forward:  "
+            + constants.YELLOW
+            + str(bytesForward)
+            + constants.RESET
+        )
+        gtMenu += "\n"
+        gtMenu += (
+            constants.GREEN
+            + "\tbb "
+            + constants.RESET
+            + "- Max bytes to dissassemble backward: "
+            + constants.YELLOW
+            + str(bytesBack)
+            + constants.RESET
+        )
+        gtMenu += "\n\n" + constants.RESET
 
-	else:
-		gtMenu = "\nModify global Shellcode settings:\n"
+    else:
+        gtMenu = "\nModify global Shellcode settings:\n"
 
-		gtMenu += gre+"\tfi " + res + "- Max lines to check forward:  " + yel + str(linesForward) + res
-		gtMenu += "\n"
-		gtMenu += gre+"\tbi " + res + "- Max lines to check backward: " + yel + str(linesBack) + res
-		gtMenu += "\n\n"
-		gtMenu += gre+ "x"+res+"  - Exit.\n"+res
+        gtMenu += (
+            constants.GREEN
+            + "\tfi "
+            + constants.RESET
+            + "- Max lines to check forward:  "
+            + constants.YELLOW
+            + str(linesForward)
+            + constants.RESET
+        )
+        gtMenu += "\n"
+        gtMenu += (
+            constants.GREEN
+            + "\tbi "
+            + constants.RESET
+            + "- Max lines to check backward: "
+            + constants.YELLOW
+            + str(linesBack)
+            + constants.RESET
+        )
+        gtMenu += "\n\n"
+        gtMenu += (
+            constants.GREEN + "x" + constants.RESET + "  - Exit.\n" + constants.RESET
+        )
 
+    print(gtMenu)
 
-	print(gtMenu)
 
 def cpTechMenu(maxDistance):
-	cpTMenu = "\nMax call distance: "+ yel+ str(maxDistance) + res+"\n"
-	cpTMenu += "\tHow far forward can you go for GetPC.\n\n"
-	cpTMenu += "Enter max call distance below.\n"
-	print(cpTMenu)
+    cpTMenu = (
+        "\nMax call distance: "
+        + constants.YELLOW
+        + str(maxDistance)
+        + constants.RESET
+        + "\n"
+    )
+    cpTMenu += "\tHow far forward can you go for GetPC.\n\n"
+    cpTMenu += "Enter max call distance below.\n"
+    print(cpTMenu)
+
 
 # def displayCurrentSelections(bpPushRet, bpCallPop, bpFstenv, bpSyscall, bpHeaven, bpPEB, bpStrings, bpEvilImports, bpModules, bpPushStrings, bDisass, bpAll): #Displays current print selections
 
-def printMenu(bpPushRet, bpCallPop, bpFstenv, bpSyscall, bpHeaven, bpPEB, bExportAll, bpStrings, bpEvilImports, bpModules, bpPushStrings, bDisass, bpAll,outDir, emulation_verbose, emulation_multiline, bPrintEmulation, p2screen=None):
-	
 
-	if p2screen:
-		p2screen = "x"
-	else:
-		p2screen = " "
+def printMenu(
+    bpPushRet,
+    bpCallPop,
+    bpFstenv,
+    bpSyscall,
+    bpHeaven,
+    bpPEB,
+    bExportAll,
+    bpStrings,
+    bpEvilImports,
+    bpModules,
+    bpPushStrings,
+    bDisass,
+    bpAll,
+    outDir,
+    emulation_verbose,
+    emulation_multiline,
+    bPrintEmulation,
+    p2screen=None,
+):
+    if p2screen:
+        p2screen = "x"
+    else:
+        p2screen = " "
 
-	iMenu=displayCurrentSelections(bpPushRet, bpCallPop, bpFstenv, bpSyscall, bpHeaven, bpPEB, bpStrings, bpEvilImports, bpModules, bpPushStrings, bDisass, bPrintEmulation,bpAll)
+    iMenu = displayCurrentSelections(
+        bpPushRet,
+        bpCallPop,
+        bpFstenv,
+        bpSyscall,
+        bpHeaven,
+        bpPEB,
+        bpStrings,
+        bpEvilImports,
+        bpModules,
+        bpPushStrings,
+        bDisass,
+        bPrintEmulation,
+        bpAll,
+    )
 
-	iMenu += " {} {} \t\t[".format(gre + "j"+ res, whi + "- Export all to JSON." + res)
-	iMenu += cya + "x" + res if bExportAll else " "
-	iMenu += "]\n"
-	iMenu += " {} {} \t\t[".format(gre + "e"+ res, whi + "- Emulation verbose print style." + res)
-	iMenu += cya + "x" + res if emulation_verbose else " "
-	iMenu += "]\n"
-	iMenu += " {} {} \t[".format(gre + "m"+ res, whi + "- Multiline print style of artifacts." + res)
-	iMenu += cya + "x" + res if emulation_multiline else " "
-	iMenu += "]\n"
-	iMenu += " {} {} \t\t\t[{}]\n".format(gre + "p" + res, whi + "- Print to screen" + res, cya + p2screen + res)
-	# iMenu += " {} {} \t\t{}\n".format(gre + "d" + res, whi + "- Change output directory" + res, cya + outDir + res)
-	iMenu += " {} {}\n".format(gre + "h" + res, whi + "- Show options." + res)
-	iMenu += " {} {}\n".format(gre + "c" + res, whi + "- Clear all print selections." + res)
-	iMenu += " {} {}\n".format(gre + "s" + res, whi + "- Windows syscall submenu." + res)
-	iMenu += " {} {}\n".format(gre + "g" + res, whi + "- Toggle selections." + res)
-	iMenu += " {} {}\n".format(gre + "z" + res, whi + "- Print selections." + res)
-	iMenu += " {} {}\n".format(gre + "x" + res, whi + "- Exit." + res)
-	print(iMenu)
+    iMenu += " {} {} \t\t[".format(
+        constants.GREEN + "j" + constants.RESET,
+        constants.WHITE + "- Export all to JSON." + constants.RESET,
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bExportAll else " "
+    iMenu += "]\n"
+    iMenu += " {} {} \t\t[".format(
+        constants.GREEN + "e" + constants.RESET,
+        constants.WHITE + "- Emulation verbose print style." + constants.RESET,
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if emulation_verbose else " "
+    iMenu += "]\n"
+    iMenu += " {} {} \t[".format(
+        constants.GREEN + "m" + constants.RESET,
+        constants.WHITE + "- Multiline print style of artifacts." + constants.RESET,
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if emulation_multiline else " "
+    iMenu += "]\n"
+    iMenu += " {} {} \t\t\t[{}]\n".format(
+        constants.GREEN + "p" + constants.RESET,
+        constants.WHITE + "- Print to screen" + constants.RESET,
+        constants.CYAN + p2screen + constants.RESET,
+    )
+    # iMenu += " {} {} \t\t{}\n".format(constants.GREEN + "d" + constants.RESET, whi + "- Change output directory" + constants.RESET, constants.CYAN + outDir + constants.RESET)
+    iMenu += " {} {}\n".format(
+        constants.GREEN + "h" + constants.RESET,
+        constants.WHITE + "- Show options." + constants.RESET,
+    )
+    iMenu += " {} {}\n".format(
+        constants.GREEN + "c" + constants.RESET,
+        constants.WHITE + "- Clear all print selections." + constants.RESET,
+    )
+    iMenu += " {} {}\n".format(
+        constants.GREEN + "s" + constants.RESET,
+        constants.WHITE + "- Windows syscall submenu." + constants.RESET,
+    )
+    iMenu += " {} {}\n".format(
+        constants.GREEN + "g" + constants.RESET,
+        constants.WHITE + "- Toggle selections." + constants.RESET,
+    )
+    iMenu += " {} {}\n".format(
+        constants.GREEN + "z" + constants.RESET,
+        constants.WHITE + "- Print selections." + constants.RESET,
+    )
+    iMenu += " {} {}\n".format(
+        constants.GREEN + "x" + constants.RESET, constants.WHITE + "- Exit." + constants.RESET
+    )
+    print(iMenu)
 
-# def osFindSelectionPrint(osVersion):
-# 	if(type(osVersion) == "<class '__main__.OSVersion'>"):
-# 		return osVersion.toggle
 
-# 	else:
-		
-# 		print("false")
+def osFindSelection(osVersion):
+    # Returns [ ] if false else [x]
+    menuString = ""
+    g = ""
+    if osVersion.toggle:
+        menuString += "[x]"
+        g = "[x]"
+    else:
+        menuString += "[ ]"
+        g = "[ ]"
+    return g
 
-def osFindSelection(osVersion):	
-	#Returns [ ] if false else [x] 
-	menuString = ""
-	g = ""
-	if(osVersion.toggle):
-		menuString += "[x]"
-		g = "[x]"
-	else:
-		menuString += "[ ]"
-		g = "[ ]"
-	return g
 
 def newSysCallPrint(syscallSelection):
-	
-	codes = ['xp', 'v', 'w7', 'w8', 'w10', 's3', 's8', 's12', 'all']
+    codes = ["xp", "v", "w7", "w8", "w10", "s3", "s8", "s12", "all"]
 
-	all_selections = []
-	list_of_strings1 = []
-	list_of_strings2 = []
+    all_selections = []
+    list_of_strings1 = []
+    list_of_strings2 = []
 
-	for ver in syscallSelection:
-		all_selections.append(ver)
+    for ver in syscallSelection:
+        all_selections.append(ver)
 
-	column1 = []
-	column2 = []
+    column1 = []
+    column2 = []
 
-	for i in all_selections:
-		if i.code == "w10":
-			index = all_selections.index(i)
+    for i in all_selections:
+        if i.code == "w10":
+            index = all_selections.index(i)
 
-	column1 = all_selections[:index]
-	column2 = all_selections[index:]
+    column1 = all_selections[:index]
+    column2 = all_selections[index:]
 
-	for i in column1:
-		list_of_strings1.append(i.code + "  " + i.name )
+    for i in column1:
+        list_of_strings1.append(i.code + "  " + i.name)
 
-	for i in column2:
-		list_of_strings2.append(i.code + "  " + i.name )
-	for both in itertools.zip_longest(column1, column2):
-		col1 = both[0]
-		col2 = both[1]
-		if col1 != None:
-			code1 = col1.code
-			toggle1 = col1.toggle
-			if toggle1:
-				toggle1 = "x"
-			else:
-				toggle1 = " "
-			cat1 = col1.category
-			name1 = col1.name
-		if col2 != None:
-			code2 = col2.code
-			toggle2 = col2.toggle
-			if toggle2:
-				toggle2 = "x"
-			else:
-				toggle2 = " "
-			cat2 = col2.category
-			name2 = col2.name
-		maxLen1 = get_max_length(list_of_strings1)
-		maxLen2 = get_max_length(list_of_strings2)
-		L1Len = len(code1 + " " + name1)
-		L2Len = len(code2 + "  "+ name2)
-		if col1 != None and col2 != None:
-			# print(code1, code2, codes)
-			if code1 in codes and code2 in codes:
-				print(" {}  {}{:>{x}}[{}]\t{}  {}{:>{y}}[{}]".format(gre+code1+res, cya + name1 + res, "",red + toggle1+res, gre + code2+res, cya + name2 + res, "",red + toggle2+res, x=(maxLen1-L1Len+8), y=(maxLen2-L2Len+10)))
-			elif code1 in codes and code2 not in codes:
+    for i in column2:
+        list_of_strings2.append(i.code + "  " + i.name)
+    for both in itertools.zip_longest(column1, column2):
+        col1 = both[0]
+        col2 = both[1]
+        if col1 != None:
+            code1 = col1.code
+            toggle1 = col1.toggle
+            if toggle1:
+                toggle1 = "x"
+            else:
+                toggle1 = " "
+            cat1 = col1.category
+            name1 = col1.name
+        if col2 != None:
+            code2 = col2.code
+            toggle2 = col2.toggle
+            if toggle2:
+                toggle2 = "x"
+            else:
+                toggle2 = " "
+            cat2 = col2.category
+            name2 = col2.name
+        maxLen1 = get_max_length(list_of_strings1)
+        maxLen2 = get_max_length(list_of_strings2)
+        L1Len = len(code1 + " " + name1)
+        L2Len = len(code2 + "  " + name2)
+        if col1 != None and col2 != None:
+            # print(code1, code2, codes)
+            if code1 in codes and code2 in codes:
+                print(
+                    " {}  {}{:>{x}}[{}]\t{}  {}{:>{y}}[{}]".format(
+                        constants.GREEN + code1 + constants.RESET,
+                        constants.CYAN + name1 + constants.RESET,
+                        "",
+                        constants.RED + toggle1 + constants.RESET,
+                        constants.GREEN + code2 + constants.RESET,
+                        constants.CYAN + name2 + constants.RESET,
+                        "",
+                        constants.RED + toggle2 + constants.RESET,
+                        x=(maxLen1 - L1Len + 8),
+                        y=(maxLen2 - L2Len + 10),
+                    )
+                )
+            elif code1 in codes and code2 not in codes:
+                print(
+                    " {}  {}{:>{x}}[{}]\t\t{}  {}{:>{y}}[{}]".format(
+                        constants.GREEN + code1 + constants.RESET,
+                        constants.CYAN + name1 + constants.RESET,
+                        "",
+                        constants.RED + toggle1 + constants.RESET,
+                        constants.YELLOW + code2 + constants.RESET,
+                        constants.WHITE + name2 + constants.RESET,
+                        "",
+                        constants.RED + toggle2 + constants.RESET,
+                        x=(maxLen1 - L1Len + 8),
+                        y=(maxLen2 - L2Len + 2),
+                    )
+                )
+            else:
+                print(
+                    "\t{}  {} {:>{x}}[{}]\t\t{}  {}{:>{y}}[{}]".format(
+                        constants.YELLOW + code1 + constants.RESET,
+                        name1,
+                        "",
+                        constants.RED + toggle1 + constants.RESET,
+                        constants.YELLOW + code2 + constants.RESET,
+                        name2,
+                        "",
+                        constants.RED + toggle2 + constants.RESET,
+                        x=(maxLen1 - L1Len),
+                        y=(maxLen2 - L2Len + 2),
+                    )
+                )
+        elif col2 is None:
+            if code1 in codes:
+                print(
+                    " {}  {}{:>{x}}[{}]".format(
+                        constants.GREEN + code1 + constants.RESET,
+                        constants.CYAN + name1 + constants.RESET,
+                        "",
+                        constants.RED + toggle1 + constants.RESET,
+                        x=(maxLen1 - L1Len + 8),
+                    )
+                )
+            else:
+                print(
+                    "\t{}  {} {:>{x}}[{}]".format(
+                        constants.YELLOW + code1 + constants.RESET,
+                        name1,
+                        "",
+                        constants.RED + toggle1 + constants.RESET,
+                        x=(maxLen1 - L1Len),
+                    )
+                )
+        elif col1 is None:
+            if code2 in codes:
+                print(" {}  {}{:>{x}}[ ]".format(code2, name2))
+            else:
+                print("\t{}  {} {:>{x}}[ ]".format(code2, name2))
 
-				print(" {}  {}{:>{x}}[{}]\t\t{}  {}{:>{y}}[{}]".format(gre+code1+res, cya + name1 + res, "",red + toggle1+res, yel + code2+res, whi + name2 + res, "",red + toggle2+res, x=(maxLen1-L1Len+8), y=(maxLen2-L2Len+2)))
-			else:
-				print("\t{}  {} {:>{x}}[{}]\t\t{}  {}{:>{y}}[{}]".format(yel + code1 + res, name1, "",red + toggle1+res, yel + code2 + res, name2, "",red + toggle2+res, x=(maxLen1-L1Len), y=(maxLen2-L2Len+2)))
-		elif col2 == None:
 
-			if code1 in codes:
-				print(" {}  {}{:>{x}}[{}]".format(gre + code1 + res, cya + name1 + res, "", red + toggle1+res, x=(maxLen1-L1Len+8)))
-			else:
-				print("\t{}  {} {:>{x}}[{}]".format(yel + code1 +res, name1, "",red + toggle1+res, x=(maxLen1-L1Len)))
-		elif col1 == None:
-			if code2 in codes:
-				print(" {}  {}{:>{x}}[ ]".format(code2, name2))
-			else:
-				print("\t{}  {} {:>{x}}[ ]".format(code2, name2))
-	# print("+------------------------+")
-	# codes = ['xp', 'v', 'w7', 'w8', 'w10', 's3', 's8', 's12', 'all']
-	# maxLen1 = get_max_length(list_of_strings1)
-	# maxLen2 = get_max_length(list_of_strings2)
 
-	# for both in itertools.zip_longest(column1, column2):
-
-	# 	col1 = both[0]
-	# 	col2 = both[1]
-	# 	if col1 != None:
-	# 		code1 = col1.code
-	# 		toggle1 = col1.toggle
-	# 		cat1 = col1.category
-	# 		name1 = col1.name
-	# 	if col2 != None:
-	# 		code2 = col2.code
-	# 		toggle2 = col2.toggle
-	# 		cat2 = col2.category
-	# 		name2 = col2.name
-	# 	if col1 != None and col2 != None:
-	# 		if code1 in codes or code2 in codes:
-	# 			curLen1 = len(code1 + cat1)
-	# 			curLen2 = len(code2 + cat2)
-	# 			curNameLen1 = len(code1 + "  " + name1)
-	# 			curNameLen2 = len(code2 + "  " + name2)
-	# 			curNameLen2 = curNameLen2 +  curNameLen1
-
-	# 			print(" {}  {} {:>{x}}[]   {}  {} {:>{y}}[]".format(code1, cat1, "", code2, cat2, "", x=(maxLen1-curLen1), y=(maxLen2-curLen2)))
-	# 		else:
-	# 			print("\t{}  {} {:>{x}}[]\t\t{}  {} {:>{y}}[]".format(code1, name1, "", code2, name2, "", x=(maxLen1-curNameLen1), y=(maxLen2-curNameLen2)))
-
-	# 	elif col2 == None:
-	# 		if code1 in codes:
-	# 			print("{}  {} []".format(code1, cat1))
-	# 		else:
-	# 			print("{}  {} []".format(code1, name1))
-
-def emuNewSysCallPrint(emuSyscallSelection):
-	syscallNameStrings = ["NA  Windows XP","\txp1  SP1","\txp2  SP2","NA  Windows Server 2003","\ts30  SP0","\ts32  SP2","\ts3r  R2","\ts3r2  R2 SP2","NA  Windows Vista","\tv0  SP0","\tv1  SP1","\tv2  SP2","NA  Windows Server 2008","\ts80  SP0","\ts82  SP2","\ts8r  R2","\ts8r1  R2 SP1","NA  Windows 7","\tw70  SP0","\tw71  SP1","NA  Windows Server 2012","\ts120  SP0","\ts12r  R2","NA  Windows 8","\tw80  8.0","\tw81  8.1","NA  Windows 10","\tr0  release 1507","\tr1  release 1511","\tr2  release 1607","\tr3  release 1703","\tr4  release 1709","\tr5  release 1803","\tr6  release 1809","\tr7  release 1903","\tr8  release 1909","\tr9  release 2004","\tr10  release 20H2","\tr11  release 21H1", "\tr12  release 21H2", "\tr13  release 22H2","NA  Windows 11","\tb1  21H2","\tb2  22H2"]
-	# codes = ['xp', 'v', 'w7', 'w8', 'w10', 's3', 's8', 's12', 'all']
-	for line in syscallNameStrings:
-		line = line.split(maxsplit = 1)
-		code = line[0]
-		description = line[1]
-
-		if((not (code == "NA")) and emuSyscallSelection[code][0]):
-			tog = 'x'
-		else:
-			tog = ' '
-		if(description.split()[0] == "Windows" or description.split()[0] == "All"):
-			print("\n{}".format(cya + description + res))
-		else:
-			print("{}\t{}  {}".format("[" + red + tog + res + "]", yel + code + res, description))
-		
-	
 
 def syscallSelectionMenu():
-	print("#### WINDOWS XP ####")
-	print("Windows XP (SP1)")
-		# code = "xp1"
-	print("Windows XP (SP2)\n")
-		# code = "xp2"
+    print("#### WINDOWS XP ####")
+    print("Windows XP (SP1)")
+    # code = "xp1"
+    print("Windows XP (SP2)\n")
+    # code = "xp2"
 
-	print("#### WINDOWS VISTA ####")
-	print("Windows Vista (SP0)")
-		# code = "v0"
-	print("Windows Vista (SP1)")
-		# code = "v1"
-	print("Windows Vista (SP2)\n")
-		# code = "v2"
+    print("#### WINDOWS VISTA ####")
+    print("Windows Vista (SP0)")
+    # code = "v0"
+    print("Windows Vista (SP1)")
+    # code = "v1"
+    print("Windows Vista (SP2)\n")
+    # code = "v2"
 
-	print("#### WINDOWS 7 ####")
-	print("Windows 7 (SP0)")
-		# code = "w70"
-	print("Windows 7 (SP1)\n")
-		# code = "w71"
+    print("#### WINDOWS 7 ####")
+    print("Windows 7 (SP0)")
+    # code = "w70"
+    print("Windows 7 (SP1)\n")
+    # code = "w71"
 
-	print("#### WINDOWS 8 ####")
-	print("Windows 8 (8.0)")
-		# code = "w80"
-	print("Windows 8 (8.1)\n")
-		# code = "w81"
+    print("#### WINDOWS 8 ####")
+    print("Windows 8 (8.0)")
+    # code = "w80"
+    print("Windows 8 (8.1)\n")
+    # code = "w81"
 
-	print("#### WINDOWS 10 ####")
-	print("Windows 10 (1507)")
-		# code = "r0"
-	print("Windows 10 (1511)")
-		# code = "r1"
-	print("Windows 10 (1607)")
-		# code = "r2"
-	print("Windows 10 (1703)")
-		# code = "r3"
-	print("Windows 10 (1709)")
-		# code = "r4"
-	print("Windows 10 (1803)")
-		# code = "r5"
-	print("Windows 10 (1809)")
-		# code = "r6"
-	print("Windows 10 (1903)")
-		# code = "r7"
-	print("Windows 10 (1909)")
-		# code = "r8"
-	print("Windows 10 (2004)")
-		# code = "r9"
-	print("Windows 10 (20H2)\n")
-		# code = "r10"
+    print("#### WINDOWS 10 ####")
+    print("Windows 10 (1507)")
+    # code = "r0"
+    print("Windows 10 (1511)")
+    # code = "r1"
+    print("Windows 10 (1607)")
+    # code = "r2"
+    print("Windows 10 (1703)")
+    # code = "r3"
+    print("Windows 10 (1709)")
+    # code = "r4"
+    print("Windows 10 (1803)")
+    # code = "r5"
+    print("Windows 10 (1809)")
+    # code = "r6"
+    print("Windows 10 (1903)")
+    # code = "r7"
+    print("Windows 10 (1909)")
+    # code = "r8"
+    print("Windows 10 (2004)")
+    # code = "r9"
+    print("Windows 10 (20H2)\n")
+    # code = "r10"
 
-	print("#### WINDOWS SERVER 2003 ####")
-	print("Windows Server 2003 (SP0)")
-		# code = "s30"
-	print("Windows Server 2003 (SP2)")
-		# code = "s32"
-	print("Windows Server 2003 (R2)")
-		# code = "s3r"
-	print("Windows Server 2003 (R2 SP2)\n")
-		# code = "s3r2"
+    print("#### WINDOWS SERVER 2003 ####")
+    print("Windows Server 2003 (SP0)")
+    # code = "s30"
+    print("Windows Server 2003 (SP2)")
+    # code = "s32"
+    print("Windows Server 2003 (R2)")
+    # code = "s3r"
+    print("Windows Server 2003 (R2 SP2)\n")
+    # code = "s3r2"
 
-	print("#### WINDOWS SERVER 2008 ####")
-	print("Windows Server 2008 (SP0)")
-		# code = "s80"
-	print("Windows Server 2008 (SP2)")
-		# code = "s82"
-	print("Windows Server 2008 (R2)")
-		# code = "s8r"
-	print("Windows Server 2008 (R2 SP1)\n")
-		# code = "s8r1"
+    print("#### WINDOWS SERVER 2008 ####")
+    print("Windows Server 2008 (SP0)")
+    # code = "s80"
+    print("Windows Server 2008 (SP2)")
+    # code = "s82"
+    print("Windows Server 2008 (R2)")
+    # code = "s8r"
+    print("Windows Server 2008 (R2 SP1)\n")
+    # code = "s8r1"
 
-	print("#### WINDOWS SERVER 2012 ####")
-	print("Windows Server 2012 (SP0)")
-		# code = "s120"
-	print("Windows Server 2012 (R2)\n")
-		# code = "s12r"
+    print("#### WINDOWS SERVER 2012 ####")
+    print("Windows Server 2012 (SP0)")
+    # code = "s120"
+    print("Windows Server 2012 (R2)\n")
+    # code = "s12r"
 
-	print("#### WINDOWS 2000 ####")
-	print("Windows 2000 (SP0)")
-		# code = "w200"
-	print("Windows 2000 (SP1)")
-		# code = "w201"
-	print("Windows 2000 (SP2)")
-		# code = "w202"
-	print("Windows 2000 (SP3)")
-		# code = "w203"
-	print("Windows 2000 (SP4)\n")
-		# code = "w204"
+    print("#### WINDOWS 2000 ####")
+    print("Windows 2000 (SP0)")
+    # code = "w200"
+    print("Windows 2000 (SP1)")
+    # code = "w201"
+    print("Windows 2000 (SP2)")
+    # code = "w202"
+    print("Windows 2000 (SP3)")
+    # code = "w203"
+    print("Windows 2000 (SP4)\n")
+    # code = "w204"
 
-	print("#### WINDOWS NT ####")
-	print("Windows NT (SP3 TS)")
-		# code = "nt3t"
-	print("Windows NT (SP3)")
-		# code = "nt3"
-	print("Windows NT (SP4)")
-		# code = "nt4"
-	print("Windows NT (SP5)")
-		# code = "nt5"
-	print("Windows NT (SP6)")
-		# code = "nt6"
-
-
-
-def emuSyscallPrintSubMenu(emuSyscallSelection, showDisassembly, syscallPrintBit, showOptions):
-	vMenu = ""
-
-	#Used for list of OSVersions to print for syscall
-	# def _init_(self, name, category, toggle, code):
-	# 	self.name = name 			#Version, e.g. SP1
-	# 	self.category = category 	#OS, e.g. Windows 10
-	# 	self.toggle = toggle 		#To print or not
-	# 	self.code = code 			#The opcode, e.g. xp1
-
-	#  xp   Windows XP         [ ]      s3   Windows Server 2003                 [ ]
- #       xp1  SP1          [ ]             s30   SP0                         [ ]
- #       xp2  SP2          [ ]             s32   SP2                         [ ]
- #                                         s3r   R2                          [ ]
- # v    Windows Vista      [ ]             s3r2  R2 SP2                      [ ]
-	
-
-		# print(x.category, x.name, x.toggle, x.code)
-	print (red+"Note: "+res+"  Only one OSBuild may be selected for emulation.")
-	if(showOptions):
-		print(mag + " \n OSBuild Selection:\n" + res)
-		emuNewSysCallPrint(emuSyscallSelection)
+    print("#### WINDOWS NT ####")
+    print("Windows NT (SP3 TS)")
+    # code = "nt3t"
+    print("Windows NT (SP3)")
+    # code = "nt3"
+    print("Windows NT (SP4)")
+    # code = "nt4"
+    print("Windows NT (SP5)")
+    # code = "nt5"
+    print("Windows NT (SP6)")
+    # code = "nt6"
 
 
-	vMenu = ""
-	if showOptions:
-		vMenu += mag+" \n\n Functional Commands:\n\n"+res
-		vMenu += " {} - Options.\n".format(cya + "h" + res)
-		vMenu += " {} - Clear syscall selection.\n".format(cya + "c" + res)
-		vMenu += " {} - Enter syscall selection.\n".format(cya + "g" + res)
-		vMenu += " {} - Exit.\n".format(cya + "x" + res)
+class EmulationSyscallSubScreen(Screen):
+    """Displays the Emulation Syscalls Print Sub-Menu."""
+    def __init__(self, emuSyscallSelection):
+        """Initialize Emulation Syscalls Print Sub-Menu."""
+        self.output: str = ""
+        self.emuSyscallSelection = emuSyscallSelection
 
-	print(vMenu)
+    def emuNewSysCallPrint(self):
+        """Print all OS Build versions as part of syscall selection."""
+        for line in constants.SYSCALL_NAME_STRINGS:
+            line = line.split(maxsplit=1)
+            code = line[0]
+            description = line[1]
 
-def syscallPrintSubMenu(syscallSelection, showDisassembly, syscallPrintBit, showOptions):
-	print (red+"Note:"+res+"   This is a pseudo-emulation performed statically, on shellcode or PE files. \n\tFor more accurate results, select the desired OSBuild in emulation submenu. \n\tAdditional new OSBuild releases supported there.")
-	vMenu = ""
+            tog = "x" if code != "NA" and self.emuSyscallSelection[code][0] else " "
+            if description.split()[0] == "Windows" or description.split()[0] == "All":
+                self.output+= "\n{}\n".format(constants.CYAN + description + constants.RESET)
+            else:
+                self.output += (
+                    "{}\t{}  {}\n".format(
+                        "[" + constants.RED + tog + constants.RESET + "]",
+                        constants.YELLOW + code + constants.RESET,
+                        description,
+                    )
+                )
 
-	#Used for list of OSVersions to print for syscall
-	# def _init_(self, name, category, toggle, code):
-	# 	self.name = name 			#Version, e.g. SP1
-	# 	self.category = category 	#OS, e.g. Windows 10
-	# 	self.toggle = toggle 		#To print or not
-	# 	self.code = code 			#The opcode, e.g. xp1
+    def __repr__(self) -> str:
+        """String representation of Emulation Syscalls Sub-Menu."""
+        self.output += constants.RED
+        self.output += "Note: "
+        self.output += constants.RESET
+        self.output += "  Only one OSBuild may be selected for emulation."
+        self.output += constants.MAGENTA 
+        self.output += " \n OSBuild Selection:\n" 
+        self.output += constants.RESET
+        self.emuNewSysCallPrint()
+        self.output += constants.MAGENTA 
+        self.output += " \n\n Functional Commands:\n\n" 
+        self.output += constants.RESET
+        self.output += " {} - Options.\n".format(constants.CYAN + "h" + constants.RESET)
+        self.output += " {} - Clear syscall selection.\n".format(constants.CYAN + "c" + constants.RESET)
+        self.output += " {} - Enter syscall selection.\n".format(constants.CYAN + "g" + constants.RESET)
+        self.output += " {} - Exit.\n".format(constants.CYAN + "x" + constants.RESET)
+        return self.output
 
-	#  xp   Windows XP         [ ]      s3   Windows Server 2003                 [ ]
- #       xp1  SP1          [ ]             s30   SP0                         [ ]
- #       xp2  SP2          [ ]             s32   SP2                         [ ]
- #                                         s3r   R2                          [ ]
- # v    Windows Vista      [ ]             s3r2  R2 SP2                      [ ]
-	
-
-		# print(x.category, x.name, x.toggle, x.code)
-	if(showOptions):
-		print(mag + " \n OSBuild Selections:\n" + res)
-		newSysCallPrint(syscallSelection)
-
-	# 	vMenu += mag + " Selections:\n" + res
-	# nada = ""
-	# column1 = 0 		#The col1 position in syscallSelection
-	# column2 = 0
-	# col1Newline = False
-	# col2Newline = False
-	# col1Category = ''
-	# col2Category = ''
-	# t = 0
-	# while not ((column1 == -1) and (column2 == -1)):
-
-	# #Prints two columns recursively from our list
-	# #-1 indicates column is done
-	# 	if  not (column1 == -1): 
-
-	# 		#check for newline
-	# 		if not (syscallSelection[column1].category == col1Category):
-	# 			col1Newline = True
-	# 			col1Category = syscallSelection[column1].category
+def emuSyscallPrintSubMenu(emuSyscallSelection):
+    print(EmulationSyscallSubScreen(emuSyscallSelection))
 
 
-	# 		#check if we've reached the last in a category	
-	# 		if(re.search("server", syscallSelection[column1].category, re.IGNORECASE)):
-	# 			#Look for next col1 category
-	# 			for i in range(len(syscallSelection[column1 + 1:])):
-	# 				if not (re.search("server", syscallSelection[i + column1].category, re.IGNORECASE)):
-	# 					column1 = i + column1
-	# 					col1Category = syscallSelection[column1].category
-	# 					break
+def syscallPrintSubMenu(
+    syscallSelection, showDisassembly, syscallPrintBit, showOptions
+):
+    print(
+        constants.RED
+        + "Note:"
+        + constants.RESET
+        + "   This is a pseudo-emulation performed statically, on shellcode or PE files. \n\tFor more accurate results, select the desired OSBuild in emulation submenu. \n\tAdditional new OSBuild releases supported there."
+    )
+    vMenu = ""
 
-	# 				#bounds checking
-	# 				if i == len(syscallSelection[column1 + 1:])-1:
-	# 					column1 = -1
+    if showOptions:
+        print(constants.MAGENTA + " \n OSBuild Selections:\n" + constants.RESET)
+        newSysCallPrint(syscallSelection)
 
-	# 	if  not (column2 == -1):
+        vMenu = ""
+    if showOptions:
+        vMenu += constants.MAGENTA + " \n\n Functional Commands:\n\n" + constants.RESET
+        vMenu += " {} - Options.\n".format(constants.CYAN + "h" + constants.RESET)
+        vMenu += " {} - Clear syscall selections.\n".format(
+            constants.CYAN + "c" + constants.RESET
+        )
+        vMenu += " {} - Enter syscall selections.\n".format(
+            constants.CYAN + "g" + constants.RESET
+        )
+        vMenu += " {} - Change architecture for syscall.\t[".format(
+            constants.CYAN + "b" + constants.RESET
+        )
+        vMenu += constants.RED + str(syscallPrintBit) + "-bit" + constants.RESET
+        vMenu += "]\n"
+        vMenu += (
+            "    -    "
+            + constants.YELLOW
+            + "Note:"
+            + constants.RESET
+            + " This should generally remain 64-bit.\n"
+        )
+        vMenu += " {} - Display disassembly.\t[".format(
+            constants.CYAN + "d" + constants.RESET
+        )
+        vMenu += constants.RED + "x" + constants.RESET if showDisassembly else " "
+        vMenu += "]\n"
+        vMenu += " {} - Print syscalls.\n".format(
+            constants.CYAN + "z" + constants.RESET
+        )
+        # vMenu += "b - Change bits 64]\n"
+        vMenu += " {} - Exit.\n".format(constants.CYAN + "x" + constants.RESET)
 
-	# 		if not (syscallSelection[column2].category == col2Category):
-	# 			col2Newline = True
-	# 			col2Category = syscallSelection[column2].category
-	# 		#check if we've reached the last in a category
-	# 		if not (re.search("server", syscallSelection[column2].category, re.IGNORECASE)):
+    print(vMenu)
 
-	# 			#Look for next col2 category
-	# 			for i in range(len(syscallSelection[column2 + 1:])):
-	# 				if (re.search("server", syscallSelection[i + column2].category, re.IGNORECASE)):
-	# 					column2 = i + column2
-	# 					col2Category = syscallSelection[column2].category
-	# 					break
 
-	# 		#bounds checking
-	# 		#After it finds the end of the list, it sets the position (column2) to -1 to know it is at the end
-	# 		if column2 >= (len(syscallSelection)):
-	# 					print("Col2 end")
-	# 					column2 = -1
+class ModulesMenuScreen(Screen):
+    """Menu Screen for loaded Modules."""
+    def __init__(self, modulesMode: Literal[1,2,3]):
+        """Initialize screen for loaded Modules."""
+        super().__init__()
+        self.modulesMode: Literal[1,2,3] = modulesMode
+        self.output: str = ""
 
-	# 	#Add col1 item
-	# 	if not (column1 == -1):
-	# 		if(col1Newline):
-	# 			vMenu += (' {:<32}'.format(nada))
-	# 		else:
+    def __repr__(self):
+        """String representation of Modules Menu Screen."""
+        self.output += (
+            constants.GREEN
+            + "\tNote: This feature is experimental and not always accurate.\n\n"
+            + constants.RESET
+        )
+        self.output += "Select one of the following options:\n"
+        self.output += "\t" + constants.CYAN + "1" + constants.RESET + " - Find only DLLs in IAT"
+        if self.modulesMode == 1:
+            self.output += "\t\t[" + constants.RED + "x" + constants.RESET + "]\n"
+        else:
+            self.output += "\t\t[ ]\n"
+        self.output += (
+            "\t" + constants.CYAN + "2" + constants.RESET + " - Find DLLs in IAT and beyond"
+        )
+        if self.modulesMode == 2:
+            self.output += "\t\t[" + constants.RED + "x" + constants.RESET + "]\n"
+        else:
+            self.output += "\t\t[ ]\n"
+        self.output += (
+            "\t"
+            + constants.CYAN
+            + "3"
+            + constants.RESET
+            + " - Find DLLs in IAT, beyond, and more"
+        )
+        if self.modulesMode == 3:
+            self.output += "\t[" + constants.RED + "x" + constants.RESET + "]\n"
+        else:
+            self.output += "\t[ ]\n"
+        self.output += constants.GREEN + "\t\tDefault\n" + constants.RESET
+        self.output += "\t " + constants.CYAN + "h" + constants.RESET + " - Show options.\n"
+        self.output += "\t " + constants.CYAN + "p" + constants.RESET + " - Print.\n"
+        self.output += "\t " + constants.CYAN + "z" + constants.RESET + " - Execute.\n"
+        self.output += "\t " + constants.CYAN + "r" + constants.RESET + " - reset .\n"
+        self.output += "\t " + constants.CYAN + "x" + constants.RESET + " - Exit.\n"
+        return self.output
 
-	# 			#Format non categories
-	# 			if not (syscallSelection[column1].name == syscallSelection[column1].category):
-	# 				vMenu += (' {:<5s} {:<4s} {:<12s} {:<8}'.format(nada, syscallSelection[column1].code, syscallSelection[column1].name, osFindSelection(syscallSelection[column1]))) 
-
-	# 			#Format Categories
-	# 			else:
-	# 				vMenu += (' {:<4s} {:<17s}  {:<8}'.format(syscallSelection[column1].code , syscallSelection[column1].name, osFindSelection(syscallSelection[column1]))) 
-	# 			column1 += 1
-	# 			if column1 >= (len(syscallSelection)):
-	# 						column1 = -1
-	# 	if not (column2 == -1):
-	# 		if not col2Newline: 
-
-	# 			#Format non categories
-	# 			if not (syscallSelection[column2].name == syscallSelection[column2].category) and not (syscallSelection[column2].category == "server Column multiselect variables"):
-	# 				vMenu += (' {:<6s} {:<5s} {:<27s} {:<5}'.format(nada, syscallSelection[column2].code, syscallSelection[column2].name, osFindSelection(syscallSelection[column2])))
-
-	# 			#Format categories
-	# 			else:
-	# 				vMenu += (' {:<4s} {:<35s} {:<5}'.format(syscallSelection[column2].code, syscallSelection[column2].name, osFindSelection(syscallSelection[column2])))  
-	# 			column2 += 1
-	# 			if column2 >= (len(syscallSelection)):
-	# 						column2 = -1
-	# 	vMenu += "\n"
-	# 	col1Newline = False
-	# 	col2Newline = False
-	# vMenu += "\n"
-	vMenu = ""
-	if showOptions:
-		vMenu += mag+" \n\n Functional Commands:\n\n"+res
-		vMenu += " {} - Options.\n".format(cya + "h" + res)
-		vMenu += " {} - Clear syscall selections.\n".format(cya + "c" + res)
-		vMenu += " {} - Enter syscall selections.\n".format(cya + "g" + res)
-		vMenu += " {} - Change architecture for syscall.\t[".format(cya + "b" + res)
-		vMenu += red+str(syscallPrintBit)+"-bit"+res
-		vMenu += "]\n"
-		vMenu += "    -    "+yel+"Note:"+res+" This should generally remain 64-bit.\n"
-		vMenu += " {} - Display disassembly.\t[".format(cya + "d" + res)
-		vMenu += red+"x"+res if showDisassembly else " "
-		vMenu += "]\n"
-		vMenu += " {} - Print syscalls.\n".format(cya + "z" + res)
-		# vMenu += "b - Change bits 64]\n"
-		vMenu += " {} - Exit.\n".format(cya + "x" + res)
-
-	print(vMenu)
-	choice = input(">")
 
 def printModulesMenu(modulesMode):
-	# gMS_API_MIN_skip
-	iMenu = gre + '\tNote: This feature is experimental and not always accurate.\n\n'+ res
-	iMenu += 'Select one of the following options:\n'
-	iMenu += "\t"+cya+"1"+res+" - Find only DLLs in IAT"
-	if(modulesMode == 1):
-		iMenu += "\t\t["+red+"x"+res+"]\n"
-	else:
-		iMenu += "\t\t[ ]\n"
-	iMenu += "\t"+cya+"2"+res+" - Find DLLs in IAT and beyond"
-	if(modulesMode == 2):
-		iMenu += "\t\t["+red+"x"+res+"]\n"
-	else:
-		iMenu += "\t\t[ ]\n"
-	iMenu += "\t"+cya+"3"+res+" - Find DLLs in IAT, beyond, and more"
-	# iMenu += "\t\t**This must be selected to find InMemoryOrderModuleList.\n"
-	if(modulesMode == 3):
-		iMenu += "\t["+red+"x"+res+"]\n"
-	else:
-		iMenu += "\t[ ]\n"
-	iMenu += gre+"\t\tDefault\n"+res
-	# iMenu += "\t\t**This must be selected to find InMemoryOrderModuleList.\n"
-	iMenu += "\t "+cya+"h"+res+" - Show options.\n"
+    print(ModulesMenuScreen(modulesMode))
 
-	iMenu += "\t "+cya+"p"+res+" - Print.\n"
-	iMenu += "\t "+cya+"z"+res+" - Execute.\n"
-	iMenu += "\t "+cya+"r"+res+" - Reset .\n"
-	iMenu += "\t "+cya+"x"+res+" - Exit.\n"
-	print(iMenu)
 
-def stringMenu(bAsciiStrings, bWideCharStrings, bPushStackStrings, bAllStrings, s, useStringsFile, stringsEmu):
-	if useStringsFile:
-		strFile = "Yes"
-	else:
-		strFile = "No"
+def stringMenu(
+    bAsciiStrings,
+    bWideCharStrings,
+    bPushStackStrings,
+    bAllStrings,
+    s,
+    useStringsFile,
+    stringsEmu,
+):
+    if useStringsFile:
+        strFile = "Yes"
+    else:
+        strFile = "No"
 
-	if stringsEmu:
-		emu = "Yes"
-	else:
-		emu = "No"
-	iMenu = ''
-	iMenu += gre + " Strings to find:\n\n" + res
-	iMenu += cya + "\tas"+ yel + res+" -"+yel+" ASCII strings\t"+res+"[" 
-	iMenu += cya + "x"+res if bAsciiStrings else " "
-	iMenu += res + "]\n" 
-	iMenu += cya + "\twc"+ yel + res+" -"+yel+" Wide char strings\t"+res+"[" 
-	iMenu += cya + "x" +res if bWideCharStrings else " "
-	iMenu += res + "]\n" 
-	iMenu += cya + "\tps"+ yel + res+" -"+yel+" Push stack strings\t"+res+"[" 
-	iMenu += cya + "x"+res if bPushStackStrings else " "
-	iMenu += res + "]\n" 
-	iMenu += cya + "\tall"+ yel + res+" -"+yel+" All strings\t"+res+"[" 
-	iMenu += cya + "x" +res if bAllStrings else " "
-	iMenu += res + "]\n\n"
-	# iMenu += "Sections:\n"
-	# for sec in s:
-	# 	iMenu += "\t" + sec.sectionName.decode() + "\n"
-	# iMenu += "\n"
-	iMenu += mag + " h"+res + " - Show options.\n"
-	iMenu += mag + " g"+res +" - Toggle selections.\n\n"
-	iMenu += gre + " Strings emulation:\n\n" + res
-	iMenu += gre+"\tm"+res+" - Manually set register values for emulation.\n" + res
-	
-	iMenu +=yel+ "\t\tNote: This is only a sanity check.\n" + res
-	iMenu +=gre+ "\tn"+res+" - Change name of registers text file for emulation "+yel+"["+res +"{}".format(cya + strFile + res) + yel + "]\n" + res
-	iMenu +=gre+ "\t\tDefault: " + res + cya + "regs.txt\n" + res
-	iMenu +=gre+ "\te"+res+" - Enable emulation of stack strings with use of registers "+yel+"["+res +"{}".format(cya + emu + res) + yel + "]\n" + res
-	iMenu +=yel+ "\t\tNote: This should not be used ordinarily.\n" + res
-	iMenu +=gre+ "\ts"+res+" - Check accuracy of found stack strings.\n" + res
-	iMenu +=gre+ "\tk"+res+" - Change minimum length of strings.\n\n" + res
+    if stringsEmu:
+        emu = "Yes"
+    else:
+        emu = "No"
+    iMenu = ""
+    iMenu += constants.GREEN + " Strings to find:\n\n" + constants.RESET
+    iMenu += (
+        constants.CYAN
+        + "\tas"
+        + constants.YELLOW
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " ASCII strings\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bAsciiStrings else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\twc"
+        + constants.YELLOW
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Wide char strings\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bWideCharStrings else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tps"
+        + constants.YELLOW
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " Push stack strings\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bPushStackStrings else " "
+    iMenu += constants.RESET + "]\n"
+    iMenu += (
+        constants.CYAN
+        + "\tall"
+        + constants.YELLOW
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + " All strings\t"
+        + constants.RESET
+        + "["
+    )
+    iMenu += constants.CYAN + "x" + constants.RESET if bAllStrings else " "
+    iMenu += constants.RESET + "]\n\n"
+    # iMenu += "Sections:\n"
+    # for sec in s:
+    # 	iMenu += "\t" + sec.sectionName.decode() + "\n"
+    # iMenu += "\n"
+    iMenu += constants.MAGENTA + " h" + constants.RESET + " - Show options.\n"
+    iMenu += constants.MAGENTA + " g" + constants.RESET + " - Toggle selections.\n\n"
+    iMenu += constants.GREEN + " Strings emulation:\n\n" + constants.RESET
+    iMenu += (
+        constants.GREEN
+        + "\tm"
+        + constants.RESET
+        + " - Manually set register values for emulation.\n"
+        + constants.RESET
+    )
 
-	iMenu += mag + " c"+res + " - Clear selections.\n"
-	iMenu += mag + " p"+res + " - Print found strings.\n"
-	iMenu += mag + " z"+res + " - Find strings.\n"
-	iMenu += mag + " r"+res + " - Reset found strings.\n"
-	iMenu += mag + " x"+res + " - Exit.\n"
-	print(iMenu)
+    iMenu += (
+        constants.YELLOW + "\t\tNote: This is only a sanity check.\n" + constants.RESET
+    )
+    iMenu += (
+        constants.GREEN
+        + "\tn"
+        + constants.RESET
+        + " - Change name of registers text file for emulation "
+        + constants.YELLOW
+        + "["
+        + constants.RESET
+        + "{}".format(constants.CYAN + strFile + constants.RESET)
+        + constants.YELLOW
+        + "]\n"
+        + constants.RESET
+    )
+    iMenu += (
+        constants.GREEN
+        + "\t\tDefault: "
+        + constants.RESET
+        + constants.CYAN
+        + "regs.txt\n"
+        + constants.RESET
+    )
+    iMenu += (
+        constants.GREEN
+        + "\te"
+        + constants.RESET
+        + " - Enable emulation of stack strings with use of registers "
+        + constants.YELLOW
+        + "["
+        + constants.RESET
+        + "{}".format(constants.CYAN + emu + constants.RESET)
+        + constants.YELLOW
+        + "]\n"
+        + constants.RESET
+    )
+    iMenu += (
+        constants.YELLOW
+        + "\t\tNote: This should not be used ordinarily.\n"
+        + constants.RESET
+    )
+    iMenu += (
+        constants.GREEN
+        + "\ts"
+        + constants.RESET
+        + " - Check accuracy of found stack strings.\n"
+        + constants.RESET
+    )
+    iMenu += (
+        constants.GREEN
+        + "\tk"
+        + constants.RESET
+        + " - Change minimum length of strings.\n\n"
+        + constants.RESET
+    )
 
-#disToggleMenu(shellEntry,shellSizeLimit,mBool[o].bPreSysDisDone, , mBool[o].maxOpDisplay, mBool[o].btsV, mBool[o].bDoShowOffsets, mBool[o].bDoshowOpcodes,mBool[# toggList = {'findString':True, 
-# 			'deobfCode':False,
-# 			'findShell':False,
-# 			'comments':True,
-# 			'hidden_calls':True,
-# 			'show_ascii':True,
-# 			'ignore_dis_discovery':False,
-# 			'opcodes':True,
-# 			'labels':True,
-# 			'offsets':True,
-# 			'max_opcodes':8,
-# 			'binary_to_string':3}
+    iMenu += constants.MAGENTA + " c" + constants.RESET + " - Clear selections.\n"
+    iMenu += constants.MAGENTA + " p" + constants.RESET + " - Print found strings.\n"
+    iMenu += constants.MAGENTA + " z" + constants.RESET + " - Find strings.\n"
+    iMenu += constants.MAGENTA + " r" + constants.RESET + " - reset found strings.\n"
+    iMenu += constants.MAGENTA + " x" + constants.RESET + " - Exit.\n"
+    print(iMenu)
 
-# class emulationOptons:
-# 	def __init__(self):
-# 		self.verbose = True
-# 		self.maxEmuInstr = 500000
-# 		self.cpuArch = 32
-# 		self.breakLoop = True
-# 		self.numOfIter = 500000
 
 def emulatorUI(emuObj, emulation_multiline, emulation_verbose):
+    # print(mag+"\tPlease note the setup.py MUST be run first before emulation will work!"+constants.RESET)
 
-	# print(mag+"\tPlease note the setup.py MUST be run first before emulation will work!"+res)
+    # text = """
+    #   ....................
+    #    Shellcode Emulator
+    #   ....................\n\n
+    #  """
+    text = ""
+    text += (
+        constants.GREEN
+        + """
+     _____       SHAREM   _       _             
+    |  ___|              | |     | |            
+    | |__ _ __ ___  _   _| | __ _| |_ ___  _ __ 
+    |  __| '_ ` _ \| | | | |/ _` | __/ _ \| '__|
+    | |__| | | | | | |_| | | (_| | || (_) | |   
+    \____/_| |_| |_|\__,_|_|\__,_|\__\___/|_|   
+                                                
+    \n"""
+        + constants.RESET
+    )
 
-	# text = """
- #   ....................
- #    Shellcode Emulator 
- #   ....................\n\n
- #  """
-	text=""
-	text+=gre+"""
-	 _____       SHAREM   _       _             
-	|  ___|              | |     | |            
-	| |__ _ __ ___  _   _| | __ _| |_ ___  _ __ 
-	|  __| '_ ` _ \| | | | |/ _` | __/ _ \| '__|
-	| |__| | | | | | |_| | | (_| | || (_) | |   
-	\____/_| |_| |_|\__,_|_|\__,_|\__\___/|_|   
-	                                            
-	\n"""+res
+    # text+=constants.CYAN+	"\tPlease note the"+constants.GREEN+" em_setup.py"+constants.CYAN+" MUST be run first before emulation will work!\n\n"+constants.RESET
 
-	# text+=cya+	"\tPlease note the"+gre+" em_setup.py"+cya+" MUST be run first before emulation will work!\n\n"+res
+    vmode = emuObj.verbose
+    maxinst = emuObj.maxEmuInstr
+    var = Variables()
+    em = var.emu
+    arch = em.arch
+    bloop = em.maxLoop  # emuObj.breakLoop  old
+    # iternum = emuObj.numOfIter
+    ent = em.entryOffset
+    stackTD = em.timeless_debugging_stack
 
-	vmode = emuObj.verbose
-	maxinst = emuObj.maxEmuInstr
-	var = Variables()
-	em = var.emu
-	arch = em.arch
-	bloop = em.maxLoop #emuObj.breakLoop  old
-	# iternum = emuObj.numOfIter
-	ent = em.entryOffset
-	stackTD = em.timeless_debugging_stack
+    osBuild = em.winVersion + " " + em.winSP
+    if em.breakOutOfLoops:
+        bloopTog = "x"
+    else:
+        bloopTog = " "
 
-	osBuild= em.winVersion + " " + em.winSP
-	if em.breakOutOfLoops:
-		bloopTog = "x"
-	else:
-		bloopTog = " "
+    if vmode:
+        vmodeTog = "x"
+    else:
+        vmodeTog = " "
 
-	if vmode:
-		vmodeTog = "x"
-	else:
-		vmodeTog = " "
+    if stackTD:
+        stackTDTog = "x"
+    else:
+        stackTDTog = " "
 
-	if stackTD:
-		stackTDTog = "x"
-	else:
-		stackTDTog = " "
+    if emulation_verbose:
+        emuVerbose = "x"
+    else:
+        emuVerbose = " "
 
-	if emulation_verbose:
-		emuVerbose = "x"
-	else:
-		emuVerbose = " "
+    if emulation_multiline:
+        emuMultiLine = "x"
+    else:
+        emuMultiLine = " "
 
+    if em.codeCoverage:
+        emuCoCo = "x"
+    else:
+        emuCoCo = " "
+    # iMenu += " {} {} \t\t[".format(constants.GREEN + "e"+ constants.RESET, whi + "- Emulation verbose print style." + constants.RESET)
+    # iMenu += constants.CYAN + "x" + constants.RESET if emulation_verbose else " "
+    # iMenu += "]\n"
+    # iMenu += " {} {} \t[".format(constants.GREEN + "m"+ constants.RESET, whi + "- Emulation multiline print style." + constants.RESET)
+    # iMenu += constants.CYAN + "x" + constants.RESET if emulation_multiline else " "
+    # iMenu += "]\n"
 
-	if emulation_multiline:
-		emuMultiLine = "x"
-	else:
-		emuMultiLine = " "
+    text += "  {}        \n".format(
+        constants.CYAN
+        + "z"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Initiate emulation."
+        + constants.RESET
+    )
+    text += "  {}{:>5}[{}]\n".format(
+        constants.CYAN
+        + "s"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Select Windows syscall OSBuild."
+        + constants.RESET,
+        "",
+        constants.CYAN + osBuild + constants.RESET,
+    )
 
-	if em.codeCoverage:
-		emuCoCo = "x"
-	else:
-		emuCoCo = " "
-	# iMenu += " {} {} \t\t[".format(gre + "e"+ res, whi + "- Emulation verbose print style." + res)
-	# iMenu += cya + "x" + res if emulation_verbose else " "
-	# iMenu += "]\n"
-	# iMenu += " {} {} \t[".format(gre + "m"+ res, whi + "- Emulation multiline print style." + res)
-	# iMenu += cya + "x" + res if emulation_multiline else " "
-	# iMenu += "]\n"
+    text += "  {}        \n".format(
+        constants.CYAN
+        + "d"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Edit Simulated Values."
+        + constants.RESET
+    )
+    text += "  {}{:>3} [{}]\n".format(
+        constants.CYAN
+        + "m"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Maximum instructions to emulate."
+        + constants.RESET,
+        "",
+        constants.CYAN + str(maxinst) + constants.RESET,
+    )
 
+    text += "  {}{:>1} [{}]\n".format(
+        constants.CYAN
+        + "v"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Verbose mode (Timeless Debugging)."
+        + constants.RESET,
+        "",
+        constants.CYAN + vmodeTog + constants.RESET,
+    )
+    text += "\t{}\n".format(
+        constants.GREEN
+        + "Log all Assembly executed to "
+        + constants.CYAN
+        + "emulationLog.txt"
+        + constants.RESET
+    )
 
-	text += "  {}        \n".format(cya + "z"+res+" -"+yel+"  Initiate emulation."+ res)
-	text += "  {}{:>5}[{}]\n".format(cya + "s"+res+" -"+yel+"  Select Windows syscall OSBuild."+ res, "", cya + osBuild+ res)
+    text += "  {}{:>1}[{}]\n".format(
+        constants.CYAN
+        + "t"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Save stack with Timeless Debugging."
+        + constants.RESET,
+        "",
+        constants.CYAN + stackTDTog + constants.RESET,
+    )
+    text += "\t{}\n".format(
+        constants.GREEN
+        + "Log stack values +/- 0xA0 to "
+        + constants.CYAN
+        + "stackLog.txt"
+        + constants.RED
+        + "\n\tWarning:"
+        + constants.WHITE
+        + " Slow"
+        + constants.RESET
+    )
 
-	text += "  {}        \n".format(cya + "d"+res+" -"+yel+"  Edit Simulated Values."+ res)
-	text += "  {}{:>3} [{}]\n".format(cya + "m"+res+" -"+yel+"  Maximum instructions to emulate."+ res, "", cya + str(maxinst)+ res)
+    text += "  {}{:>13}[{}]\n".format(
+        constants.CYAN
+        + "c"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Complete code coverage."
+        + constants.RESET,
+        "",
+        constants.CYAN + emuCoCo + constants.RESET,
+    )
 
+    text += "  {}{:>13}{}\n".format(
+        constants.CYAN
+        + "o"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Access Complete Code Coverage Submenu"
+        + constants.RESET,
+        "",
+        constants.CYAN + "" + constants.RESET,
+    )
 
-	text += "  {}{:>1} [{}]\n".format(cya + "v"+res+" -"+yel+"  Verbose mode (Timeless Debugging)."+ res, "", cya + vmodeTog+ res)
-	text += "\t{}\n".format(gre + "Log all Assembly executed to "+cya +"emulationLog.txt" + res)
+    text += "  {}{:>13}       [{}]\n".format(
+        constants.CYAN
+        + "a"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  CPU Architecture"
+        + constants.RESET,
+        "",
+        constants.CYAN + str(arch) + constants.RESET,
+    )
+    text += "  {}{:>7} [{}]\n".format(
+        constants.CYAN
+        + "b"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Break out of infinite loops."
+        + constants.RESET,
+        "",
+        constants.CYAN + bloopTog + constants.RESET,
+    )
 
-	text += "  {}{:>1}[{}]\n".format(cya + "t"+res+" -"+yel+"  Save stack with Timeless Debugging."+ res, "", cya + stackTDTog+ res)
-	text += "\t{}\n".format(gre + "Log stack values +/- 0xA0 to "+cya +"stackLog.txt" + red + "\n\tWarning:" + whi + " Slow" + res)
+    text += "  {}{:>1} [{}]\n".format(
+        constants.CYAN
+        + "n"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Number of iterations before break."
+        + constants.RESET,
+        "",
+        constants.CYAN + str(bloop) + constants.RESET,
+    )
 
-	text += "  {}{:>13}[{}]\n".format(cya + "c"+res+" -"+yel+"  Complete code coverage."+ res, "", cya + emuCoCo+ res)
+    text += "  {}{:>1} [{}]\n".format(
+        constants.CYAN
+        + "p"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Emulation verbose print style.    "
+        + constants.RESET,
+        "",
+        constants.CYAN + str(emuVerbose) + constants.RESET,
+    )
 
-	text += "  {}{:>13}{}\n".format(cya + "o"+res+" -"+yel+"  Access Complete Code Coverage Submenu"+ res, "", cya + ""+ res)
-	
-	text += "  {}{:>13}       [{}]\n".format(cya + "a"+res+" -"+yel+"  CPU Architecture"+ res, "", cya + str(arch)+ res)
-	# text += "\t{}\n".format(whi + "* x86_64"+whi + " Under Development" + res)
-	text += "  {}{:>7} [{}]\n".format(cya + "b"+res+" -"+yel+"  Break out of infinite loops."+ res, "", cya + bloopTog+ res)
+    text += "  {}{:>1} [{}]\n".format(
+        constants.CYAN
+        + "e"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Change entry point offset.        "
+        + constants.RESET,
+        "",
+        constants.CYAN + hex(ent) + constants.RESET,
+    )
 
-	text += "  {}{:>1} [{}]\n".format(cya + "n"+res+" -"+yel+"  Number of iterations before break."+ res, "", cya + str(bloop)+ res)
+    text += "  {}{:>1}[{}]\n".format(
+        constants.CYAN
+        + "w"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Multiline print style of artifacts."
+        + constants.RESET,
+        "",
+        constants.CYAN + str(emuMultiLine) + constants.RESET,
+    )
 
+    text += "  {}        \n".format(
+        constants.CYAN
+        + "h"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Show this menu."
+        + constants.RESET
+    )
 
-	text += "  {}{:>1} [{}]\n".format(cya + "p"+res+" -"+yel+"  Emulation verbose print style.    "+ res, "", cya + str(emuVerbose)+ res)
-	
-	text += "  {}{:>1} [{}]\n".format(cya + "e"+res+" -"+yel+"  Change entry point offset.        "+ res, "", cya + hex(ent)+ res)
+    text += "  {}        \n".format(
+        constants.CYAN
+        + "x"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Exit."
+        + constants.RESET
+    )
 
-
-
-	text += "  {}{:>1}[{}]\n".format(cya + "w"+res+" -"+yel+"  Multiline print style of artifacts."+ res, "", cya + str(emuMultiLine)+ res)
-
-	
-
-
-	text += "  {}        \n".format(cya + "h"+res+" -"+yel+"  Show this menu."+ res)
-
-	text += "  {}        \n".format(cya + "x"+res+" -"+yel+"  Exit."+ res)
-
-
-	text += "\n"
-	print(text)
+    text += "\n"
+    print(text)
 
 
 def emuCodeCoverageUI():
-	# print(mag+"\tPlease note the setup.py MUST be run first before emulation will work!"+res)
-	text = gre+"\n\t\tComplete Code Coverage Submenu\n\n"+res
-	var = Variables()
-	em = var.emu
-	text +=red+"\tNote:"+res+" It is recommended to stick with the defaults for the first group of options.\n\n"
-	sizeStack = str(em.codeCoverageStackAmt) + " bytes"
-	
-	if em.showCCDebugInfo:
-		debugTog = "x"
-	else:
-		debugTog = " "
+    # print(mag+"\tPlease note the setup.py MUST be run first before emulation will work!"+constants.RESET)
+    text = (
+        constants.GREEN + "\n\t\tComplete Code Coverage Submenu\n\n" + constants.RESET
+    )
+    var = Variables()
+    em = var.emu
+    text += (
+        constants.RED
+        + "\tNote:"
+        + constants.RESET
+        + " It is recommended to stick with the defaults for the first group of options.\n\n"
+    )
+    sizeStack = str(em.codeCoverageStackAmt) + " bytes"
 
-	if em.writeToTempFile:
-		tempTog = "x"
-	else:
-		tempTog = " "
+    if em.showCCDebugInfo:
+        debugTog = "x"
+    else:
+        debugTog = " "
 
-	if em.StopExecutingAfterTraversed:
-		traversedTog = "x"
-	else:
-		traversedTog = " "
+    if em.writeToTempFile:
+        tempTog = "x"
+    else:
+        tempTog = " "
 
-	if em.displayNonTraversedCC:
-		colorCodeTog = "x"
-	else:
-		colorCodeTog = " "
+    if em.StopExecutingAfterTraversed:
+        traversedTog = "x"
+    else:
+        traversedTog = " "
 
-	if em.includeCallInCC:
-		callTog = "x"
-	else:
-		callTog = " "
+    if em.displayNonTraversedCC:
+        colorCodeTog = "x"
+    else:
+        colorCodeTog = " "
 
+    if em.includeCallInCC:
+        callTog = "x"
+    else:
+        callTog = " "
 
-	if em.includeJmpInCC:
-		jmpTog = "x"
-	else:
-		jmpTog = " "
+    if em.includeJmpInCC:
+        jmpTog = "x"
+    else:
+        jmpTog = " "
 
+    if em.excludeJmpCallCoverage:
+        excludeTog = "x"
+    else:
+        excludeTog = " "
 
-	if em.excludeJmpCallCoverage:
-		excludeTog = "x"
-	else:
-		excludeTog = " "
-	
-	text += "  {}{:>2}[{}]\n".format(cya + "s"+res+" -"+yel+"  Size of "+mag+"ESP" + yel+" and "+mag+"EBP"+yel+" to save with each coverage object."+ res, "", cya + sizeStack+ res)
+    text += "  {}{:>2}[{}]\n".format(
+        constants.CYAN
+        + "s"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Size of "
+        + constants.MAGENTA
+        + "ESP"
+        + constants.YELLOW
+        + " and "
+        + constants.MAGENTA
+        + "EBP"
+        + constants.YELLOW
+        + " to save with each coverage object."
+        + constants.RESET,
+        "",
+        constants.CYAN + sizeStack + constants.RESET,
+    )
 
-	text += "  {}{:>1}[{}]\n".format(cya + "t"+res+" -"+yel+"  Stop emulation after revisiting already traversed code."+ res, "", cya + traversedTog+ res)
+    text += "  {}{:>1}[{}]\n".format(
+        constants.CYAN
+        + "t"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Stop emulation after revisiting already traversed code."
+        + constants.RESET,
+        "",
+        constants.CYAN + traversedTog + constants.RESET,
+    )
 
-	text += "\t{}\n".format(whi + "Emulation restarts with next coverage object." + res)
-	
-	text += "  {}{:>12} [{}]\n".format(cya + "c"+res+" -"+yel+"  Include "+mag+"CALL"+yel+" instructions in code coverage."+ res, "", cya + callTog+ res)
-	text += "  {}{:>13} [{}]\n".format(cya + "j"+res+" -"+yel+"  Include "+mag+"JMP"+yel+" instructions in code coverage."+ res, "", cya + jmpTog+ res)
-	text += "\t{}\n".format(whi + "Not recommended unless excluding addresses from coverage via JSON." + res)
-	text += "  {}{:>0} [{}]\n".format(cya + "e"+res+" -"+mag+"  Exclude addresses"+yel+" after JMP or CALL from code coverage."+ res, "", cya + excludeTog+ res)
-	text += "\t{}\n".format(whi + "Addresses to exclude must be specified via JSON." + res)
+    text += "\t{}\n".format(
+        constants.WHITE
+        + "Emulation restarts with next coverage object."
+        + constants.RESET
+    )
 
-	text += "  {}{:>24}[{}]\n".format(cya + "w"+res+" -"+yel+"  Write "+mag+"temporary file "+yel+"to hardisk."+ res, "", cya + tempTog+ res)
-	text += "\t{}\n".format(whi + "Likely only needed if memory problems." + res)
+    text += "  {}{:>12} [{}]\n".format(
+        constants.CYAN
+        + "c"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Include "
+        + constants.MAGENTA
+        + "CALL"
+        + constants.YELLOW
+        + " instructions in code coverage."
+        + constants.RESET,
+        "",
+        constants.CYAN + callTog + constants.RESET,
+    )
+    text += "  {}{:>13} [{}]\n".format(
+        constants.CYAN
+        + "j"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Include "
+        + constants.MAGENTA
+        + "JMP"
+        + constants.YELLOW
+        + " instructions in code coverage."
+        + constants.RESET,
+        "",
+        constants.CYAN + jmpTog + constants.RESET,
+    )
+    text += "\t{}\n".format(
+        constants.WHITE
+        + "Not recommended unless excluding addresses from coverage via JSON."
+        + constants.RESET
+    )
+    text += "  {}{} [{}]\n".format(
+        constants.CYAN
+        + "e"
+        + constants.RESET
+        + " -"
+        + constants.MAGENTA
+        + "  Exclude addresses"
+        + constants.YELLOW
+        + " after JMP or CALL from code coverage."
+        + constants.RESET,
+        "",
+        constants.CYAN + excludeTog + constants.RESET,
+    )
+    text += "\t{}\n".format(
+        constants.WHITE
+        + "Addresses to exclude must be specified via JSON."
+        + constants.RESET
+    )
 
+    text += "  {}{:>24}[{}]\n".format(
+        constants.CYAN
+        + "w"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Write "
+        + constants.MAGENTA
+        + "temporary file "
+        + constants.YELLOW
+        + "to hardisk."
+        + constants.RESET,
+        "",
+        constants.CYAN + tempTog + constants.RESET,
+    )
+    text += "\t{}\n".format(
+        constants.WHITE + "Likely only needed if memory problems." + constants.RESET
+    )
 
-	text += "\n\n  {}{:>8} [{}]\n".format(cya + "d"+res+" -"+yel+"  Display code coverage "+mag+"debugging info "+yel+"to screen."+ res, "", cya + debugTog+ res)
-	text += "  {}{:>7}[{}]\n".format(cya + "o"+res+" -"+yel+"  Show offsets for non-traversed code/data in "+cya+"cyan"+ yel
-		+ "."+res,"", cya + colorCodeTog+ res)
+    text += "\n\n  {}{:>8} [{}]\n".format(
+        constants.CYAN
+        + "d"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Display code coverage "
+        + constants.MAGENTA
+        + "debugging info "
+        + constants.YELLOW
+        + "to screen."
+        + constants.RESET,
+        "",
+        constants.CYAN + debugTog + constants.RESET,
+    )
+    text += "  {}{:>7}[{}]\n".format(
+        constants.CYAN
+        + "o"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Show offsets for non-traversed code/data in "
+        + constants.CYAN
+        + "cyan"
+        + constants.YELLOW
+        + "."
+        + constants.RESET,
+        "",
+        constants.CYAN + colorCodeTog + constants.RESET,
+    )
 
-	text += "  {}        \n".format(cya + "r"+res+" -"+yel+"  Reset to defaults."+ res)
+    text += "  {}        \n".format(
+        constants.CYAN
+        + "r"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  reset to defaults."
+        + constants.RESET
+    )
 
-	text += "  {}        \n".format(cya + "h"+res+" -"+yel+"  Show this menu."+ res)
+    text += "  {}        \n".format(
+        constants.CYAN
+        + "h"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Show this menu."
+        + constants.RESET
+    )
 
-	text += "  {}        \n".format(cya + "x"+res+" -"+yel+"  Exit - return to Emulator submenu."+ res)
+    text += "  {}        \n".format(
+        constants.CYAN
+        + "x"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Exit - return to Emulator submenu."
+        + constants.RESET
+    )
 
-
-	text += "\n"
-	print(text)
+    text += "\n"
+    print(text)
 
 
 def emuSimValuesMenu():
-	conr = Configuration()
-	print("\n")
-	print(f"{yel} ...................................")
-	print(f"{yel} Emulation Simulation Values")
-	print(f"{yel} ...................................")
+    conr = Configuration()
+    print("\n")
+    print(f"{constants.YELLOW} ...................................")
+    print(f"{constants.YELLOW} Emulation Simulation Values")
+    print(f"{constants.YELLOW} ...................................")
 
-	print (red+" Note:"+res+"  These may also be set in the config.")
-	def emuSimValHelpList():
-		print(f"\n{mag} Computer Settings:")
-		print(f"{cya}    c {whi}- {yel}Current User {whi}[{cya}{conr.simulatedValues_current_user}{whi}]")
-		print(f"{cya}    u {whi}- {yel}Users {whi}[{cya}{str(conr.simulatedValues_users)[1:-1]}{whi}]")
-		print(f"{cya}    n {whi}- {yel}Computer Name {whi}[{cya}{conr.simulatedValues_computer_name}{whi}]")
-		print(f"{cya}    a {whi}- {yel}Computer IP Address {whi}[{cya}{conr.simulatedValues_computer_ip_address}{whi}]")
+    print(
+        constants.RED
+        + " Note:"
+        + constants.RESET
+        + "  These may also be set in the config."
+    )
 
-		print(f"\n{mag} File System:")
-		print(f"{cya}    p {whi}- {yel}Temp File Prefix {whi}[{cya}{conr.simulatedValues_temp_file_prefix}{whi}]")
-		print(f"{cya}    l {whi}- {yel}Drive Letter {whi}[{cya}{conr.simulatedValues_drive_letter}{whi}]")
-		print(f"{cya}    s {whi}- {yel}Start Directory {whi}[{cya}{conr.simulatedValues_start_directory}{whi}]")
-		print(f"{cya}    d {whi}- {yel}File Download {whi}[{cya}{conr.simulatedValues_download_files}{whi}]")
+    def emuSimValHelpList():
+        global SimFileSystem
 
-		print(f"\n{mag} System Time:")
-		print(f"{cya}    z {whi}- {yel}Timezone {whi}[{cya}{conr.simulatedValues_timezone}{whi}]")
-		print(f"{cya}    e {whi}- {yel}Time since Epoch {whi}[{cya}{conr.simulatedValues_system_time_since_epoch}{whi}]")
-		print(f"{cya}    t {whi}- {yel}Uptime in Minutes {whi}[{cya}{conr.simulatedValues_system_uptime_minutes}{whi}]")
+        print(f"\n{constants.MAGENTA} Computer Settings:")
+        print(
+            f"{constants.CYAN}    c {constants.WHITE}- {constants.YELLOW}Current User {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_current_user}{constants.WHITE}]"
+        )
+        print(
+            f"{constants.CYAN}    u {constants.WHITE}- {constants.YELLOW}Users {constants.WHITE}[{constants.CYAN}{str(conr.simulatedValues_users)[1:-1]}{constants.WHITE}]"
+        )
+        print(
+            f"{constants.CYAN}    n {constants.WHITE}- {constants.YELLOW}Computer Name {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_computer_name}{constants.WHITE}]"
+        )
+        print(
+            f"{constants.CYAN}    a {constants.WHITE}- {constants.YELLOW}Computer IP Address {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_computer_ip_address}{constants.WHITE}]"
+        )
 
-		print(f"\n{mag} Other:")
-		print(f"{cya}    r {whi}- {yel}Default Registry Value {whi}[{cya}{conr.simulatedValues_default_registry_value}{whi}]")
-		print(f"{cya}    b {whi}- {yel}Clipboard Data {whi}[{cya}{conr.simulatedValues_clipboard_data}{whi}]")
+        print(f"\n{constants.MAGENTA} File System:")
+        print(
+            f"{constants.CYAN}    p {constants.WHITE}- {constants.YELLOW}Temp File Prefix {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_temp_file_prefix}{constants.WHITE}]"
+        )
+        print(
+            f"{constants.CYAN}    l {constants.WHITE}- {constants.YELLOW}Drive Letter {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_drive_letter}{constants.WHITE}]"
+        )
+        print(
+            f"{constants.CYAN}    s {constants.WHITE}- {constants.YELLOW}Start Directory {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_start_directory}{constants.WHITE}]"
+        )
+        print(
+            f"{constants.CYAN}    d {constants.WHITE}- {constants.YELLOW}File Download {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_download_files}{constants.WHITE}]"
+        )
 
-		print(f"\n{cya}  h {whi}- {yel}Show this menu")
+        print(f"\n{constants.MAGENTA} System Time:")
+        print(
+            f"{constants.CYAN}    z {constants.WHITE}- {constants.YELLOW}Timezone {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_timezone}{constants.WHITE}]"
+        )
+        print(
+            f"{constants.CYAN}    e {constants.WHITE}- {constants.YELLOW}Time since Epoch {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_system_time_since_epoch}{constants.WHITE}]"
+        )
+        print(
+            f"{constants.CYAN}    t {constants.WHITE}- {constants.YELLOW}Uptime in Minutes {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_system_uptime_minutes}{constants.WHITE}]"
+        )
 
-	emuSimValHelpList()
-	print("\n" + yel + " Sharem>" + cya + "Emulator>" + gre + "SimValues> " + res, end="")
-	simValueIn = input().lower()[0]
-	while simValueIn != 'x':
-		if simValueIn == "c":
-			conr.simulatedValues_current_user = input("   Enter Current User: ")
-		elif simValueIn == "u":
-			print("   Enter List of Users Seperated by Comas")
-			conr.simulatedValues_users = list(set(input("   Users: ").replace(" ", "").split(',')))
-			SimFileSystem.InitializeFileSystem()
-		elif simValueIn == "n":
-			conr.simulatedValues_computer_name = input("   Enter Computer Name: ")
-		elif simValueIn == "a":
-			conr.simulatedValues_computer_ip_address = input("   Enter Computer IP Address: ")
-		elif simValueIn == "p":
-			conr.simulatedValues_temp_file_prefix = input("   Enter Temp File Prefix: ")
-		elif simValueIn == "l":
-			conr.simulatedValues_drive_letter = input("   Enter Drive Letter: ")
-			SimFileSystem.InitializeFileSystem()
-		elif simValueIn == "s":
-			conr.simulatedValues_start_directory = input("   Enter Start Directory: ")
-			SimFileSystem.InitializeFileSystem()
-		elif simValueIn == "d":
-			if conr.simulatedValues_download_files:
-				conr.simulatedValues_download_files = False
-			else:
-				conr.simulatedValues_download_files = True
-		elif simValueIn == "z":
-			conr.simulatedValues_timezone = input("   Enter Timezone: ") # possible add list of timezones
-		elif simValueIn == "e":
-			conr.simulatedValues_system_time_since_epoch = int(input("   Enter Time Since Epoch: "))
-		elif simValueIn == "t":
-			conr.simulatedValues_system_uptime_minutes = int(input("   Enter Uptime in Minutes: "))
-		elif simValueIn == "r":
-			conr.simulatedValues_default_registry_value = input("   Enter Defualt Registry Value: ")
-		elif simValueIn == "b":
-			conr.simulatedValues_clipboard_data = input("   Enter Clipboard data: ")
-		elif simValueIn == "h":
-			emuSimValHelpList()
-		
-		print("\n" + cya + " Sharem>" + gre + "Print>" + yel + "SimValues> " + res, end="")
-		simValueIn = input().lower()[0]
+        print(f"\n{constants.MAGENTA} Other:")
+        print(
+            f"{constants.CYAN}    r {constants.WHITE}- {constants.YELLOW}Default Registry Value {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_default_registry_value}{constants.WHITE}]"
+        )
+        print(
+            f"{constants.CYAN}    b {constants.WHITE}- {constants.YELLOW}Clipboard Data {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_clipboard_data}{constants.WHITE}]"
+        )
+
+        print(f"\n{constants.CYAN}  h {constants.WHITE}- {constants.YELLOW}Show this menu")
+
+    emuSimValHelpList()
+    print(
+        "\n"
+        + constants.YELLOW
+        + " Sharem>"
+        + constants.CYAN
+        + "Emulator>"
+        + constants.GREEN
+        + "SimValues> "
+        + constants.RESET,
+        end="",
+    )
+    simValueIn = input().lower()[0]
+    while simValueIn != "x":
+        if simValueIn == "c":
+            conr.simulatedValues_current_user = input("   Enter Current User: ")
+        elif simValueIn == "u":
+            print("   Enter List of Users Seperated by Comas")
+            conr.simulatedValues_users = list(
+                set(input("   Users: ").replace(" ", "").split(","))
+            )
+            SimFileSystem.InitializeFileSystem()
+        elif simValueIn == "n":
+            conr.simulatedValues_computer_name = input("   Enter Computer Name: ")
+        elif simValueIn == "a":
+            conr.simulatedValues_computer_ip_address = input(
+                "   Enter Computer IP Address: "
+            )
+        elif simValueIn == "p":
+            conr.simulatedValues_temp_file_prefix = input("   Enter Temp File Prefix: ")
+        elif simValueIn == "l":
+            conr.simulatedValues_drive_letter = input("   Enter Drive Letter: ")
+            SimFileSystem.InitializeFileSystem()
+        elif simValueIn == "s":
+            conr.simulatedValues_start_directory = input("   Enter Start Directory: ")
+            SimFileSystem.InitializeFileSystem()
+        elif simValueIn == "d":
+            if conr.simulatedValues_download_files:
+                conr.simulatedValues_download_files = False
+            else:
+                conr.simulatedValues_download_files = True
+        elif simValueIn == "z":
+            conr.simulatedValues_timezone = input(
+                "   Enter Timezone: "
+            )  # possible add list of timezones
+        elif simValueIn == "e":
+            conr.simulatedValues_system_time_since_epoch = int(
+                input("   Enter Time Since Epoch: ")
+            )
+        elif simValueIn == "t":
+            conr.simulatedValues_system_uptime_minutes = int(
+                input("   Enter Uptime in Minutes: ")
+            )
+        elif simValueIn == "r":
+            conr.simulatedValues_default_registry_value = input(
+                "   Enter Defualt Registry Value: "
+            )
+        elif simValueIn == "b":
+            conr.simulatedValues_clipboard_data = input("   Enter Clipboard data: ")
+        elif simValueIn == "h":
+            emuSimValHelpList()
+
+        print(
+            "\n"
+            + constants.CYAN
+            + " Sharem>"
+            + constants.GREEN
+            + "Print>"
+            + constants.YELLOW
+            + "SimValues> "
+            + constants.RESET,
+            end="",
+        )
+        simValueIn = input().lower()[0]
 
 
 def disPrintStyle(disassemblyFound, toggList):
+    comments = toggList["comments"]
+    show_ascii = toggList["show_ascii"]
+    bShowLabels = toggList["labels"]
+    bDoShowOffsets = toggList["offsets"]
+    bDoshowOpcodes = toggList["opcodes"]
+    maxOpDisplay = toggList["max_opcodes"]
+    btsV = toggList["binary_to_string"]
 
+    if comments:
+        commentsTogg = "x"
+    else:
+        commentsTogg = " "
 
-	comments = toggList['comments']
-	show_ascii = toggList['show_ascii']
-	bShowLabels = toggList['labels']
-	bDoShowOffsets = toggList['offsets']
-	bDoshowOpcodes = toggList['opcodes']
-	maxOpDisplay = toggList['max_opcodes']
-	btsV = toggList['binary_to_string']
+    if show_ascii:
+        asciiTogg = "x"
+    else:
+        asciiTogg = " "
 
-	if comments == True:
-		commentsTogg = "x"
-	else:
-		commentsTogg = " "
+    if bDoShowOffsets:
+        offsetTogg = "x"
+    else:
+        offsetTogg = " "
 
-	if show_ascii:
-		asciiTogg="x"
-	else:
-		asciiTogg=" "
+    if bShowLabels:
+        labelTogg = "x"
+    else:
+        labelTogg = " "
 
-	if bDoShowOffsets:
-		offsetTogg="x"
-	else:
-		offsetTogg=" "
-		
-	if bShowLabels:
-		labelTogg="x"
-	else:
-		labelTogg=" "
+    if bDoshowOpcodes:
+        opcodeTogg = "x"
+    else:
+        opcodeTogg = " "
 
-	if bDoshowOpcodes:
-		opcodeTogg="x"
-	else:
-		opcodeTogg=" "
+    if disassemblyFound:
+        generated = "FOUND"
+    else:
+        generated = "NOT DISASSEMBLED"
 
-	if disassemblyFound:
-		generated = "FOUND"
-	else:
-		generated = "NOT DISASSEMBLED"
-
-
-	tCol=whi
-	maxOpval= tCol+"["+cya+str(maxOpDisplay)+tCol+"]"+res2
-	printStyleVal= tCol+"["+cya+str(btsV)+tCol+"]"+res2
-	text = ""
-	text+="\n\n" +gre + "  Disassembly Print Style\n\n\n" + res2
-	text += """
+    maxOpval = (
+        constants.WHITE + "[" + constants.CYAN + str(maxOpDisplay) + constants.WHITE + "]" + constants.RESET
+    )
+    printStyleVal = (
+        constants.WHITE + "[" + constants.CYAN + str(btsV) + constants.WHITE + "]" + constants.RESET
+    )
+    text = ""
+    text += (
+        "\n\n" + constants.GREEN + "  Disassembly Print Style\n\n\n" + constants.RESET
+    )
+    text += """
    ....................
       Style Toggles
    ....................\n
   """
-	text += "   Use"+gre+" toggle"+res2+" to make your selections.\n\n"
-	text += "\t{}       [{}]\n".format(cya + "c"+res+" -"+yel+"  Display comments in disassembly"+ res, cya + commentsTogg+ res)
-	text += "\t{}           [{}]\n".format(cya + "a"+res+" -"+yel+"  Display ASCII alongside Hex"+ res, cya + asciiTogg+ res)
-	text += "\t{}                       [{}]\n".format(cya + "o"+res+" -"+yel+"  Display opcodes"+ res, cya + opcodeTogg+ res)
-	text += "\t{}         [{}]\n".format(cya + "l"+res+" -"+yel+"  Display labels in disassembly"+ res, cya + labelTogg+ res)
-	text += "\t{}        [{}]\n".format(cya + "f"+res+" -"+yel+"  Display offsets in disassembly"+ res, cya + offsetTogg+ res)
-	text += "\n"
+    text += (
+        "   Use"
+        + constants.GREEN
+        + " toggle"
+        + constants.RESET
+        + " to make your selections.\n\n"
+    )
+    text += "\t{}       [{}]\n".format(
+        constants.CYAN
+        + "c"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Display comments in disassembly"
+        + constants.RESET,
+        constants.CYAN + commentsTogg + constants.RESET,
+    )
+    text += "\t{}           [{}]\n".format(
+        constants.CYAN
+        + "a"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Display ASCII alongside Hex"
+        + constants.RESET,
+        constants.CYAN + asciiTogg + constants.RESET,
+    )
+    text += "\t{}                       [{}]\n".format(
+        constants.CYAN
+        + "o"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Display opcodes"
+        + constants.RESET,
+        constants.CYAN + opcodeTogg + constants.RESET,
+    )
+    text += "\t{}         [{}]\n".format(
+        constants.CYAN
+        + "l"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Display labels in disassembly"
+        + constants.RESET,
+        constants.CYAN + labelTogg + constants.RESET,
+    )
+    text += "\t{}        [{}]\n".format(
+        constants.CYAN
+        + "f"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Display offsets in disassembly"
+        + constants.RESET,
+        constants.CYAN + offsetTogg + constants.RESET,
+    )
+    text += "\n"
 
-	text += """
+    text += """
    ....................
       Style Options
    ....................\n\n
   """
-	text += "  {} {}              \n".format(gre + "g" + whi + ":"+ res, whi + "  Toggle selections."+res)
-	text += "    {} {}         {}\n".format(gre + "m" + whi + ":" + res, whi + "  Maximum opcodes to display as hex"+res,maxOpval)
-	text += "    {} {}                  {}\n".format(gre + "p" + whi + ":" + res,whi + "  Opcode print style (1-3)"+res,printStyleVal)
-	text += "    {} {}  [{}]              \n".format(gre + "r" + whi + ":" +res, whi + "  Regenerate disassembly with new settings"+res, cya + generated + res)
-	text += "    {} {}              \n".format(gre + "h" + whi + ":" +res, whi + "  Print this menu."+res)
+    text += "  {} {}              \n".format(
+        constants.GREEN + "g" + constants.WHITE + ":" + constants.RESET,
+        constants.WHITE + "  Toggle selections." + constants.RESET,
+    )
+    text += "    {} {}         {}\n".format(
+        constants.GREEN + "m" + constants.WHITE + ":" + constants.RESET,
+        constants.WHITE + "  Maximum opcodes to display as hex" + constants.RESET,
+        maxOpval,
+    )
+    text += "    {} {}                  {}\n".format(
+        constants.GREEN + "p" + constants.WHITE + ":" + constants.RESET,
+        constants.WHITE + "  Opcode print style (1-3)" + constants.RESET,
+        printStyleVal,
+    )
+    text += "    {} {}  [{}]              \n".format(
+        constants.GREEN + "r" + constants.WHITE + ":" + constants.RESET,
+        constants.WHITE + "  Regenerate disassembly with new settings" + constants.RESET,
+        constants.CYAN + generated + constants.RESET,
+    )
+    text += "    {} {}              \n".format(
+        constants.GREEN + "h" + constants.WHITE + ":" + constants.RESET,
+        constants.WHITE + "  Print this menu." + constants.RESET,
+    )
+    text += "\n\n"
 
-	# text += "\t{}	Opcode print style (1-3) {}\n".format("?",printStyleVal)
-	# text += "\t{}	\t\tRegenerate disassembly with new settings\n".format("?")
-	# text += "\t{}\t\t{}\n".format(cya + "g" + res, yel + "Toggle selections."+ res)
-	# text += "\t{}\t\t{}".format(cya + "h" + res, yel + "Print this menu."+ res)
+    print(text)
 
-	text += "\n\n"
-
-	print(text)
 
 def disToggleMenu(shellEntry, shellSizeLimit, disassemblyFound, toggList):
+    deobfuscatedSuccessfully = False  # NEED TO GET THIS FROM AUSTIN
 
-	deobfuscatedSuccessfully=False    # NEED TO GET THIS FROM AUSTIN
-	
-	deobfcode = toggList['deobfCode']
-	findshell = toggList['findShell']
-	hidden_calls = toggList['hidden_calls']
-	ignoreDisDiscovery = toggList['ignore_dis_discovery']
-	findString = toggList['findString']
+    deobfcode = toggList["deobfCode"]
+    findshell = toggList["findShell"]
+    hidden_calls = toggList["hidden_calls"]
+    ignoreDisDiscovery = toggList["ignore_dis_discovery"]
+    findString = toggList["findString"]
 
-	maxOpDisplay = toggList['max_opcodes']
-	btsV = toggList['binary_to_string']
+    maxOpDisplay = toggList["max_opcodes"]
+    btsV = toggList["binary_to_string"]
 
-	
-	if findString:
-		strTogg = "x"
-	else:
-		strTogg = " "
+    if findString:
+        strTogg = "x"
+    else:
+        strTogg = " "
 
-	if deobfcode == True:
-		deobfTogg = "x"
-	else:
-		deobfTogg = " "
+    if deobfcode:
+        deobfTogg = "x"
+    else:
+        deobfTogg = " "
 
-	if findshell == True:
-		findshellTogg = "x"
-	else:
-		findshellTogg = " "
-	
+    if findshell:
+        findshellTogg = "x"
+    else:
+        findshellTogg = " "
 
+    if hidden_calls:
+        hiddenTogg = "x"
+    else:
+        hiddenTogg = " "
 
-	if hidden_calls:
-		hiddenTogg="x"
-	else:
-		hiddenTogg=" "
+    if deobfuscatedSuccessfully:
+        deobSucTogg = constants.CYAN + "DEOBFUSCATED" + constants.RESET
+    else:
+        deobSucTogg = constants.CYAN + "NOT DEOBFUSCATED" + constants.RESET
 
-	
-
-	
-
-	if deobfuscatedSuccessfully:
-		deobSucTogg=cya+"DEOBFUSCATED"+res
-	else:
-		deobSucTogg=cya+"NOT DEOBFUSCATED"+res
-	
-
-
-	text = gre+ """
+    text = (
+        constants.GREEN
+        + """
   Disassembly Creation:
 
-  """+res
-	text += "\t{}       [{}]\n".format(cya + "  s"+res+" -"+yel+"  Use found strings in shellcode"+ res, cya + strTogg + res)
-	text += "\t{}       [{}]\n".format(cya + "  d"+res+" -"+yel+"  Utilize deobfuscated shellcode"+ res, cya + deobfTogg + res)
-	text +="\t\t\t[" + deobSucTogg + "]\n"
-	text += "\t{}          [{}]\n".format(cya + "  c"+res+" -"+yel+"  Find lost/hidden calls/jmps"+ res, cya + hiddenTogg+ res)
-	# text += "\t{} [{}]\n".format(cya + "  p"+res+" -"+yel+"  Find all shellcode instructions"+ res, cya + findshellTogg+ res)
-	# text +="\t\tE.g. Push Ret, GetPC, etc.\n"
+  """
+        + constants.RESET
+    )
+    text += "\t{}       [{}]\n".format(
+        constants.CYAN
+        + "  s"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Use found strings in shellcode"
+        + constants.RESET,
+        constants.CYAN + strTogg + constants.RESET,
+    )
+    text += "\t{}       [{}]\n".format(
+        constants.CYAN
+        + "  d"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Utilize deobfuscated shellcode"
+        + constants.RESET,
+        constants.CYAN + deobfTogg + constants.RESET,
+    )
+    text += "\t\t\t[" + deobSucTogg + "]\n"
+    text += "\t{}          [{}]\n".format(
+        constants.CYAN
+        + "  c"
+        + constants.RESET
+        + " -"
+        + constants.YELLOW
+        + "  Find lost/hidden calls/jmps"
+        + constants.RESET,
+        constants.CYAN + hiddenTogg + constants.RESET,
+    )
+    print(text)
+    disassembleUiMenu(
+        shellEntry,
+        shellSizeLimit,
+        disassemblyFound,
+        maxOpDisplay,
+        btsV,
+        ignoreDisDiscovery,
+    )
 
 
+def disassembleUiMenu(
+    shellEntry, shellSizeLimit, disassemblyFound, maxOpDisplay, btsV, ignoreDisDiscovery
+):
+    dfOut = ""
+    if ignoreDisDiscovery:
+        ignDiscTogg = constants.WHITE + "[" + constants.CYAN + "x" + constants.WHITE + "]" + constants.RESET
+    else:
+        ignDiscTogg = constants.WHITE + "[ ]" + constants.RESET
 
+    if disassemblyFound:
+        dfOut = constants.WHITE + "[" + constants.CYAN + "FOUND" + constants.WHITE + "]" + constants.RESET
+    shellsize = constants.CYAN + str(shellSizeLimit) + " kb" + constants.RESET
 
-	##### PLEASE put these all in a disassembly print style submenu. Top ones are a toggle. Bottom ones are not.
-	# text+="\n\n" +gre + "  Disassembly Print Style\n" + res2
-	# text += "\t{}       [{}]\n".format(cya + "dc"+res+" -"+yel+"  Display comments in disassembly"+ res, cya + commentsTogg+ res)
-	# text += "\t{}           [{}]\n".format(cya + "da"+res+" -"+yel+"  Display ASCII alongside Hex"+ res, cya + asciiTogg+ res)
-	# text += "\t{}                       [{}]\n".format(cya + "do"+res+" -"+yel+"  Display opcodes"+ res, cya + opcodeTogg+ res)
-	# text += "\t{}         [{}]\n".format(cya + "dl"+res+" -"+yel+"  Display labels in disassembly"+ res, cya + labelTogg+ res)
-	# text += "\t{}        [{}]\n".format(cya + "df"+res+" -"+yel+"  Display offsets in disassembly"+ res, cya + offsetTogg+ res)
-	# text += "\n{}	Maximum opcodes to display as hex {}\n".format("?",maxOpval)
-	# text += "{}	Opcode print style (1-3) {}\n".format("?",printStyleVal)
-	# text += "{}	Regenerate disassembly with new settings\n".format("?")
-	
-	####  TAREK: this uses regenerateDisassemblyForPrint()  -- it will save it to gDisassemblyText --- print that to screen after it regenerates it
-	
+    if disassemblyFound:
+        printDis = constants.WHITE + "[" + constants.CYAN + "FOUND" + constants.WHITE+ "]" + constants.RESET
+    else:
+        printDis = (
+            constants.WHITE
+            + "["
+            + constants.CYAN
+            + " NOT DISASSEMBLED"
+            + constants.WHITE
+            + "]"
+            + constants.RESET
+        )
 
-
-
-
-	# text += "\t{}[{}]\n".format(cya + "  l"+res+" -"+yel+"  Do not use generated disassembly to find shellcode instructions"+ res, cya + HiddenTogg+ res)
-
-	
-	
-
-
-
-	print(text)
-	disassembleUiMenu(shellEntry, shellSizeLimit, disassemblyFound,  maxOpDisplay, btsV, ignoreDisDiscovery)
-  	# s - Find strings in shellcode      [{}]
-  	# d - Use deobfuscated shellcode     [{}]
-  	# p - Find all shellcode insructions [{}]
-  	# c - Enable comments in disassembly [{}]
-
-	# """.format(cya + strTogg + res, cya + deobfTogg + res, cya + findshellTogg + res, cya + commentsTogg + res)
-
-	# print (text)
-	
-
-
-def disassembleUiMenu(shellEntry, shellSizeLimit, disassemblyFound, maxOpDisplay, btsV, ignoreDisDiscovery ):
-	
-	# leave this here
-	#    {}:		Modify shellcode range. (Not functional)
-
-	dfOut=""
-	tCol=whi
-	if ignoreDisDiscovery:
-		ignDiscTogg= tCol+"["+cya+"x"+tCol+"]"+res2
-	else:
-		ignDiscTogg=tCol+"[ ]"+res2
-
-	if disassemblyFound:
-		dfOut=tCol+"["+cya+"FOUND"+tCol+"]"+res
-	shellsize=cya+str(shellSizeLimit) +" kb"+res
-
-	if disassemblyFound:
-		printDis=tCol+"["+cya+"FOUND"+tCol+"]"+res
-	else:
-		printDis=tCol+"["+cya+" NOT DISASSEMBLED"+tCol+"]"+res
-
-
-	menu = """
+    menu = """
   ......................
    Disassembly Options
   ......................
@@ -1328,60 +2206,81 @@ def disassembleUiMenu(shellEntry, shellSizeLimit, disassemblyFound, maxOpDisplay
    {}:		Return to main menu.
             
  
-	""".format(gre +"h"+res, gre+"g"+res, gre+"j"+res, gre+"e"+res, cya + hex(shellEntry) + res, gre+"u"+res, gre+"D"+res, dfOut, gre+"p"+res, printDis, gre+"m"+res, shellsize, gre+"i"+res2, ignDiscTogg,  gre+"r"+res, gre+"x"+res)
+    """.format(
+        constants.GREEN + "h" + constants.RESET,
+        constants.GREEN + "g" + constants.RESET,
+        constants.GREEN + "j" + constants.RESET,
+        constants.GREEN + "e" + constants.RESET,
+        constants.CYAN + hex(shellEntry) + constants.RESET,
+        constants.GREEN + "u" + constants.RESET,
+        constants.GREEN + "D" + constants.RESET,
+        dfOut,
+        constants.GREEN + "p" + constants.RESET,
+        printDis,
+        constants.GREEN + "m" + constants.RESET,
+        shellsize,
+        constants.GREEN + "i" + constants.RESET,
+        ignDiscTogg,
+        constants.GREEN + "r" + constants.RESET,
+        constants.GREEN + "x" + constants.RESET,
+    )
 
-	print (menu)
-def shellcodeStringMenu(bAsciiStrings, bWideCharStrings, bPushStackStrings, bAllStrings, s):
-	iMenu = ''
-	iMenu += "Strings to find:\n"
-	iMenu += "\tas - ASCII strings\t["
-	iMenu += "x" if bAsciiStrings else " "
-	iMenu += "]\n"
-	iMenu += "\twc - Wide char strings\t["
-	iMenu += "x" if bWideCharStrings else " "
-	iMenu += "]\n"
-	iMenu += "\tps - Push stack strings\t["
-	iMenu += "x" if bPushStackStrings else " "
-	iMenu += "]\n"
-	iMenu += "\tall - All strings\t["
-	iMenu += "x" if bAllStrings else " "
-	iMenu += "]\n\n"
-	# iMenu += "Sections:\n"
-	# for sec in s:
-	# 	iMenu += "\t" + sec.sectionName.decode() + "\n"
-	# iMenu += "\n"
-	iMenu += "h - Show options.\n"
-	iMenu += "g - Toggle selections.\n"
-	iMenu += "c - Clear selections.\n"
-	iMenu += "p - Print found strings.\n"
-	iMenu += "m - Change minimum shellcode length.\n"
-	iMenu += "z - Find strings.\n"
-	iMenu += "r - Reset found strings.\n"
-	iMenu += "x - Exit.\n"
-	print(iMenu)
+    print(menu)
 
-def showStringSelections(bAsciiStrings, bWideCharStrings, bPushStackStrings, bAllStrings, s):
-	iMenu = "\nSelections changed.\n\n"
-	iMenu += "Strings to find:\n"
-	iMenu += "\tas - ASCII strings\t["
-	iMenu += "x" if bAsciiStrings else " "
-	iMenu += "]\n"
-	iMenu += "\twc - Wide char strings\t["
-	iMenu += "x" if bWideCharStrings else " "
-	iMenu += "]\n"
-	iMenu += "\tps - Push stack strings\t["
-	iMenu += "x" if bPushStackStrings else " "
-	iMenu += "]\n"
-	iMenu += "\tall - All strings\t["
-	iMenu += "x" if bAllStrings else " "
-	iMenu += "]\n\n"
-	print(iMenu)
+
+def shellcodeStringMenu(
+    bAsciiStrings, bWideCharStrings, bPushStackStrings, bAllStrings, s
+):
+    iMenu = ""
+    iMenu += "Strings to find:\n"
+    iMenu += "\tas - ASCII strings\t["
+    iMenu += "x" if bAsciiStrings else " "
+    iMenu += "]\n"
+    iMenu += "\twc - Wide char strings\t["
+    iMenu += "x" if bWideCharStrings else " "
+    iMenu += "]\n"
+    iMenu += "\tps - Push stack strings\t["
+    iMenu += "x" if bPushStackStrings else " "
+    iMenu += "]\n"
+    iMenu += "\tall - All strings\t["
+    iMenu += "x" if bAllStrings else " "
+    iMenu += "]\n\n"
+    iMenu += "h - Show options.\n"
+    iMenu += "g - Toggle selections.\n"
+    iMenu += "c - Clear selections.\n"
+    iMenu += "p - Print found strings.\n"
+    iMenu += "m - Change minimum shellcode length.\n"
+    iMenu += "z - Find strings.\n"
+    iMenu += "r - reset found strings.\n"
+    iMenu += "x - Exit.\n"
+    print(iMenu)
+
+
+def showStringSelections(
+    bAsciiStrings, bWideCharStrings, bPushStackStrings, bAllStrings, s
+):
+    iMenu = "\nSelections changed.\n\n"
+    iMenu += "Strings to find:\n"
+    iMenu += "\tas - ASCII strings\t["
+    iMenu += "x" if bAsciiStrings else " "
+    iMenu += "]\n"
+    iMenu += "\twc - Wide char strings\t["
+    iMenu += "x" if bWideCharStrings else " "
+    iMenu += "]\n"
+    iMenu += "\tps - Push stack strings\t["
+    iMenu += "x" if bPushStackStrings else " "
+    iMenu += "]\n"
+    iMenu += "\tall - All strings\t["
+    iMenu += "x" if bAllStrings else " "
+    iMenu += "]\n\n"
+    print(iMenu)
+
 
 def importsMenu():
-	iMenu = ''
-	iMenu +='h - Show options.\n'
-	iMenu +='p - Print imports.\n'
-	iMenu +='z - Execute.\n'
-	iMenu +='r - Reset found imports.\n'
-	iMenu +='x - Exit.\n'
-	print(iMenu)
+    iMenu = ""
+    iMenu += "h - Show options.\n"
+    iMenu += "p - Print imports.\n"
+    iMenu += "z - Execute.\n"
+    iMenu += "r - reset found imports.\n"
+    iMenu += "x - Exit.\n"
+    print(iMenu)

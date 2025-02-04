@@ -2,6 +2,7 @@ import colorama
 import textwrap3
 
 from sharem.sharem.helper.variable import Variables
+import sharem.sharem.constants as constants
 
 colorama.init()
 
@@ -9,43 +10,11 @@ colorama.init()
 class PrintingOutput:
 	def __init__(self):
 		self.txtOut = ""
-		
-		self.red ='\u001b[31;1m'
-		self.gre = '\u001b[32;1m'
-		self.yel = '\u001b[33;1m'
-		self.blu = '\u001b[34;1m'
-		self.mag = '\u001b[35;1m'
-		self.cya = '\u001b[36;1m'
-		self.whi = '\u001b[37m'
-		self.res = '\u001b[0m'
-		self.res2 = '\u001b[0m'
-
-
-
-	def colors(self):
-		#keep
-		red ='\u001b[31;1m'
-		gre = '\u001b[32;1m'
-		yel = '\u001b[33;1m'
-		blu = '\u001b[34;1m'
-		mag = '\u001b[35;1m'
-		cya = '\u001b[36;1m'
-		whi = '\u001b[37m'
-		res = '\u001b[0m'
-		res2 = '\u001b[0m'
-
-		return red,gre,yel,blu,mag,cya,whi,res,res2
-
-#####################
-#######  TEXT  ######
-#####################
 
 	def apisOut(self,emulation_verbose,api_names, api_params_values, api_params_types, api_params_names, api_address, ret_values, ret_type, api_bruteforce, syscallID):
 		text_output = ""
 
-		red,gre,yel,blu,mag,cya,whi,res,res2 = self.colors()
-
-		text_output += mag + "\n************* APIs *************\n\n" + res
+		text_output += constants.MAGENTA + "\n************* APIs *************\n\n" + constants.RESET
 			# no_colors_out += "\n************* APIs *************\n\n"
 
 		verbose_mode = emulation_verbose
@@ -60,17 +29,11 @@ class PrintingOutput:
 			retVal = ret_values[t]
 			retType = ret_type[t]
 			paramVal = api_params_values[t]
-			paramVal_tuple = api_params_values[t]
 			aBruteForce = api_bruteforce[t]
-			# print(paramVal)
 			for potentialTuple in paramVal:
-				if( type(potentialTuple) == tuple):
-					# print("is a tuple")
-					# print(potentialTuple)
+				if isinstance(potentialTuple, tuple):
 					tuple_flag = 1
 					
-
-			# DLL = dll_name[t]
 			for v, typ in zip(pType, pName):
 				TypeBundle.append(v + " " + typ)
 			joinedBund = ', '.join(TypeBundle)
@@ -78,20 +41,20 @@ class PrintingOutput:
 				joinedBund= (textwrap3.fill(joinedBund, width=150, break_long_words=False))
 			except:
 				pass
-			joinedBundclr = joinedBund.replace(",", cya + "," + res)
+			joinedBundclr = joinedBund.replace(",", constants.CYAN + "," + constants.RESET)
 			retBundle = retType + " " + retVal
 
 			if verbose_mode:
-				temp = '{} {}{}\n'.format(gre + offset + res, yel + apName + res,
-												cya + "(" + res + joinedBundclr + cya + ")" + res)  # Example: WinExec(LPCSTR lpCmdLine, UINT uCmdShow)
+				temp = '{} {}{}\n'.format(constants.GREEN + offset + constants.RESET, constants.YELLOW + apName + constants.RESET,
+												constants.CYAN + "(" + constants.RESET + joinedBundclr + constants.CYAN + ")" + constants.RESET)  # Example: WinExec(LPCSTR lpCmdLine, UINT uCmdShow)
 				text_output+= (textwrap3.fill(temp, width=150, break_long_words=False))
 				text_output+="\n"
 
 			else:
-				text_output += '{} {}{} {}{}\n'.format(gre + offset + res, yel + apName + res,
-													cya + "(" + res + joinedBundclr + cya + ")" + res,
-													cya + "Ret: " + res,
-													red + retBundle + res)  # Example: WinExec(LPCSTR lpCmdLine, UINT uCmdShow)
+				text_output += '{} {}{} {}{}\n'.format(constants.GREEN + offset + constants.RESET, constants.YELLOW + apName + constants.RESET,
+													constants.CYAN + "(" + constants.RESET + joinedBundclr + constants.CYAN + ")" + constants.RESET,
+													constants.CYAN + "Ret: " + constants.RESET,
+													constants.RED + retBundle + constants.RESET)  # Example: WinExec(LPCSTR lpCmdLine, UINT uCmdShow)
 
 			t += 1
 			if verbose_mode:
@@ -99,24 +62,19 @@ class PrintingOutput:
 					text_output += self.printTuples(paramVal,pType,pName,retBundle)
 				else:
 					for ptyp, pname, pval in zip(pType, pName, paramVal):
-						text_output += '\t{} {} {}\n'.format(cya + ptyp, pname + ":" + res, pval)
-					text_output += "\t{} {}\n".format(red + "Return:" + res, retBundle)
+						text_output += '\t{} {} {}\n'.format(constants.CYAN + ptyp, pname + ":" + constants.RESET, pval)
+					text_output += "\t{} {}\n".format(constants.RED + "Return:" + constants.RESET, retBundle)
 				if aBruteForce:
-					text_output += "\t{}\n\n".format(whi + "Brute-forced" + res, )
+					text_output += "\t{}\n\n".format(constants.WHITE + "Brute-forced" + constants.RESET, )
 				else:
 					text_output += "\n"
 
-				# no_colors_out += "\t{} {}\n\n".format( "Return:", retVal)
-
-					
 		return text_output
 	
 	def syscallsOut(self,emulation_verbose,syscall_names, syscall_params_values, syscall_params_types, syscall_params_names, syscall_address, ret_values, ret_type, syscall_bruteforce, syscallID,em):
 		text_output = ""
 
-		red,gre,yel,blu,mag,cya,whi,res,res2 = self.colors()
-		
-		text_output += mag + "\n************* Syscalls *************\n\n" + res
+		text_output += constants.MAGENTA + "\n************* Syscalls *************\n\n" + constants.RESET
 		verbose_mode = emulation_verbose
 		t = 0
 		for eachApi in syscall_names:
@@ -130,27 +88,24 @@ class PrintingOutput:
 			paramVal = syscall_params_values[t]
 			sBruteForce = syscall_bruteforce[t]
 			sid = syscallID[t]
-			# DLL = dll_name[t]
 			tuple_flag = 0
 			for potentialTuple in paramVal:
-				if( type(potentialTuple) == tuple):
-					# print("is a tuple")
-					# print(potentialTuple)
+				if isinstance(potentialTuple, tuple):
 					tuple_flag = 1
 			for v, typ in zip(pType, pName):
 				TypeBundle.append(v + " " + typ)
 			joinedBund = ', '.join(TypeBundle)
-			joinedBundclr = joinedBund.replace(",", cya + "," + res)
+			joinedBundclr = joinedBund.replace(",", constants.CYAN + "," + constants.RESET)
 			retBundle = retType + " " + retVal
 
 			if verbose_mode:
-				text_output += '{} {}{}\n'.format(gre + offset + res, yel + apName + res,
-													cya + "(" + res + joinedBundclr + cya + ")" + res)  # Example: WinExec(LPCSTR lpCmdLine, UINT uCmdShow)
+				text_output += '{} {}{}\n'.format(constants.GREEN + offset + constants.RESET, constants.YELLOW + apName + constants.RESET,
+													constants.CYAN + "(" + constants.RESET + joinedBundclr + constants.CYAN + ")" + constants.RESET)  # Example: WinExec(LPCSTR lpCmdLine, UINT uCmdShow)
 			else:
-				text_output += '{} {}{} {}{}\n'.format(gre + offset + res, yel + apName + res,
-													cya + "(" + res + joinedBundclr + cya + ")" + res,
-													cya + "Ret: " + res,
-													red + retBundle + res)  # Example: WinExec(LPCSTR lpCmdLine, UINT uCmdShow)
+				text_output += '{} {}{} {}{}\n'.format(constants.GREEN + offset + constants.RESET, constants.YELLOW + apName + constants.RESET,
+													constants.CYAN + "(" + constants.RESET + joinedBundclr + constants.CYAN + ")" + constants.RESET,
+													constants.CYAN + "Ret: " + constants.RESET,
+													constants.RED + retBundle + constants.RESET)  # Example: WinExec(LPCSTR lpCmdLine, UINT uCmdShow)
 
 			t += 1
 			if verbose_mode:
@@ -158,11 +113,11 @@ class PrintingOutput:
 					text_output += self.printTuples(paramVal,pType,pName,retBundle)
 				else:
 					for ptyp, pname, pval in zip(pType, pName, paramVal):
-						text_output += '\t{} {} {}\n'.format(cya + ptyp, pname + ":" + res, pval)
-					text_output += "\t{} {}\n".format(red + "Return:" + res, retBundle)
-				text_output += "\t{} {} - ({}, SP {})\n".format(red + "EAX: " + res, hex(sid) + res, em.winVersion + res, em.winSP + res)
+						text_output += '\t{} {} {}\n'.format(constants.CYAN + ptyp, pname + ":" + constants.RESET, pval)
+					text_output += "\t{} {}\n".format(constants.RED + "Return:" + constants.RESET, retBundle)
+				text_output += "\t{} {} - ({}, SP {})\n".format(constants.RED + "EAX: " + constants.RESET, hex(sid) + constants.RESET, em.winVersion + constants.RESET, em.winSP + constants.RESET)
 				if sBruteForce:
-					text_output += "\t{}\n\n".format(whi + "Brute-forced" + res, )
+					text_output += "\t{}\n\n".format(constants.WHITE + "Brute-forced" + constants.RESET, )
 				else:
 					text_output += "\n"
 
@@ -174,11 +129,10 @@ class PrintingOutput:
 		art = var.art
 		emulation_multiline = var.emulation_multiline
 		
-		red,gre,yel,blu,mag,cya,whi,res,res2 = var.colors()
 		if emulation_multiline:
 			emu_dll_list = self.multiLine(logged_dlls)
-			text_output += self.mag + "\n************* DLLs *************\n" + self.res
-			text_output += "{}{:<18} {}\n".format(self.cya + "DLLs" + self.res, "",emu_dll_list)
+			text_output += constants.MAGENTA + "\n************* DLLs *************\n" + constants.RESET
+			text_output += "{}{:<18} {}\n".format(constants.CYAN + "DLLs" + constants.RESET, "",emu_dll_list)
 
 			emu_correlation_list = self.multiLineTuple(art.correlation,' -> ')
 
@@ -216,8 +170,8 @@ class PrintingOutput:
 			
 		else:
 			emu_dll_list= ', '.join(logged_dlls)
-			text_output += mag + "\n************* DLLs *************\n" + res
-			text_output += "{}{:<18} {}\n".format(self.cya + "DLLs" + self.res, "",emu_dll_list)
+			text_output += constants.MAGENTA + "\n************* DLLs *************\n" + constants.RESET
+			text_output += "{}{:<18} {}\n".format(constants.CYAN + "DLLs" + constants.RESET, "",emu_dll_list)
 			emu_correlation_list = ', '.join(str(art.correlation))
 			emu_path_list = ', '.join(art.path_artifacts)
 			# emu_fileArtifacts_list = ", ".join(art.file_artifacts)
@@ -246,10 +200,10 @@ class PrintingOutput:
 			emu_pathCopy_list = ', '.join(art.path_copy)
 			emu_pathMove_list = ', '.join(art.path_move)
 			emu_filesHashes_list = ', '.join(art.files_hashes)
-		text_output += self.mag + "\n************* Artifacts *************\n" 
+		text_output += constants.MAGENTA + "\n************* Artifacts *************\n" 
 		#correlation
 		if len(art.correlation) > 0:
-			text_output += "{}{:<8} {}\n".format(self.cya + "*** Correlations ***" + self.res,"", emu_correlation_list)
+			text_output += "{}{:<8} {}\n".format(constants.CYAN + "*** Correlations ***" + constants.RESET,"", emu_correlation_list)
 
 		#paths
 		text_output += self.Ppaths(art,emu_path_list,emu_pathCopy_list,emu_pathMove_list)
@@ -258,13 +212,13 @@ class PrintingOutput:
 		text_output += self.Pfiles(art,emu_filesCreate_list,emu_filesWrite_list,emu_filesDelete_list,emu_filesAccess_list,emu_filesCopy_list,emu_filesMoved_list,emu_filesMisc_list,emu_filesHashes_list)
 		# commandline artifacts
 		if len(art.commandLine_artifacts) > 0:
-			text_output += "{}{:<8} {}\n".format(self.cya + "*** Command Line ***" + self.res,"", emu_commandline_list)
+			text_output += "{}{:<8} {}\n".format(constants.CYAN + "*** Command Line ***" + constants.RESET,"", emu_commandline_list)
 		#web
 		if len(art.web_artifacts) > 0:
-			text_output += "{}{:<13} {}\n".format(self.cya + "*** Web ***" + self.res,"", emu_webArtifacts_list)
+			text_output += "{}{:<13} {}\n".format(constants.CYAN + "*** Web ***" + constants.RESET,"", emu_webArtifacts_list)
 		#exe dlls
 		if len(art.exe_dll_artifacts) > 0:
-			text_output += "{}{:<8} {}\n".format(self.cya + "*** EXE / DLLs ***" + self.res,"", emu_exe_dll_list)
+			text_output += "{}{:<8} {}\n".format(constants.CYAN + "*** EXE / DLLs ***" + constants.RESET,"", emu_exe_dll_list)
 		
 		# registry
 		text_output += self.Pregistry(art,emu_registry_add_list,emu_registry_edit_list,emu_registry_delete_list,emu_registry_persistence_list,emu_registry_credentials_list,emu_registry_discovery_list,emu_registry_hkcr_list,emu_registry_hkcu_list,emu_registry_hklm_list,emu_registry_hku_list,emu_registry_hkcc_list,emu_registry_list)
@@ -280,36 +234,36 @@ class PrintingOutput:
 		text_output = ''
 
 		if (len(art.path_artifacts) > 0 or len(art.path_copy) > 0 or len(art.path_move) > 0):
-			text_output += "{}{:<9}\n".format(self.cya + "*** Paths ***" + self.res,"")
+			text_output += "{}{:<9}\n".format(constants.CYAN + "*** Paths ***" + constants.RESET,"")
 		if(len(art.path_copy) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Copy **" + self.res,"", emu_pathCopy_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Copy **" + constants.RESET,"", emu_pathCopy_list)
 		if(len(art.path_move) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Move **" + self.res,"", emu_pathMove_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Move **" + constants.RESET,"", emu_pathMove_list)
 		if(len(art.path_artifacts) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Misc **" + self.res,"", emu_path_list)	
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Misc **" + constants.RESET,"", emu_path_list)	
 		
 		return text_output
 
 	def Pfiles(self,art,emu_filesCreate_list,emu_filesWrite_list,emu_filesDelete_list,emu_filesAccess_list,emu_filesCopy_list,emu_filesMoved_list,emu_filesMisc_list,emu_filesHashes_list):
 		text_output = ""
 		if(len(art.files_create) > 0 or len(art.files_write) > 0 or len(art.files_delete) > 0 or len(art.files_access) > 0 or len(art.files_copy) > 0 or len(art.files_move) > 0 or len(art.file_artifacts) > 0 or len(art.files_hashes) > 0):
-			text_output += "{}{:<9}\n".format(self.cya + "*** Files ***" + self.res,"")
+			text_output += "{}{:<9}\n".format(constants.CYAN + "*** Files ***" + constants.RESET,"")
 		if(len(art.files_hashes) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Hashes **" + self.res,"", emu_filesHashes_list)	
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Hashes **" + constants.RESET,"", emu_filesHashes_list)	
 		if(len(art.files_create) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Create **" + self.res,"", emu_filesCreate_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Create **" + constants.RESET,"", emu_filesCreate_list)
 		if(len(art.files_write) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Write **" + self.res,"", emu_filesWrite_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Write **" + constants.RESET,"", emu_filesWrite_list)
 		if(len(art.files_delete) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Delete **" + self.res,"", emu_filesDelete_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Delete **" + constants.RESET,"", emu_filesDelete_list)
 		if(len(art.files_access) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Read **" + self.res,"", emu_filesAccess_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Read **" + constants.RESET,"", emu_filesAccess_list)
 		if(len(art.files_copy) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Copy **" + self.res,"", emu_filesCopy_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Copy **" + constants.RESET,"", emu_filesCopy_list)
 		if(len(art.files_move) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Move **" + self.res,"", emu_filesMoved_list)	
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Move **" + constants.RESET,"", emu_filesMoved_list)	
 		if(len(art.file_artifacts) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Misc **" + self.res,"", emu_filesMisc_list)	
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Misc **" + constants.RESET,"", emu_filesMisc_list)	
 		
 		return text_output
 
@@ -317,41 +271,41 @@ class PrintingOutput:
 		text_output = ""
 		####### Registry Actiions #########
 		if (len(art.registry_add_keys) > 0 or len(art.registry_edit_keys) > 0 or len(art.registry_delete_keys) > 0):
-			text_output += "{}{:<9}\n".format(self.cya + "*** Registry Actions ***" + self.res,"")
+			text_output += "{}{:<9}\n".format(constants.CYAN + "*** Registry Actions ***" + constants.RESET,"")
 		if len(art.registry_add_keys) > 0:
-			text_output += "{}{:<9} {}\n".format(self.red + "** Add **" + self.res,"", emu_registry_add_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Add **" + constants.RESET,"", emu_registry_add_list)
 		if len(art.registry_edit_keys) > 0:
-			text_output += "{}{:<9} {}\n".format(self.red + "** Edit **" + self.res,"", emu_registry_edit_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Edit **" + constants.RESET,"", emu_registry_edit_list)
 		if len(art.registry_delete_keys) > 0:
-			text_output += "{}{:<9} {}\n".format(self.red + "** Delete **" + self.res,"", emu_registry_delete_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Delete **" + constants.RESET,"", emu_registry_delete_list)
 
 		####### Registry Techniques #########
 		if (len(art.registry_persistence) > 0 or len(art.registry_credentials) > 0 or len(art.registry_discovery) > 0):
-			text_output += "{}{:<9}\n".format(self.cya + "*** Registry Techniques ***" + self.res,"")
+			text_output += "{}{:<9}\n".format(constants.CYAN + "*** Registry Techniques ***" + constants.RESET,"")
 		if (len(art.registry_persistence) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Persistence **" + self.res,"", emu_registry_persistence_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Persistence **" + constants.RESET,"", emu_registry_persistence_list)
 		if (len(art.registry_credentials) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Credentials **" + self.res,"", emu_registry_credentials_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Credentials **" + constants.RESET,"", emu_registry_credentials_list)
 		if (len(art.registry_discovery) > 0):
-			text_output += "{}{:<9} {}\n".format(self.red + "** Discovery **" + self.res,"", emu_registry_discovery_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** Discovery **" + constants.RESET,"", emu_registry_discovery_list)
 
 		####### Registry Hierarchy #########
 		if(len(art.reg_HKCR) > 0 or len(art.reg_HKCU) > 0 or len(art.reg_HKLM) > 0 or len(art.reg_HKU) > 0 or len(art.reg_HKCC) > 0):
-			text_output += "{}{:<9}\n".format(self.cya + "*** Registry Hierarchy ***" + self.res,"")
+			text_output += "{}{:<9}\n".format(constants.CYAN + "*** Registry Hierarchy ***" + constants.RESET,"")
 		if(len(art.reg_HKCR) > 0 ):
-			text_output += "{}{:<9} {}\n".format(self.red + "** HKEY_Classes_Root **" + self.res,"", emu_registry_hkcr_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** HKEY_Classes_Root **" + constants.RESET,"", emu_registry_hkcr_list)
 		if(len(art.reg_HKCU) > 0 ):
-			text_output += "{}{:<9} {}\n".format(self.red + "** HKEY_Current_User **" + self.res,"", emu_registry_hkcu_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** HKEY_Current_User **" + constants.RESET,"", emu_registry_hkcu_list)
 		if(len(art.reg_HKLM) > 0 ):
-			text_output += "{}{:<9} {}\n".format(self.red + "** HKEY_Local_Machine **" + self.res,"", emu_registry_hklm_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** HKEY_Local_Machine **" + constants.RESET,"", emu_registry_hklm_list)
 		if(len(art.reg_HKU) > 0 ):
-			text_output += "{}{:<9} {}\n".format(self.red + "** HKEY_Users **" + self.res,"", emu_registry_hku_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** HKEY_Users **" + constants.RESET,"", emu_registry_hku_list)
 		if(len(art.reg_HKCC) > 0 ):
-			text_output += "{}{:<9} {}\n".format(self.red + "** HKEY_Current_Config **" + self.res,"", emu_registry_hkcc_list)
+			text_output += "{}{:<9} {}\n".format(constants.RED + "** HKEY_Current_Config **" + constants.RESET,"", emu_registry_hkcc_list)
 		
 		####### Registry Miscellaneous #########
 		if len(art.registry_misc) > 0:
-			text_output += "{}{:<9} {}\n".format(self.cya + "*** Registry Miscellaneous ***" + self.res,"", emu_registry_list)
+			text_output += "{}{:<9} {}\n".format(constants.CYAN + "*** Registry Miscellaneous ***" + constants.RESET,"", emu_registry_list)
 
 		return text_output
 
@@ -361,45 +315,43 @@ class PrintingOutput:
 
 	def printTuples(self,paramVal,pType,pName,retBundle):
 		text_output = ""
-		red,gre,yel,blu,mag,cya,whi,res,res2 = self.colors()
 		index = 0
 
 		for pv in paramVal:
 			# if there is a structure
-			if(type(paramVal[index]) == tuple):
+			if isinstance(paramVal[index], tuple):
 				structure_names = paramVal[index][0]
 				structure_types = paramVal[index][1]
 				structure_values = paramVal[index][2]
 
-				text_output += '\t{} {} \n'.format(cya + pType[index], pName[index] + ":")
+				text_output += '\t{} {} \n'.format(constants.CYAN + pType[index], pName[index] + ":")
 
 				# prints the variables within the strucutes
 				for sn, st, sv in zip(structure_names, structure_types, structure_values):
 					#checks if there is another strucutre within the struct, usually a dummy struct and prints it
 					#currently only works for one struct and one dummy struct
-					if type(sv) == tuple: # Check for Nested Tuple
+					if isinstance(sv, tuple): # Check for Nested Tuple
 						text_output += self.subStruct(sv,sn,st)
 					else:
-						text_output += '\t\t{} {} {}\n'.format(gre + sn, st +":"+ res, sv)
+						text_output += '\t\t{} {} {}\n'.format(constants.GREEN + sn, st +":"+ constants.RESET, sv)
 			else:
 				#normal printing
-				txt_params='\t{} {} {}\n'.format(cya + pType[index], pName[index] + ":" + res, paramVal[index])
+				txt_params='\t{} {} {}\n'.format(constants.CYAN + pType[index], pName[index] + ":" + constants.RESET, paramVal[index])
 
 				text_output += txt_params
 			index += 1
-		text_output += "\t{} {}\n".format(red + "Return:" + res, retBundle)
+		text_output += "\t{} {}\n".format(constants.RED + "Return:" + constants.RESET, retBundle)
 		return text_output
 		
 	def subStruct(self,structure_values,pType,pName): 
 		text_output = ''
-		red,gre,yel,blu,mag,cya,whi,res,res2 = self.colors()
 
 		#structure name
-		text_output += '\t\t{} {} \n'.format(cya + pType, pName + ":")
+		text_output += '\t\t{} {} \n'.format(constants.CYAN + pType, pName + ":")
 		
 		pTypes, pNames, pVals = structure_values
 		for pT, pN, pV in zip(pTypes, pNames, pVals):
-			text_output += '\t\t\t{} {} {}\n'.format(gre + pT, pN +":"+ res, pV)
+			text_output += '\t\t\t{} {} {}\n'.format(constants.GREEN + pT, pN +":"+ constants.RESET, pV)
 		return text_output
 
 	def multiLine(self,artifact):
@@ -413,7 +365,7 @@ class PrintingOutput:
 		emu_artifact_list = ''
 		if(len(artifact) > 0):
 				for each in artifact:
-					if (type(each) == tuple):
+					if isinstance(each, tuple):
 						p = 0
 						for o in each:
 							if p == 0:
@@ -430,7 +382,7 @@ class PrintingOutput:
 		emu_artifact_list = ''
 		if(len(artifact) > 0):
 				for each in artifact:
-					if (type(each) == tuple):
+					if isinstance(each, tuple):
 						p = 0
 						for o in each:
 							if p == 0:
@@ -447,7 +399,7 @@ class PrintingOutput:
 		emu_artifact_list = ''
 		if(len(artifact) > 0):
 				for each in artifact:
-					if (type(each) == tuple):
+					if isinstance(each, tuple):
 						p = 0
 						for o in each:
 							if p == 0:
@@ -464,7 +416,7 @@ class PrintingOutput:
 		emu_artifact_list = ''
 		if(len(artifact) > 0):
 				for each in artifact:
-					if (type(each) == tuple):
+					if isinstance(each, tuple):
 						p = 0
 						for o in each:
 							if p == 0:

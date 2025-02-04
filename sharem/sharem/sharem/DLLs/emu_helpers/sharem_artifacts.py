@@ -467,7 +467,7 @@ class Artifacts_emulation:
 		#remove the duplicate artifacts that are also tuples
 		tempSet = set()
 		for item in artifact_set:
-			if(type(item) == tuple):
+			if isinstance(item, tuple):
 				tempSet.add(item[0])
 			else:
 				pass

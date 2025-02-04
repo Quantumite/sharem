@@ -1,29 +1,29 @@
+from unicorn import Uc, UcError
+from unicorn.x86_const import *
 from copy import deepcopy
-from random import choice, randint
+from random import randint
 from time import perf_counter_ns
 from typing import Callable
 from urllib.parse import quote, unquote
-from sharem.sharem.DLLs.emu_helpers.atom import AtomTable
-from sharem.sharem.DLLs.emu_helpers.memHelper import Memory
-from sharem.sharem.helper.emu import EMU
-from sharem.sharem.parseconf import Configuration
+from struct import pack, unpack
+from .emu_helpers.atom import AtomTable
+from .emu_helpers.memHelper import Memory
+from ..helper.emu import EMU
+from ..parseconf import Configuration
 from .emu_helpers.sharem_artifacts import Artifacts_emulation
 from .emu_helpers.sharem_filesystem import Directory_system
-from sharem.sharem.DLLs.emu_helpers.handles import Handle, HandleType, HandlesDict
-from sharem.sharem.DLLs.emu_helpers.heap import Heap, HeapsDict
-from sharem.sharem.DLLs.emu_helpers.registry import RegKey, RegValueTypes, RegistryKeys
-from sharem.sharem.DLLs.emu_helpers.sim_values import emuSimVals
-# from sharem.sharem.DLLs.emu_helpers.sharem_artifacts import Artifacts_emulation
-from sharem.sharem.DLLs.emu_helpers.sharem_filesystem import Directory_system
-from sharem.sharem.DLLs.emu_helpers.tool_snapshot import System_SnapShot
-from sharem.sharem.DLLs.emu_helpers.reverseLookUps import ReverseLookUps
-from sharem.sharem.helper.printingOutput import PrintingOutput
-from sharem.sharem.helper.jsonPrinting import *
-from sharem.sharem.DLLs.emu_helpers.structures import *
-from sharem.sharem.helper.structHelpers import makeStructVals
-from unicorn.x86_const import *
-from struct import pack, unpack
-from ..helper.emuHelpers import Uc
+from .emu_helpers.handles import Handle, HandleType, HandlesDict
+from .emu_helpers.heap import Heap, HeapsDict
+from .emu_helpers.registry import RegKey, RegValueTypes, RegistryKeys
+from .emu_helpers.sim_values import emuSimVals
+from .emu_helpers.sharem_filesystem import Directory_system
+from .emu_helpers.tool_snapshot import System_SnapShot
+from .emu_helpers.reverseLookUps import ReverseLookUps
+from ..helper.printingOutput import PrintingOutput
+from ..helper.jsonPrinting import jsonPrint
+from .emu_helpers.structures import *
+from ..helper.structHelpers import makeStructVals
+from ..helper.variable import Variables
 from ..modules import allDllsDict
 import traceback
 import re
@@ -31,9 +31,6 @@ import re
 var = Variables()
 #Artifacts class initialization
 art = var.art
-# Instance of File System
-SimFileSystem = Directory_system()
-printOut = PrintingOutput()
 
 conr = Configuration()
 
@@ -15241,16 +15238,22 @@ def findStringsParms(uc: Uc, pTypes: 'list[str]', pVals: 'list', skip: 'list[int
         i += 1
     return pTypes, pVals
 
-def read_string(uc: Uc, address: int):
+def read_string(uc: Uc, address: int) -> str:
     ret = ""
-    c = uc.mem_read(address, 1)[0]
+    try:
+        c = uc.mem_read(address, 1)[0]
+    except UcError:
+        print(f"[!] Failed to read at {address}")
     read_bytes = 1
 
     if c == 0x0: ret = "[NULL]"  # Option for NULL String
 
     while c != 0x0:
         ret += chr(c)
-        c = uc.mem_read(address + read_bytes, 1)[0]
+        try:
+            c = uc.mem_read(address + read_bytes, 1)[0]
+        except UcError:
+            print(f"[!] Failed to read at {address}")
         read_bytes += 1
     return ret
 

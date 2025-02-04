@@ -1,74 +1,42 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-from sharem.sharem.helper.variable import Variables
-from unicorn import *
+from unicorn import UcError, Uc, UC_ARCH_X86
 from unicorn.x86_const import *
-from capstone import *
-from struct import pack, unpack
-from collections import defaultdict
-from .modules import *
-from .DLLs.dict_signatures import *
-from .DLLs.dict2_signatures import *
-from .DLLs.dict3_w32 import *
-from .DLLs.dict4_ALL import *
-from .DLLs.dict5_signatures import *
-from .DLLs.hookAPIs import *
-from .DLLs.syscall_signatures import *
-from .helper.emuHelpers import *
-from .helper.sharemuDeob import *
-from .sharem_debugger import *
+from unicorn.unicorn_const import *
+from capstone import Cs, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
+from .modules import initMods, saveDLLAddsToFile, allocateWinStructs32, allocateWinStructs64
+from .DLLs.dict_signatures import *  # noqa: F403
+from .DLLs.dict2_signatures import *  # noqa: F403
+from .DLLs.dict3_w32 import dict3_w32
+from .DLLs.dict4_ALL import *  # noqa: F403
+from .DLLs.dict5_signatures import *  # noqa: F403
+from sharem.sharem.DLLs.hookAPIs import CustomWinAPIs, CustomWinSysCalls, stackCleanup, read_string, buildPtrString, getPointerVal, makeArgVals, art
+from .DLLs.syscall_signatures import syscall_signature, syscallRS
+from .helper.emuHelpers import (
+    constConvert, set_register, boolFollowJump, push, bprint, signedNegHexTo, exitAPI, 
+    giveRegs, giveStack, controlFlow, retEnding, getJmpFlag, tryDictLocate
+)
+from .helper.moduleHelpers import readDLLsAddsFromFile
+from .helper.emuHelpers import findRetVal 
+from .helper.sharemuDeob import binaryToStr, sharDeobf
+from .helper.variable import Variables
+from .sharem_debugger import debugger
 from .DLLs.emu_helpers.sharem_artifacts import Artifacts_regex
-#from .sharem_artifacts import *
+import sharem.sharem.constants as constants
 
 import json
 import re
 import os
 import colorama
 import traceback
+import platform
 
 finalAddress=0
-# from sharemuDeob import *
-
-# class EMU():
-#     def __init__(self):
-#         self.maxCounter = 500000
-#         self.arch = 32
-#         self.debug = False
-#         self.breakOutOfLoops = True
-#         self.maxLoop = 50000  # to break out of loops
-#         self.entryOffset = 0
-#         self.codeCoverage = True
-#         self.beginCoverage = False
-#         self.timelessDebugging = False  # todo: bramwell
-#         # self.winVersion = "Windows 7" # "Windows 10" ## Should make these value config.
-#         # self.winSP = "SP1" # "2004"
-#         self.winVersion = "Windows 10"
-#         self.winSP = "2004"
-
-class EMU():        #### see EMU note below  
-    def __init__(self):
-        self.maxCounter = 500000
-        self.arch = 32
-        self.debug = False
-        self.breakOutOfLoops = True
-        self.maxLoop = 50000  # to break out of loops
-        self.entryOffset = 0
-        self.codeCoverage = True
-        self.beginCoverage = False
-        self.timelessDebugging = False  # todo: bramwell
-        self.timeless_debugging_stack = False
-        self.winVersion = "Windows 10"
-        self.winSP = "2004"
-        ############### NOTE: This is not the class any more - the actual EMU class is now in helper/emu.py - this is left here as a placeholder for anyone that needs to add or modify this and is confused.
-
-
-
 
 class Coverage():
-    def __init__(self, uc, address):
-        # print (cya+"creating Coverage object - coverage number " + res2, coverage_num)
-        self.address = address
+    def __init__(self, uc: Uc, address: int):
+        self.address: int = address
         if em.arch == 32:
             self.regs = {'eax': 0x0, 'ebx': 0x0, 'ecx': 0x0, 'edx': 0x0, 'edi': 0x0, 'esi': 0x0, 'esp': 0x0, 'ebp': 0x0, 'eflags': 0x0}
         else:
@@ -83,19 +51,14 @@ class Coverage():
             self.regs[reg] = int(constConvert(uc, reg))
         
         # Save memory
-        # self.mem_file = 'coverage_mem_tmp' + str(coverage_num) + '.bin' # Old Jacob way - no longer needed - we use one memory now
-        # with open (self.mem_file, 'wb') as f:
-        #     f.write(uc.mem_read(0x10000000, 0x10050000))
-
-        # Save memory
         if em.writeToTempFile:
             print ("writeToTempFile 1")
             with open ('coverage_mem_tmp.bin', 'wb') as f:
                 f.write(uc.mem_read(0x10000000, 0x10050000))
 
         # Save stack bytes
-        esp = uc.reg_read(UC_X86_REG_ESP)
-        ebp = uc.reg_read(UC_X86_REG_EBP)
+        esp = uc.reg_read(UC_X86_REG_ESP)  # noqa: F405
+        ebp = uc.reg_read(UC_X86_REG_EBP)  # noqa: F405
         amt=em.codeCoverageStackAmt
         if em.arch == 32:
             esp = self.regs['esp']
@@ -110,39 +73,32 @@ class Coverage():
                 # print ("new_stack", hex(esp -amt), hex(esp+amt*2), "ebp", hex(esp -amt), hex(esp+amt*2))
                 self.stack = bytes(uc.mem_read(esp-amt, amt*2))
                 # print (binaryToStr(self.stack))
-            except:
+            except UcError:
                 if em.showCCDebugInfo:
-                    print (red+"\t[*] "+whi+ "Code coverage: Could not capture memory pointed to by esp - memory not valid: "+res2, hex(esp))
+                    print (constants.RED +"\t[*] "+ constants.WHITE + "Code coverage: Could not capture memory pointed to by esp - memory not valid: " +constants.RESET, hex(esp))
             try:
                 # print ("new_stack_ebp", hex(esp -amt), hex(esp+amt*2), "ebp", hex(esp -amt), hex(esp+amt*2))
                 self.ebpStack = bytes(uc.mem_read(ebp-amt, amt*2))
                 # print ("stack size", len(self.ebpStack))
-            except:
+            except UcError:
                 if em.showCCDebugInfo:
-                    print (red+"\t[*] "+whi+ "Code coverage: Could not capture memory pointed to by ebp - memory not valid: "+res2, hex(ebp))
+                    print (constants.RED +"\t[*] "+constants.WHITE+ "Code coverage: Could not capture memory pointed to by ebp - memory not valid: "++constants.RESET, hex(ebp))
         if em.arch == 64:
             rsp = self.regs['rsp']
             rbp = self.regs['rbp']
             try:
                 self.stack = bytes(uc.mem_read(rsp-amt, amt*2))
                 # print (binaryToStr(self.stack))
-            except:
+            except UcError:
                 if em.showCCDebugInfo:
-                    print (red+"\t[*] "+whi+ "Code coverage: Could not capture memory pointed to by rsp - memory not valid: "+res2, hex(rsp))
+                    print (constants.constants.RED +"\t[*] "+constants.WHITE+ "Code coverage: Could not capture memory pointed to by rsp - memory not valid: "++constants.RESET, hex(rsp))
             try:
                 self.ebpStack = bytes(uc.mem_read(rbp-amt, amt*2))
                 # print ("stack size", len(self.ebpStack))
-            except:
+            except UcError:
                 if em.showCCDebugInfo:
-                    print (red+"\t[*] "+whi+ "Code coverage: Could not capture memory pointed to by rbp - memory not valid: "+res2, hex(rbp))
+                    print (constants.constants.RED +"\t[*] "+constants.WHITE+ "Code coverage: Could not capture memory pointed to by rbp - memory not valid: "++constants.RESET, hex(rbp))
 
-        # else:
-        #     rsp = self.regs['rsp']
-        #     rbp = self.regs['rbp']
-        #     stack_bytes_len = rbp - rsp
-        #     if stack_bytes_len < 0:
-        #         stack_bytes_len = STACK_ADDR - rsp
-        #     self.stack = bytes(uc.mem_read(rsp, stack_bytes_len))
         coverageAdds.add(address)
 
     def dump_saved_info(self, uc):
@@ -151,13 +107,11 @@ class Coverage():
             set_register(uc, reg, val)
 
         # Restore the memory
-        # with open(self.mem_file, 'rb') as f:  ## old Jacob way of doing it
         if em.writeToTempFile:
             print ("writeToTempFile 2")
             with open("coverage_mem_tmp.bin", 'rb') as f:
                 uc.mem_write(0x10000000, f.read())
 
-        # self.print_saved_info()
 
         # Restore the stack
         amt =  em.codeCoverageStackAmt
@@ -166,22 +120,22 @@ class Coverage():
             stackStartEBP=self.regs['ebp']-amt
             try:
                 uc.mem_write(stackStart, self.stack)
-            except:
+            except UcError:
                  print ("\tComplete code coverage: restoring memory pointed to by esp,", hex(self.regs['esp']), ", failed for coverage object", self.coverage_num, ".")
             try:
                 uc.mem_write(stackStartEBP, self.ebpStack)
-            except:
+            except UcError:
                  print ("\tComplete code coverage: restoring memory pointed to by ebp,", hex(self.regs['ebp']), ", failed for coverage object", self.coverage_num, ". This may be correct behavior.")
         else:
             stackStart=self.regs['rsp']-amt
             stackStartEBP=self.regs['rbp']-amt
             try:
                 uc.mem_write(stackStart, self.stack)
-            except:
+            except UcError:
                  print ("\tComplete code coverage: restoring memory pointed to by rsp,", hex(self.regs['rsp']), ", failed for coverage object", self.coverage_num, ".")
             try:
                 uc.mem_write(stackStartEBP, self.ebpStack)
-            except:
+            except UcError:
                  print ("\tComplete code coverage: restoring memory pointed to by rbp,", hex(self.regs['rbp']), ", failed for coverage object", self.coverage_num, ". This may be correct behavior.")
 
     def print_saved_info(self):
@@ -192,23 +146,16 @@ class Coverage():
 
     def delete(self, index):
         if em.showCCDebugInfo:
-            print (yel+"\t[*] Deleting code coverage object:" + res2, coverage_objects[index].coverage_num, gre+ "   Address:", whi+hex(coverage_objects[index].address))
-        # os.remove(self.mem_file) # old Jacob way - not needed any longer - we use one memory file now
-        if verbose:
-                # outFile.write("\nDeleting code coverage object - index value: "  +str(coverage_objects[index].coverage_num) + "   Address:" +hex(coverage_objects[index].address) +"\n")
-                pass
+            print (constants.YELLOW +"\t[*] Deleting code coverage object:" + constants.RESET, coverage_objects[index].coverage_num, constants.GREEN+ "   Address:", constants.WHITE+hex(coverage_objects[index].address))
 
         del coverage_objects[index]
+
     def giveAddress(self,address):
-        print (cya+"Coverage - adding address", hex(address), "num"+res2, self.coverage_num)
+        print (constants.CYAN+"Coverage - adding address", hex(address), "num"++constants.RESET, self.coverage_num)
         self.address=address
         coverageAdds.add(address)
         
 
-# artifacts = []
-# net_artifacts = []
-# file_artifacts = []
-# exec_artifacts = []
 coverage_objects = []
 covObjs =  {}
 programCounter = 0
@@ -253,7 +200,7 @@ stopProcessCC = False
 cleanBytes = 0
 bad_instruct_count = 0
 
-if platformType == "Windows":
+if platform.uname()[0] == "Windows":
     expandedDLLsPath32 = os.path.join(os.path.dirname(__file__), "DLLs\\x86\\")
     expandedDLLsPath64 = os.path.join(os.path.dirname(__file__), "DLLs\\x64\\")
 else:
@@ -263,17 +210,6 @@ else:
 bVerbose = True
 
 colorama.init()
-
-red = '\u001b[31;1m'
-gre = '\u001b[32;1m'
-yel = '\u001b[33;1m'
-blu = '\u001b[34;1m'
-mag = '\u001b[35;1m'
-cya = '\u001b[36;1m'
-whi = '\u001b[37m'
-res = '\u001b[0m'
-res2 = '\u001b[0m'
-
 
 def loadDlls(mu):
     global export_dict
@@ -309,7 +245,7 @@ def coverage_branch(uc):
     global coverage_objects
 
     if len(coverage_objects) > 0:
-        uc.reg_write(UC_X86_REG_EIP, coverage_objects[0].address)
+        uc.reg_write(UC_X86_REG_EIP, coverage_objects[0].address)  # noqa: F405
         coverage_objects[0].delete(0)
     else:
         uc.emu_stop()
@@ -324,15 +260,13 @@ def calculateAddressesSkipCCC():
                 address=address+1
 
 def breakLoop(uc, jmpFlag, jmpType, op_str, addr, size):
-    eflags = uc.reg_read(UC_X86_REG_EFLAGS)
-    # print ("eflags", eflags)
+    eflags = uc.reg_read(UC_X86_REG_EFLAGS)  # noqa: F405
     jmpLoc=0
-    # print ("breakLoop", hex(addr), op_str)
     if boolFollowJump(jmpFlag, jmpType, eflags):
         if "0x12" in op_str:
             try:
                 jmpLoc=int(op_str,16)
-            except:
+            except ValueError:
                 jmpLoc=int(op_str)
 
         else:
@@ -342,26 +276,35 @@ def breakLoop(uc, jmpFlag, jmpType, op_str, addr, size):
             else:
                 try:
                     jmpLoc = addr + int(op_str)
-                except:
+                except ValueError:
                     jmpLoc = addr + int(op_str,16)
 
         uc.reg_write(UC_X86_REG_EIP, jmpLoc)
-        # print (yel+"writes1"+res2 + " to "  + gre + hex(jmpLoc) + res2)
     else:
         uc.reg_write(UC_X86_REG_EIP, addr + size)
         jmpLoc= addr + size
-        # print (red+"writes2"+res2 + " to "  + gre + hex(jmpLoc) + res2)
         
 
-    print (cya+"\t[*] " + res2 +  "Breaking out of a loop at " + gre +  hex(addr) + res2 + " - going to " + red + hex(jmpLoc) + res2 +  ".")
+    print (
+        constants.CYAN 
+        + "\t[*] " 
+        +constants.RESET 
+        + "Breaking out of a loop at " 
+        + constants.GREEN 
+        +  hex(addr) 
+        +constants.RESET 
+        + " - going to " 
+        + constants.RED 
+        + hex(jmpLoc) 
+        +constants.RESET 
+        +  "."
+    )
     if verbose:
         outFile.write("***** Breaking out of a loop at " + hex(addr) + " - going to " + hex(jmpLoc) + ".\n")
 
-def catch_windows_api(uc, addr, ret, size, funcAddress):
+def catch_windows_api(uc, fRaw, addr, ret, size, funcAddress):
     global stopProcess
     global cleanBytes
-
-    # print ("catch_windows_api funcAddress", funcAddress, "Ret", hex(ret), "size", size)
 
     ret += size
     push(uc, em.arch, ret)
@@ -383,7 +326,7 @@ def catch_windows_api(uc, addr, ret, size, funcAddress):
             logged_dlls.append(dll)
 
 
-    except Exception as e:
+    except Exception:
         funcName = "funcname: DID NOT FIND address - " + funcAddress
         print ("finding funcname")
         print(traceback.format_exc())
@@ -392,7 +335,7 @@ def catch_windows_api(uc, addr, ret, size, funcAddress):
         funcInfo, cleanBytes = getattr(WinAPI, funcName)(uc, eip, esp, export_dict, addr, em)
         logCall(funcName, funcInfo)
         # print ("funcName", funcName)
-    except:
+    except AttributeError:
         try:
             bprint("hook_default", funcAddress)
             hook_default(uc, eip, esp, funcAddress, export_dict[funcAddress][0], addr)
@@ -404,10 +347,7 @@ def catch_windows_api(uc, addr, ret, size, funcAddress):
     fRaw.add(int(funcAddress, 16), funcName)
     if exitAPI(funcName):
         stopProcess = True
-        # print ("Stop: exitAPI, catch_windows_api")
-
-    uc.reg_write(UC_X86_REG_EIP, EXTRA_ADDR)
-
+    uc.reg_write(UC_X86_REG_EIP, EXTRA_ADDR)  # noqa: F405
     return ret
 
 
@@ -434,56 +374,36 @@ bWriteListTuple=[]
 def hook_mem_access2(uc, address, size, user_data):
     global stackFile
     stackFile.write( "[ mem_access2: bad " + hex(address) +"] ")
-    # print( "[ mem_access2: bad " + hex(address) +"] ")
 
 
 def hook_mem_access3(uc, access, address, size, value=0, user_data=None):
-    # print ("access", access, "address", hex(address), "size", size)
-
     global stackFile
     stackFile.write( "[ mem_access2: bad " + hex(address) +"] ")
 
 
 def hook_mem_access(uc, access, address, size, value, user_data):
-    # print ("hook mem access!!!!!!!!!!!!!")
-    if access == UC_MEM_WRITE:
-        # print(">>> Memory is being WRITE at 0x%x, data size = %u, data value = 0x%x" \
-        #         %(address, size, value))
+    if access == UC_MEM_WRITE:  # noqa: F405
         if address > 0x12000000 and address <0x12990070:
-
             if address in bAddWrite:
                 bAddWriteTwice.add(address)
                 bAddWriteTwiceTuple.add((address, size))
             elif address in bAddWriteTwice:
-                # print (red+"doing thrice1!!!!!"+res)
                 bAddWriteThriceTuple.add(address)
                 bAddWriteThrice.address((address, size))
             else:
                 bAddWriteTuple.add((address, size))
                 bAddWrite.add(address)
-
-
-# CODE_ADDR = 0x12000000
-# ENTRY_ADDR = 0x1000
-# STACK_ADDR = 0x17000000
-# EXTRA_ADDR = 0x18000000
-# MOD_LOW = 0x14100000
-# MOD_HIGH = 0x14100000
-
         if address < MOD_LOW or address > MOD_HIGH  and (address < STACK_ADDR-0x5000  or address > STACK_ADDR +0x5000 ) and address != ENTRY_ADDR and address != EXTRA_ADDR:
             bWriteListTuple.append((hex(address),size))
 
         
     else:   # READ
-        # print(">>> Memory is being READ at 0x%x, data size = %u" \
-                # %(address, size))
         if address > 0x12000000 and address <0x12990070:
 
             if address in bAddRead:
                 bAddReadTwice.add(address)
                 bAddReadTwiceTuple.add((address, size))
             elif address in bAddReadTwice:
-                # print (red+"doing thrice!!!!!"+res)
                 bAddReadThriceTuple.add(address)
                 bAddReadThrice.address((address, size))
             else:
@@ -508,22 +428,21 @@ def hook_code(uc, address, size, user_data):
     global finalAddress
 
     finalAddress=address
+    fRaw=user_data
 
-    funcName = ""
-
-    if cleanStackFlag == True:
+    if cleanStackFlag:
         cleanStack(uc, cleanBytes)
         cleanStackFlag = False
 
     addressF = address
-    if stopProcess == True or stopProcessCC == True:
+    if stopProcess or stopProcessCC:
         uc.emu_stop()
         if em.showCCDebugInfo:
-            print (red+"\t[!] Forced stop"+res)
+            print (constants.RED +"\t[!] Forced stop"++constants.RESET)
 
     programCounter += 1
     if programCounter > em.maxCounter and em.maxCounter > 0:
-        print(red + "\t[*] " +res2+" Exiting emulation because max counter of "  +gre +  str(em.maxCounter) + res2 + " reached.\n")
+        print(constants.RED + "\t[*] " +constants.RESET +" Exiting emulation because max counter of "  + constants.GREEN +  str(em.maxCounter) +constants.RESET + " reached.\n")
         uc.emu_stop()
 
     instructLine = ""
@@ -531,7 +450,6 @@ def hook_code(uc, address, size, user_data):
     if verbose:
         instructLine += giveRegs(uc, em.arch)
         instructLine += str(programCounter) + ": 0x%x" % address + "\t"
-        # timelessStack+=giveStackClass(uc, em.arch,programCounter)
     if em.timeless_debugging_stack:
         timelessStack+=giveStack(uc, em.arch)
         timelessStack += str(programCounter) + ": 0x%x" % address + "\t"
@@ -540,9 +458,9 @@ def hook_code(uc, address, size, user_data):
     shells = b''
     try:
         shells = uc.mem_read(address, size)
-    except Exception as e:
-        # print ("Error: ", e)
-        # print(traceback.format_exc())
+    except UcError:
+        print(f"Failed to read memory at {address}")
+        print(traceback.format_exc())
         instructLine += " size: 0x%x" % size + '\t'  # size is overflow - why so big?
         outFile.write("abrupt end:  " + instructLine)
         print("abrupt end: error reading line of shellcode")
@@ -550,7 +468,6 @@ def hook_code(uc, address, size, user_data):
         # return # terminate func early   --don't comment - we want to see the earlyrror
         
     ret = address
-    base = 0
     # Print out the instruction
     mnemonic = ""
     op_str = ""
@@ -558,7 +475,10 @@ def hook_code(uc, address, size, user_data):
     bad_instruct = False
 
     fRaw.addBytes(shells, addressF - CODE_ADDR, size)
-    finalOut = uc.mem_read(CODE_ADDR + em.entryOffset, codeLen)
+    try:
+        finalOut = uc.mem_read(CODE_ADDR + em.entryOffset, codeLen)
+    except UcError:
+        print(f"[!] Failed to read at address {CODE_ADDR+em.entryOffset}")
     fRaw.giveEnd(finalOut)
 
     if shells == b'\x00\x00':
@@ -587,9 +507,6 @@ def hook_code(uc, address, size, user_data):
         t += 1
 
     # Jump to code coverage branch if shellcode is already done
-    # if em.beginCoverage == True and em.codeCoverage == True:
-    #     coverage_branch(uc, address, mnemonic, bad_instruct)
-
     jumpAddr = controlFlow(uc, mnemonic, op_str)
 
     if (jumpAddr < CODE_ADDR or jumpAddr > MOD_HIGH) and jumpAddr != -1:
@@ -613,40 +530,28 @@ def hook_code(uc, address, size, user_data):
             jmpInstructs[address] = 0
 
         # track for code coverage
-        if address not in traversedAdds and em.codeCoverage == True:
-            # cvg = Coverage(uc, address)
-            # coverage_num += 1
-            # coverage_objects.append(cvg)
-            eflags = uc.reg_read(UC_X86_REG_EFLAGS)
-            # cvg.giveAddress(jumpAddr)
-            # cvg.giveAddress(address + size)
-
-            # if boolFollowJump(jmpFlag, mnemonic, eflags):
-            #     print ("boolFollowJump true - adding:", hex(jumpAddr))
-            #     cvg.giveAddress(jumpAddr)
-            # else:
-            #     cvg.giveAddress(address + size)
-            #     print ("boolFollowJump false - adding:", hex(address + size))
+        if address not in traversedAdds and em.codeCoverage:
+            eflags = uc.reg_read(UC_X86_REG_EFLAGS)  # noqa: F405
 
             if jumpAddr not in coverageAdds:
                 cvg1 = Coverage(uc, jumpAddr)
                 coverage_num += 1
                 coverage_objects.append(cvg1)
                 if em.showCCDebugInfo:
-                    print (cya+"\t[*] "+cya+ "Creating code coverage object:" +res2, cvg1.coverage_num, gre+"   Address:"+res2, hex(jumpAddr))
+                    print (constants.CYAN+"\t[*] "+constants.CYAN+ "Creating code coverage object:" +constants.RESET, cvg1.coverage_num, constants.GREEN+"   Address:"+constants.RESET, hex(jumpAddr))
             if address + size not in coverageAdds:
                 cvg2 = Coverage(uc, address + size)
                 coverage_num += 1
                 coverage_objects.append(cvg2)
                 if em.showCCDebugInfo:
-                    print (cya+"\t[*] "+cya+ "Creating code coverage object:" +res2, cvg2.coverage_num, gre+"   Address:"+res2, hex(address + size), )
+                    print (constants.CYAN+"\t[*] "+constants.CYAN+ "Creating code coverage object:" +constants.RESET, cvg2.coverage_num, constants.GREEN+"   Address:"+constants.RESET, hex(address + size), )
     elif "call" in mnemonic and em.includeCallInCC and em.codeCoverage:    # we are adding CALL as well.
         if address + size not in coverageAdds and address + size not in skipForCoverage:
             cvg2 = Coverage(uc, address + size)
             coverage_num += 1
             coverage_objects.append(cvg2)
             if em.showCCDebugInfo:
-                print (yel+"\t[*] "+cya+ "Code Coverage CALL - adding address"+res2, hex(address + size), cya+"- coverage object:"+res2, cvg2.coverage_num)
+                print (constants.YELLOW +"\t[*] "+constants.CYAN+ "Code Coverage CALL - adding address"+constants.RESET, hex(address + size), constants.CYAN+"- coverage object:"+constants.RESET, cvg2.coverage_num)
     elif "jmp" in mnemonic and em.codeCoverage and em.includeJmpInCC:    # we are adding CALL as well.
         if address + size not in coverageAdds and address + size not in skipForCoverage:
             if address + size == 0x12000005:
@@ -655,7 +560,7 @@ def hook_code(uc, address, size, user_data):
             coverage_num += 1
             coverage_objects.append(cvg2)
             if em.showCCDebugInfo:
-                print (yel+"\t[*] "+cya+ "Code Coverage JMP - adding address"+res2, hex(address + size), cya+"- coverage object:"+res2, cvg2.coverage_num)
+                print (constants.YELLOW +"\t[*] "+constants.CYAN+ "Code Coverage JMP - adding address"+constants.RESET, hex(address + size), constants.CYAN+"- coverage object:"+constants.RESET, cvg2.coverage_num)
 
     # Track addresses we've already visited
     if em.codeCoverage:
@@ -664,9 +569,9 @@ def hook_code(uc, address, size, user_data):
                 # print ("\tInstruction already traversed:", valInstruction)
                 if em.showCCDebugInfo:
                     if stopProcessCC:
-                        print(red+"\t[*]"+res+" Complete code coverage: already traversed " + hex(address) + red+ " -  stopping."+res2)
+                        print(constants.RED +"\t[*]"+constants.RESET+" Complete code coverage: already traversed " + hex(address) + constants.RED + " -  stopping."+constants.RESET)
                     elif em.StopExecutingAfterTraversed:
-                        print(red+"\t[*]"+res+" Complete code coverage: already traversed " + hex(address) + red+ " -  stopping after next instruction."+res2)
+                        print(constants.RED +"\t[*]"+constants.RESET+" Complete code coverage: already traversed " + hex(address) + constants.RED + " -  stopping after next instruction."+constants.RESET)
 
                 if verbose:
                     if stopProcessCC:
@@ -690,7 +595,7 @@ def hook_code(uc, address, size, user_data):
     # Hook usage of Windows API function
     if jumpAddr > MOD_LOW and jumpAddr < MOD_HIGH:
         funcAddress = hex(jumpAddr)
-        ret = catch_windows_api(uc, address, ret, size, funcAddress)
+        ret = catch_windows_api(uc, fRaw, address, ret, size, funcAddress)
 
     # Hook usage of Windows Syscall
     if jumpAddr == 0x5000:
@@ -717,13 +622,12 @@ def hook_code(uc, address, size, user_data):
 
 def hook_syscallBackup(uc, eip, esp, funcAddress, funcName, callLoc, syscallID):
     try:
-        try:
-            apiDict = dict_kernel32[funcName]
-        except:
+        for dictionary_candidate in ((dict_kernel32, "kernel32"), (dict_ntdll, "ntdll"), (dict_user32, "user32")):  # noqa: F405
             try:
-                apiDict = dict_ntdll[funcName]
-            except:
-                apiDict = dict_user32[funcName]
+                dictionary_candidate[0][funcName]
+                apiDict = dictionary_candidate[0]
+            except KeyError:
+                print(f"[!] {funcName} not found in {dictionary_candidate[1]}")
 
         paramVals = getParams(uc, esp, apiDict, 'dict1')
 
@@ -732,7 +636,7 @@ def hook_syscallBackup(uc, eip, esp, funcAddress, funcName, callLoc, syscallID):
 
         retVal, retValStr = findRetVal(funcName, syscallRS)
 
-        uc.reg_write(UC_X86_REG_EAX, retVal)
+        uc.reg_write(UC_X86_REG_EAX, retVal)  # noqa: F405
 
         funcInfo = (funcName, hex(callLoc),retValStr, 'INT', paramVals, paramTypes, paramNames, False, syscallID)
         logSysCall(funcName, funcInfo)
@@ -746,8 +650,6 @@ def hook_syscallDefault(uc, eip, esp, funcAddress, funcName, sysCallID, callLoc)
     dll = 'ntdll'
 
     try:
-        # print (1, funcName)
-
         nt_tuple = syscall_signature[funcName]
         paramVals = getParams(uc, esp, nt_tuple, 'ntdict')
         paramTypes = nt_tuple[1]
@@ -772,17 +674,17 @@ def hook_sysCall(uc, address, size):
     ret = address + size
     push(uc, em.arch, ret)
 
-    syscallID = uc.reg_read(UC_X86_REG_EAX)
+    syscallID = uc.reg_read(UC_X86_REG_EAX)  # noqa: F405
     sysCallName = syscall_dict[em.winVersion][em.winSP][str(syscallID)]
     exportAddress = 0
-    eip = uc.reg_read(UC_X86_REG_EIP)
-    esp = uc.reg_read(UC_X86_REG_ESP)
+    eip = uc.reg_read(UC_X86_REG_EIP)  # noqa: F405
+    esp = uc.reg_read(UC_X86_REG_ESP)  # noqa: F405
 
     try:
         funcInfo = getattr(WinSysCall, sysCallName)(uc, eip, esp, address, em)
         funcInfo.append(syscallID)
         logSysCall(sysCallName, funcInfo)
-    except:
+    except AttributeError:
         try:
             hook_syscallDefault(uc, eip, esp, exportAddress, sysCallName, syscallID, address)
         except Exception as e:
@@ -790,19 +692,19 @@ def hook_sysCall(uc, address, size):
     if sysCallName == 'NtTerminateProcess':
         stopProcess = True
         # print ("Stop: NtTerminateProcess syscall")
-    if 'LoadLibrary' in sysCallName and uc.reg_read(UC_X86_REG_EAX) == 0:
+    if 'LoadLibrary' in sysCallName and uc.reg_read(UC_X86_REG_EAX) == 0:  # noqa: F405
         print("\t[*] LoadLibrary failed. Emulation ceasing.")
         stopProcess = True
         # print ("Stop: LoadLibraryFailed")
 
-    uc.reg_write(UC_X86_REG_EIP, EXTRA_ADDR)
+    uc.reg_write(UC_X86_REG_EIP, EXTRA_ADDR)  # noqa: F405
 
 
 # Most Windows APIs use stdcall, so we need to clean the stack.
 def cleanStack(uc, numBytes):
     if numBytes > 0:
-        esp = uc.reg_read(UC_X86_REG_ESP)
-        uc.reg_write(UC_X86_REG_ESP, esp + numBytes)
+        esp = uc.reg_read(UC_X86_REG_ESP)  # noqa: F405
+        uc.reg_write(UC_X86_REG_ESP, esp + numBytes)  # noqa: F405
 
     # reset cleanBytes
     global cleanBytes
@@ -813,10 +715,9 @@ def cleanStack(uc, numBytes):
 def findDict(funcAddress, funcName, dll=None):
     try:
         global cleanBytes
-        if dll == None:
+        if not dll:
             dll = export_dict[funcAddress][1]
             dll = dll[0:-4]
-        paramVals = []
 
         # dll=dll.lower()
         dict4 = tryDictLocate('dict4', dll)
@@ -894,10 +795,7 @@ def getParams(uc, esp, apiDict, dictName):
 
             # Check if the type is a string
             elif "STR" in apiDict[1][i]:
-                try:
-                    paramVals[i] = read_string(uc, paramVals[i])
-                except:
-                    pass
+                paramVals[i] = read_string(uc, paramVals[i])
             else:
                 paramVals[i] = hex(paramVals[i])
 
@@ -906,12 +804,12 @@ def getParams(uc, esp, apiDict, dictName):
             if "STR" not in apiDict[1][i]:
                 try:
                     p = int(paramVals[i], 16)
-                    if (0x40000000 < p and p < 0x50010000):
-                        string = read_string(uc, p)
-                        if len(string) < 30:
-                            paramVals[i] = string
-                except:
-                    pass
+                except ValueError:
+                    print("[!] paramVals[i] is not an int.")
+                if (0x40000000 < p and p < 0x50010000):
+                    string = read_string(uc, p)
+                    if len(string) < 30:
+                        paramVals[i] = string
 
     cleanBytes = stackCleanup(uc, em, esp, numParams)
 
@@ -920,7 +818,7 @@ def getParams(uc, esp, apiDict, dictName):
 
 # If we haven't manually implemented the function, we send it to this function
 # This function will simply find parameters, then log the call in our dictionary
-def hook_default(uc, eip, esp, funcAddress, funcName, callLoc):
+def hook_default(uc, eip, esp, funcAddress, funcName, callLoc) -> None:
     try:
         dictName = apiDict = ""
         bprint(funcAddress, funcName)
@@ -942,13 +840,13 @@ def hook_default(uc, eip, esp, funcAddress, funcName, callLoc):
 
         try:
             dictR1 = globals()['dictRS_' + dll]
-        except:
+        except KeyError:
+            print(f"[!]dictRS_{dll} is not a valid key.")
             dictR1 = {}
         retVal, retValStr = findRetVal(funcName, dictR1)
         bprint("returnVal", funcName, retVal)
-        uc.reg_write(UC_X86_REG_EAX, retVal)
+        uc.reg_write(UC_X86_REG_EAX, retVal)  # noqa: F405
 
-        # retValStr = getRetVal(retVal)
         if retValStr == 32:
             funcInfo = (funcName, hex(callLoc), hex(retValStr), 'INT', paramVals, paramTypes, paramNames, False)
         else:
@@ -982,52 +880,29 @@ def findArtifacts():
         # -------------------------------------------
         #       Finding Paths
         # -------------------------------------------
-        # art.path_artifacts += re.findall(find_environment,str(p))
-        # art.path_artifacts += re.findall(find_letterDrives,str(p))
-        # art.path_artifacts += re.findall(find_relativePaths,str(p))
-        # art.path_artifacts += re.findall(find_networkShares,str(p))
-
         art.path_artifacts += re.findall(Regex.total_findPaths,str(p),re.IGNORECASE)
 
         # -------------------------------------------
         #       Finding Files
         # -------------------------------------------
-        # art.file_artifacts += re.findall(find_files,str(p))
-        # art.file_artifacts += re.findall(find_genericFiles,str(p))
-        # art.file_artifacts += re.findall(find_zip,str(p))
-        # art.file_artifacts += re.findall(find_images,str(p))
-        # art.file_artifacts += re.findall(find_programming,str(p))
-        # art.file_artifacts += re.findall(find_workRelated,str(p))
-        # art.file_artifacts += re.findall(find_videoAudio,str(p))
-
         art.file_artifacts += re.findall(Regex.find_totalFiles,str(p))
         art.file_artifacts += re.findall(Regex.find_totalFilesBeginning,str(p),re.IGNORECASE)
+
         #-------------------------------------------
         #       Finding Command line
         # -------------------------------------------
-        # art.commandLine_artifacts += re.findall(cmdline_args,str(p))
-        # art.commandLine_artifacts += re.findall(powershell_args,str(p))
-        # art.commandLine_artifacts += re.findall(reg_args,str(p))
-        # art.commandLine_artifacts += re.findall(net_args,str(p))
-        # art.commandLine_artifacts += re.findall(netsh_args,str(p))
-        # art.commandLine_artifacts += re.findall(schtask_args,str(p),re.IGNORECASE)
-        # art.commandLine_artifacts += re.findall(sc_args,str(p))
         art.commandLine_artifacts += re.findall(Regex.total_commandLineArguments, str(p), re.IGNORECASE)
+
         # -------------------------------------------
         #       Finding WEB
         # -------------------------------------------
-        # art.web_artifacts += re.findall(find_website,str(p))
-        # art.web_artifacts += re.findall(find_ftp,str(p))
         art.web_artifacts += re.findall(Regex.total_webTraffic, str(p), re.IGNORECASE)
+
         # -------------------------------------------
         #       Finding Registry
         # -------------------------------------------
-        # art.registry_artifacts += re.findall(find_HKEY,str(p))
-        # art.registry_artifacts += re.findall(find_CurrentUser,str(p))
-        # art.registry_artifacts += re.findall(find_LocalMachine,str(p))
-        # art.registry_artifacts += re.findall(find_Users,str(p))
-        # art.registry_artifacts += re.findall(find_CurrentConfig,str(p))
         art.registry_artifacts += re.findall(Regex.total_Registry, str(p), re.IGNORECASE)
+
         # -------------------------------------------
         #       Finding Exe / DLL
         # -------------------------------------------
@@ -1046,57 +921,10 @@ def findArtifacts():
     art.removeStructures(Regex)
 
 
-
-"""
-def findArtifactsOLD():
-    artifacts = []
-    net_artifacts = []
-    file_artifacts = []
-    exec_artifacts = []
-
-    for p in paramValues:
-        artifacts += re.findall(r"[a-zA-Z0-9_.-]+\.\S+", str(p))
-        net_artifacts += re.findall(r"http|ftp|https:\/\/?|www\.?[a-zA-Z]+\.com|eg|net|org", str(p))
-        net_artifacts += re.findall(
-            r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", str(p))
-        # file_artifacts += re.findall(r"[a-zA-z]:\\[^\\]*?\.\S+|.*(\\.*)$|.exe|.dll", str(p))
-        rFile = ".*(\\.*)$"
-        # print(p, type(p))
-        # result = re.search(rFile, str(p))
-        # if result:
-        #     file_artifacts.append(str(p))
-        # print(file_artifacts)
-
-        # file_artifacts
-        exec_artifacts += re.findall(r"\S+\.exe", str(p))
-        artifacts += net_artifacts + file_artifacts
-
-    # result = re.search(r, i)
-
-    #     if result:
-    #         web_artifacts.append(i)
-    #     if i[-4:] == ".exe":
-    #         exec_artifacts.append(i)
-
-    #     result = re.search(rfile,i)
-    #     if result:
-    #         file_artifacts.append(i)
-
-    # print (net_artifacts)
-    # print (net_artifacts)
-
-    return list(dict.fromkeys(artifacts)), list(dict.fromkeys(net_artifacts)), list(
-        dict.fromkeys(file_artifacts)), list(dict.fromkeys(exec_artifacts))
-
-
-    return list(dict.fromkeys(artifacts)), list(dict.fromkeys(net_artifacts)), list(dict.fromkeys(file_artifacts)), list(dict.fromkeys(exec_artifacts))
-"""
-
-
 def getArtifacts():
     artifacts, net_artifacts, file_artifacts, exec_artifacts = findArtifacts()
 
-def test_i386(mode, code):
+def test_i386(mode, code, fRaw):
     global artifacts2
     global outFile
     global stackFile
@@ -1104,7 +932,6 @@ def test_i386(mode, code):
     global codeLen
     global address_range
     global finalAddress
-    arch=0
     mu = Uc(UC_ARCH_X86, mode)
 
     startLoc=CODE_ADDR + em.entryOffset
@@ -1114,7 +941,8 @@ def test_i386(mode, code):
         # Initialize emulator
         try:
             mu.mem_map(0x00000000, 0x23050000)
-        except:
+        except UcError as uce:
+            print(uce)
             print ("memory loading erorr")
         mods = loadDlls(mu)
 
@@ -1125,27 +953,27 @@ def test_i386(mode, code):
         mu.mem_write(EXTRA_ADDR, b'\xC3')
 
         # initialize stack
-        mu.reg_write(UC_X86_REG_ESP, STACK_ADDR-600)
-        mu.reg_write(UC_X86_REG_EBP, STACK_ADDR)
+        mu.reg_write(UC_X86_REG_ESP, STACK_ADDR-600)  # noqa: F405
+        mu.reg_write(UC_X86_REG_EBP, STACK_ADDR)  # noqa: F405
 
         # Push entry point addr to top of stack. Represents calling of entry point.
         push(mu, em.arch, ENTRY_ADDR)
         mu.mem_write(ENTRY_ADDR, b'\x90\x90\x90\x90')
 
-        if mode == UC_MODE_32:
-            print(cya + "\n\t[*]" + res2 + " Emulating x86 shellcode")
+        if mode == UC_MODE_32:  
+            print(constants.CYAN + "\n\t[*]" +constants.RESET + " Emulating x86 shellcode")
             cs = Cs(CS_ARCH_X86, CS_MODE_32)
             allocateWinStructs32(mu, mods)
-        elif mode == UC_MODE_64:
-            print(cya + "\n\t[*]" + res2 + " Emulating x86_64 shellcode")
+        elif mode == UC_MODE_64:  
+            print(constants.CYAN + "\n\t[*]" +constants.RESET + " Emulating x86_64 shellcode")
             cs = Cs(CS_ARCH_X86, CS_MODE_64)
             allocateWinStructs64(mu, mods)
 
         # tracing all instructions with customized callback
 
-        mu.hook_add(UC_HOOK_MEM_WRITE, hook_mem_access)
-        mu.hook_add(UC_HOOK_MEM_READ, hook_mem_access)
-        mu.hook_add(UC_HOOK_CODE, hook_code)
+        mu.hook_add(UC_HOOK_MEM_WRITE, hook_mem_access)  
+        mu.hook_add(UC_HOOK_MEM_READ, hook_mem_access)  
+        mu.hook_add(UC_HOOK_CODE, hook_code, user_data=fRaw)  
 
         # mu.hook_add(UC_ERR_FETCH_UNMAPPED, hook_mem_access2)
 
@@ -1163,59 +991,21 @@ def test_i386(mode, code):
     try:
         # Start the emulation
         mu.emu_start(startLoc, (CODE_ADDR + em.entryOffset) + len(code))
-        # mu.release_handle(True)
 
     except Exception as e:
         print("Emulation error: ", e)
         print ("Last address:", hex(finalAddress))
         print(traceback.format_exc())
-        # createStackOutput(arch)
 
-
-
-
-    # createStackOutput(arch)
     findArtifacts()
-
     return mu
 
-
-# def startEmu(arch, data, vb):
-#     # print ("startEmu arch", arch)
-#     global verbose
-#     verbose = vb
-#
-#     fRaw.giveSize(data)
-#
-#     if arch == 32:
-#         em.arch=32
-#     elif arch == 64:
-#         em.arch=64
-#
-#     while True:
-#         if em.arch == 32:
-#             test_i386(UC_MODE_32, data)
-#         elif em.arch == 64:
-#             test_i386(UC_MODE_64, data)
-#
-#         if len(coverage_objects) <= 0 or em.codeCoverage == False:
-#             break
-#
-#     print(cya + "\t[*]" + res2 + " CPU counter: " + str(programCounter))
-#     print(cya + "\t[*]" + res2 + " Emulation complete")
-#
-#     fRaw.merge2()
-#     fRaw.completed()
-#     fRaw.findAPIs()
-# #
-#     outFile.close()
-#     stackFile.close()
 
 def showTravAdds():
     print ("TraversedAdds at restart:")
     myOut=""
     for each in traversedAdds:
-        myOut+=hex(each) + gre+", "+whi
+        myOut+=hex(each) + constants.GREEN+", "+constants.WHITE
     print (myOut)
 
 def restartEmu(mu, mode, code):
@@ -1229,7 +1019,6 @@ def restartEmu(mu, mode, code):
     codeLen = len(code)
     em.restartCCInProgress = True
 
-    # showTravAdds()
     try:
         startLoc = coverage_objects[0].address
         coverage_objects[0].dump_saved_info(mu)
@@ -1241,16 +1030,16 @@ def restartEmu(mu, mode, code):
         print(traceback.format_exc())
 
     try:
-        if mode == UC_MODE_32:
-            print(gre + "\t[!]"+res2+" Complete code coverage: "+gre+"restarting emulation"+res2+" of x86 shellcode at " + gre + hex(startLoc) + res2 + ".")
+        if mode == UC_MODE_32:  
+            print(constants.GREEN + "\t[!]"+constants.RESET+" Complete code coverage: "+constants.GREEN+"restarting emulation"+constants.RESET+" of x86 shellcode at " + constants.GREEN + hex(startLoc) + constants.RESET + ".")
             if verbose:
                 outFile.write("***** Complete code coverage: restarting emulation of x86 shellcode at " + hex(startLoc) + ".\n")
             if em.timeless_debugging_stack:
                 stackFile.write("\n***** Complete code coverage: restarting emulation of x86 shellcode at " + hex(startLoc) + ". " + str(old_num)+ "\n")
             # cs = Cs(CS_ARCH_X86, CS_MODE_32)
 
-        elif mode == UC_MODE_64:
-            print(gre + "\t[!]"+res2+" Complete code coverage: "+gre+"restarting emulation"+res2+" of x86_64 shellcode at " + gre + hex(startLoc) + res2 + ".")
+        elif mode == UC_MODE_64:  # noqa: F405
+            print(constants.GREEN + "\t[!]"+constants.RESET+" Complete code coverage: "+constants.GREEN+"restarting emulation"+constants.RESET+" of x86_64 shellcode at " + constants.GREEN + hex(startLoc) + constants.RESET + ".")
             if verbose:
                 outFile.write("\n***** Complete code coverage: restarting emulation of x86_64 shellcode at " + hex(startLoc) + ".\n")
             if em.timeless_debugging_stack:
@@ -1264,7 +1053,7 @@ def restartEmu(mu, mode, code):
         print(e)
         print(traceback.format_exc())
 
-def startEmu(data, vb):
+def startEmu(data, vb, fRaw):
     global verbose
     global programCounter
     programCounter=0
@@ -1274,39 +1063,28 @@ def startEmu(data, vb):
 
     if em.arch == 32:
         em.arch=32
-        mu = test_i386(UC_MODE_32, data)
+        mu = test_i386(UC_MODE_32, data, fRaw)  
     elif em.arch == 64:
         em.arch=64
-        mu2 = test_i386(UC_MODE_64, data)
+        mu2 = test_i386(UC_MODE_64, data, fRaw)  
 
     runs = 0
-    while len(coverage_objects) > 0 and em.codeCoverage == True:
+    while len(coverage_objects) > 0 and em.codeCoverage:
         if em.arch == 32:
-            restartEmu(mu, UC_MODE_32, data)
+            restartEmu(mu, UC_MODE_32, data)  
         elif em.arch == 64:
-            restartEmu(mu2,UC_MODE_64, data)
+            restartEmu(mu2,UC_MODE_64, data)  
 
         if runs > 2:
             break
         runs += 1
 
-    print(cya + "\t[*]" + res2 + " CPU counter: " + str(programCounter))
-    print(cya + "\t[*]" + res2 + " Emulation complete")
+    print(constants.CYAN + "\t[*]" +constants.RESET + " CPU counter: " + str(programCounter))
+    print(constants.CYAN + "\t[*]" +constants.RESET + " Emulation complete")
 
     fRaw.merge2()
     fRaw.completed()
     fRaw.findAPIs()
 
-    # outFile.close()
-
-    # stackFile.close()
-
-
-def emuInit():
-    pass
-
-def haha():
-    fRaw.show()
-fRaw=sharDeobf()
 vars = Variables()
 em = vars.emu

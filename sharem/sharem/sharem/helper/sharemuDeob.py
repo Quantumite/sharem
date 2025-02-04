@@ -30,7 +30,7 @@ def binaryToStr(binary, mode = None):
 		elif mode==3:
 			for v in binary:
 				newop += "{0:02x} ".format(v)    #   e.g ab ac ad ae
-				# print ("newop",newop)
+				# print ("newop",newbop)
 				
 
 
@@ -41,17 +41,7 @@ def binaryToStr(binary, mode = None):
 
 
 class sharDeobf:
-# 	o="shellcode"
-# shBody="decoded body"
-# shStub="decoder stub"
-# shDec="decoded shellcode (full)"
 	def __init__(self, rawData=None):
-		# print ("init")
-		# print ("HELLO, I AM STARTING, sharDeobf")
-		# try:
-		# 	print ("size sharDeobf", len(rawData))
-		# except:
-		# 	print ("NONE!")
 		rawFinal=[]
 		
 		self.rawFinal=[]
@@ -83,8 +73,6 @@ class sharDeobf:
 
 
 	def giveSize(self, rawData):
-		# print (binaryToStr(rawData))
-		# print ("size", len(rawData))
 		sizeRaw=len(rawData)
 		rawFinal=[]
 		for each in rawData:
@@ -96,8 +84,6 @@ class sharDeobf:
 		self.bytesInst=rawFinal.copy()
 		self.rawFinalAll=rawFinal.copy()
 		self.startEnd=rawFinal.copy()
-		# print ("size", len(rawData), len(self.rawFinal))
-		# print (len(self.rawFinal), len(self.original))
 
 
 	def completed(self):
@@ -107,22 +93,9 @@ class sharDeobf:
 	def setRawData2(self, rawData):
 		self.original = rawData
 
-    # fRaw.addBytes(shells, address, size)
 
-	# def addBytes(self, offset, instSize, values):
 	def addBytes(self, shells, address, size):
-		# print ("addBytes", shells, address, size)
-		# print ("**")
-		# print (shells)
-		# print (hex(address))
-		# print (size)
-		# print ("start", hex(address), "end", hex(address +size-1))
-
 		t=address
-		# print("size", hex(len(self.rawFinal)))
-		# print ("address: t", t, hex(t))
-		
-		# print ( "***typeshells", type(shells), shells, binaryToStr(shells))
 		try:
 			for each in shells:
 				try:
@@ -131,43 +104,18 @@ class sharDeobf:
 					self.startEnd[t]=(address, address+size, size)
 					self.bytesInst[t]="INST"
 				except:
-
-					# print ("AddBytes - opps", hex(address), size)
 					pass
 
 
 				t+=1
-				# print ("address, address+size, size", hex(address), hex(address+size), size)
 		except Exception as e:
-			
-			# end=""
-			# for each in self.rawFinal:
-			# 	try:
-			# 		end +="\\x"+hex(each)
-			# 	except:
-			# 		end+="\\NONE"
-			# print (end)
-
-			# print ("add_error: t", t, hex(t))
-			# print("Oh no!!!", e)
 			print(traceback.format_exc())
-			# print (len(self.rawFinal))
-			# print (self.rawFinal)
 
-
-			pass
-
-		# print ("\n\n")
-	def show(self):
-		# print ("size2", len(self.rawFinal))
-		# input()
-		pass
 
 	def show2(self):
 		print ("size2", len(self.rawFinal))
 		print ("original:")
 		print (self.original)
-		# print (list(self.original))
 		print ("rawfinal:")
 		print (self.rawFinal)
 		
@@ -203,14 +151,11 @@ class sharDeobf:
 			print (type(new))
 		except:
 			pass
-			# input()
 		
 	def giveEnd(self, final):
-		# print ("giveEnd")
 		self.rawFinalAll=final
+
 	def giveSize(self, rawData):
-		# print (binaryToStr(rawData))
-		# print ("size", len(rawData))
 		sizeRaw=len(rawData)
 		rawFinal=[]
 		for each in rawData:
@@ -222,23 +167,16 @@ class sharDeobf:
 		self.bytesInst=rawFinal.copy()
 		self.rawFinalAll=rawFinal.copy()
 		self.startEnd=rawFinal.copy()
-		# print ("size", len(rawData), len(self.rawFinal))
-		# print (len(self.rawFinal), len(self.original))
 
 	def add(self, api, funcName):
-
 		ansLE=struct.pack('<I',api)
-		# bprint ("addM", api)
 		locInMemory=0xdeadc0de
 		self.APIs.add((api, ansLE, funcName,locInMemory))
-		# bprint ("done")
 
 	
 
 	def findAPIs(self):
-		# print ("findAPIs")
 		newApis=set()
-		# print ("#", len(self.APIs))
 		for each in self.APIs:
 			pattern=each[1]
 			api=each[0]
@@ -246,25 +184,18 @@ class sharDeobf:
 			funcName=each[2]
 			locInMemory=each[3]
 
-			# print ("pattern", type(pattern), binaryToStr(pattern))
 			locInMemory=getPattern(pattern,self.merged2)
 			newApis.add((api, ansLE, funcName,locInMemory))
-			# print ("FO?UND ONE", locInMemory, hex(locInMemory), funcName)
-		# print (newApis)
 		self.APIs=newApis
-		# print (self.APIs)
+
 	def testBytesAdd(self):
 		test=b"\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00\xBD\x12\x00\x00\x00\xBD\x15\x00\x00\x00\xBD\x12\x00\x00\x00\x83\xC5\x23\x83\xC5\x23\x83\xC5\x25\x81\xC5\x55\x02\x00\x00"
 		self.original=list(test)
-		# self.original=[189, 18, 0, None, None, 0, 0, 189, 21, 0, 0, 0, 189, 18, 0, 0, 0, 131, 197, 35, 131, 197, 35, 131, 197, 37, 129, 197, 85, 2, 0, 0, 189, 18, 0, 0, 0, 189, 21, 0, 0, 0, 189, 18, 0, 0, 0, 131, 197, 35, 131, 197, 35, 131, 197, 37, 129, 197, 85, 2, 0, 0]
 
 
 	def merge(self):
 		merged=self.original.copy()
 		t=0
-		# for x in range (5):
-		# 	self.rawFinal[t]=None
-		# 	t+=1
 		for each in self.original:
 			try:
 				if self.rawFinal[t] != None:
@@ -312,16 +243,5 @@ class sharDeobf:
 				pass
 			t+=1
 
-		# print ("merged2")
-		# print (merged)
-		# print("\n\n")
 		self.merged2=bytes(merged)
-		# print (binaryToStr(bytes(merged)))
-		# print("\n\n")
-
-		# print ("original")
-		# print (self.original)
-
-		self.rawFinalAll
-# fRaw=sharDeobf()
 

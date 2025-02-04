@@ -2,11 +2,10 @@ import os
 import configparser
 import sys
 import ast
-from sharem.sharem.helper.emu import *
-from sharem.sharem.helper.foundbooleans import foundBooleans
-from sharem.sharem.helper.variable import Variables
+from .helper.variable import Variables
 
-from .singleton import Singleton
+from sharem.sharem.singleton.helpers import Singleton
+import sharem.sharem.constants as constants
 
 """
 1. add a commented template file
@@ -53,7 +52,7 @@ class Configuration(metaclass=Singleton):
 	def __init__(self, cfgFile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.cfg')):
 		self.cfgFile = cfgFile
 		self.comments = True
-		
+
 		##[CONFIG]
 		self.include_comments_in_this_file = True
 		
@@ -166,8 +165,6 @@ class Configuration(metaclass=Singleton):
 		self.simulatedValues_drive_letter = 'C:'
 		self.simulatedValues_start_directory = 'C:\\Users\\Administrator\\AppData'
 		self.simulatedValues_temp_file_prefix = 'SHAREM'
-		# self.simulatedValues_file_to_read_from = []
-		# self.simulatedValues_output_emulated_files = True
 		self.simulatedValues_download_files = False
 
 		#[COMPLETE CODE COVERAGE CCC]
@@ -186,19 +183,6 @@ class Configuration(metaclass=Singleton):
 		_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.cfgFile)
 		conf.read(_path)
 		self.config = conf
-		#initialize the config
-		
-		
-		
-		# self.decryptConf(conf)
-		# self.searchConf(conf)
-		# # self.disassemblyConf(conf)
-		# self.emulationConf(conf)
-		# self.emulationSimValueConf(conf)
-		# self.stringsConf(conf)
-		# # self.syscallsConf(conf)
-		# # self.patternConf(conf)
-		# # self.startUp(conf)
 		return conf
 		
 
@@ -252,16 +236,7 @@ class Configuration(metaclass=Singleton):
 				if key in x:
 					self.config["COMPLETE CODE COVERAGE CCC"][str(key)] = str(val)
 
-			# print("Key: ", key, "Val: ", val)
-			# print(vars(self.config))
-
-		# if "pushret" in self.args:
-		#     self.config['SHAREM SEARCH']['pushret'] = str(self.args['pushret'])
-
-		# save = self.save()
-
 	def save(self):
-		# print("save")
 		_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.cfgFile)
 		with open(_path, "w") as configfile:
 			self.config.write(configfile)
@@ -288,9 +263,6 @@ class Configuration(metaclass=Singleton):
 ##############################
 
 	def decryptConf(self,conr):
-		#update the prining to be put into a log file.
-		red,gre,yel,blu,mag,cya,whi,res,res2 = Variables.colors(self= Variables)
-		
 		self.decrypt_fast_mode = conr.getboolean('SHAREM DECRYPT','fast_mode')
 		self.decrypt_find_all = conr.getboolean('SHAREM DECRYPT','find_all')
 		self.decrypt_dist_mode = conr.getboolean('SHAREM DECRYPT','dist_mode')
@@ -300,23 +272,14 @@ class Configuration(metaclass=Singleton):
 		except:
 			self.decrypt_cpu_count = "auto"
 		self.decrypt_nodes_file =  conr['SHAREM DECRYPT']['nodes_file']
-		if not (os.path.exists(self.decrypt_nodes_file)):
-			# print(red +"\n\nConfig file Error:", yel + self.decrypt_nodes_file + res, red + "doesn't exist!" + res)
-			pass
 		self.decrypt_dec_operation_type = conr['SHAREM DECRYPT']['dec_operation_type']
 		try:
 			self.decrypt_dec_operation_type = ast.literal_eval(self.decrypt_dec_operation_type)
 		except:
-			print(yel + "The value of", red + self.decrypt_dec_operation_type, yel + "is not correct or malformed!!"+ res)
+			print(constants.YELLOW + "The value of", constants.RED + self.decrypt_dec_operation_type, constants.YELLOW + "is not correct or malformed!!"+ constants.RED)
 			sys.exit()
 		self.decrypt_file =  conr['SHAREM DECRYPT']['decrypt_file']
-		if not (os.path.exists(self.decrypt_file)):
-			# print(red +"\n\nConfig file Error:", yel + self.decrypt_file + res, red + "doesn't exist!" + res)
-			pass
 		self.decrypt_stub_file =  conr['SHAREM DECRYPT']['stub_file']
-		if not (os.path.exists(self.decrypt_stub_file)):
-			# print(red +"\n\nConfig file Error:", yel + self.decrypt_stub_file + res, red + "doesn't exist!" + res)
-			pass
 		self.decrypt_use_same_file = conr.getboolean('SHAREM DECRYPT','use_same_file')
 		try:
 			self.decrypt_stub_entry_point = int(conr['SHAREM DECRYPT']['stub_entry_point'])
@@ -415,7 +378,7 @@ class Configuration(metaclass=Singleton):
 		
 		#init the mbool Dict with values from config
 		mBool = var.mBool
-		o_shell = var.shOrg
+		o_shell = constants.SHELLCODE_LABEL
 		print ("o_shell", o_shell)
 		print ("mBool", mBool, "len", len(mBool))
 		print ("self.dissassembly_enable_hidden_calls", self.dissassembly_enable_hidden_calls)
@@ -431,8 +394,6 @@ class Configuration(metaclass=Singleton):
 		mBool[o_shell].bDoShowLabels = self.dissassembly_enable_hidden_calls
 		
 	def emulationConf(self,conr):
-
-		print ("emulationConf")
 		self.emulation_print_emulation_result = conr.getboolean('SHAREM EMULATION', 'print_emulation_result')
 		self.emulation_verbose_mode = conr.getboolean('SHAREM EMULATION', 'emulation_verbose_mode')
 		self.emulation_multiline = conr.getboolean('SHAREM EMULATION', 'emulation_multiline')
@@ -487,41 +448,15 @@ class Configuration(metaclass=Singleton):
 		self.simulatedValues_download_files = conr['SHAREM EMULATION SIMULATED VALUES']['file_download']
 		
 	def stringsConf(self,conr):
-		# global bPushStackStrings
-		# global bWideCharStrings
-		# global bAsciiStrings
-		# global minStrLen
-
 		self.strings_push_stack_strings =  conr.getboolean('SHAREM STRINGS','push_stack_strings')
 		self.strings_ascii_strings =  conr.getboolean('SHAREM STRINGS','ascii_strings')
 		self.strings_wide_char_strings =  conr.getboolean('SHAREM STRINGS','wide_char_strings')
 		self.strings_minimum_str_length = int(conr['SHAREM STRINGS']['minimum_str_length'])
 			
 	def syscallsConf(self,conr):
-
-		# global syscallSelection
-		
-		# initSysCallSelect()
-
-		
-		# try:
-		#     list_of_syscalls = ast.literal_eval(list_of_syscalls)
-		#     if(type(list_of_syscalls) != list):
-		#         print("Error:", list_of_syscalls, "<-- this should be a list.")
-
-		# except:
-		#     print(yel + "The value of", red + list_of_syscalls, yel + "is not correct or malformed!!"+ res)
-		#     sys.exit()
-
-		# for selected in list_of_syscalls:
-		#     for osv in syscallSelection:
-		#         if osv.code == selected:
-		#             osv.toggle = True
 		self.selected_syscalls = str(conr['SHAREM SYSCALLS']['selected_syscalls'])
 
 	def patternConf(self,conr):
-		# global patt 
-		# patt.setPatterns(int(conr['SHAREM PATTERNS']['path_pattern']))
 		self.pattern_path_pattern = int(conr['SHAREM PATTERNS']['path_pattern'])
 		self.pattern_lang_code_pattern = int(conr['SHAREM PATTERNS']['lang_code_pattern'])
 		self.pattern_dotted_word_pattern = int(conr['SHAREM PATTERNS']['dotted_word_pattern'])

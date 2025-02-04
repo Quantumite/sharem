@@ -1,15 +1,14 @@
 from ctypes import LittleEndianStructure, sizeof
 from struct import pack, unpack
 from time import gmtime, localtime, time_ns
-from sharem.sharem.DLLs.emu_helpers.reverseLookUps import ReverseLookUps
-from sharem.sharem.DLLs.emu_helpers.sim_values import emuSimVals
+from .reverseLookUps import ReverseLookUps
+from .sim_values import emuSimVals
 
 from sharem.sharem.helper.ctypesUnion import LittleEndianUnion
 from sharem.sharem.helper.emu import EMU
 from sharem.sharem.helper.structHelpers import BOOL, BYTE, DWORD, DWORD_PTR_32BIT, DWORD_PTR_64BIT, HANDLE_32BIT, HANDLE_64BIT, HBITMAP_32BIT, HBITMAP_64BIT, HBRUSH_32BIT, HBRUSH_64BIT, HINSTANCE_32BIT, HINSTANCE_64BIT, HKEY_32BIT, HKEY_64BIT, HMENU_32BIT, HMENU_64BIT, HWND_32BIT, HWND_64BIT, INT, LMSTR, LONG, LONGLONG, LPARAM_32BIT, LPARAM_64BIT, LPBYTE_32BIT, LPBYTE_64BIT, LPCSTR_32BIT, LPCSTR_64BIT, LPCWSTR_32BIT, LPCWSTR_64BIT, LPPROC_THREAD_ATTRIBUTE_LIST_32BIT, LPPROC_THREAD_ATTRIBUTE_LIST_64BIT, LPSTR_32BIT, LPSTR_64BIT, LPVOID_32BIT, LPVOID_64BIT, LPWSTR_32BIT, LPWSTR_64BIT, MAX_PATH, PCHAR_32BIT, PCHAR_64BIT, POINTER_32BIT, POINTER_64BIT, PVOID_32BIT, PVOID_64BIT, PWSTR_32BIT, PWSTR_64BIT, QWORD, SECURITY_DESCRIPTOR_CONTROL, SIZE_T_32BIT, SIZE_T_64BIT, UCHAR, UINT, ULONG, ULONG64, ULONG_PTR_32BIT, ULONG_PTR_64BIT, ULONGLONG, USHORT, WCHAR, WORD, CHAR, WPARAM_32BIT, WPARAM_64BIT, StructFieldsFromTypeHints, UnionFieldsFromTypeHints
 
-from ...helper.emuHelpers import Uc
-
+from unicorn import Uc
 
 # Struct PROCESS_INFORMATION
 # Alias Names: _PROCESS_INFORMATION
@@ -81,65 +80,6 @@ class PROCESS_INFORMATION:
             else:
                 self.dwThreadId = emuSimVals.getNextTID()
 
-
-# class PROCESSENTRY32: # Needs Redone
-#     # Backs both PROCESSENTRY32 and PROCESSENTRY32W
-#     types = ['DWORD','DWORD','DWORD','ULONG_PTR','DWORD','DWORD','DWORD','LONG','DWORD','CHAR'] 
-#     names = ['dwSize','cntUsage','th32ProcessID','th32DefaultHeapID','th32ModuleID','cntThreads','th32ParentProcessID','pcPriClassBase','dwFlags','szExeFile']
-
-#     def __init__(self, processID, threadCount, parent_pID, baseThreadPriority, exeFile: str):
-#         self.dwSizeA = 296 # Ascii Size
-#         self.dwSizeW = 556 # Unicode Size
-#         self.cntUsage = 0 # No Longer Used
-#         self.th32ProcessID = processID
-#         self.th32DefaultHeapID = 0 # No Longer Used
-#         self.th32ModuleID = 0 # No Longer Used
-#         self.cntThreads= threadCount
-#         self.th32ParentProcessID = parent_pID
-#         self.pcPriClassBase = baseThreadPriority
-#         self.dwFlags = 0 # No Longer Used
-#         self.szExeFile = exeFile
-
-#     def writeToMemoryA(self, uc: Uc, address):
-#         packedStruct = pack('<IIILIIIlI260s', self.dwSizeA, self.cntUsage, self.th32ProcessID, self.th32DefaultHeapID, self.th32ModuleID, self.cntThreads, self.th32ParentProcessID, self.pcPriClassBase, self.dwFlags, self.szExeFile.encode('ascii'))
-#         uc.mem_write(address, packedStruct)
-
-#     def readFromMemoryA(self, uc: Uc, address):
-#         data = uc.mem_read(address, self.dwSizeA)
-#         unpackedStruct = unpack('<IIILIIIlI260s', data)
-#         self.dwSizeA = unpackedStruct[0]
-#         self.cntUsage = unpackedStruct[1]
-#         self.th32ProcessID = unpackedStruct[2]
-#         self.th32DefaultHeapID = unpackedStruct[3]
-#         self.th32ModuleID = unpackedStruct[4]
-#         self.cntThreads = unpackedStruct[5]
-#         self.th32ParentProcessID = unpackedStruct[6]
-#         self.pcPriClassBase = unpackedStruct[7]
-#         self.dwFlags = unpackedStruct[8]
-#         self.szExeFile = unpackedStruct[9].decode()
-
-#     def writeToMemoryW(self, uc: Uc, address):
-#         packedStruct = pack('<IIILIIIlI520s', self.dwSizeW, self.cntUsage, self.th32ProcessID, self.th32DefaultHeapID, self.th32ModuleID, self.cntThreads, self.th32ParentProcessID, self.pcPriClassBase, self.dwFlags,self.szExeFile.encode('utf-16')[2:])
-#         uc.mem_write(address, packedStruct)
-
-#     def readFromMemoryW(self, uc: Uc, address):
-#         data = uc.mem_read(address, self.dwSizeW)
-#         unpackedStruct = unpack('<IIILIIIlI520s', data)
-#         self.dwSizeW = unpackedStruct[0]
-#         self.cntUsage = unpackedStruct[1]
-#         self.th32ProcessID = unpackedStruct[2]
-#         self.th32DefaultHeapID = unpackedStruct[3]
-#         self.th32ModuleID = unpackedStruct[4]
-#         self.cntThreads = unpackedStruct[5]
-#         self.th32ParentProcessID = unpackedStruct[6]
-#         self.pcPriClassBase = unpackedStruct[7]
-#         self.dwFlags = unpackedStruct[8]
-#         self.szExeFile = unpackedStruct[9].decode()
-
-# Needs Redone More
-# Struct PROCESSENTRY32
-# Alias Names: tagPROCESSENTRY32
-# Alias Pointer Names: 
 
 def get_PROCESSENTRY32(uc: Uc, address: int, em: EMU):
     if em.arch == 32:

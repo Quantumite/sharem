@@ -1,6 +1,4 @@
-import json
 
-from unicorn.x86_const import *
 from unicorn.x86_const import *
 from struct import pack, unpack
 from unicorn import *
@@ -14,8 +12,6 @@ from ..DLLs.hookAPIs import *
 from ..DLLs.syscall_signatures import *
 import re
 import binascii
-from pathlib import Path
-import sys
 
 
 class timelessD:
@@ -752,13 +748,11 @@ def controlFlow(uc, mnemonic, op_str):
     return address
 
 def exitAPI(funcName):
-    if funcName == "ExitProcess" or funcName == "TerminateProcess":
-        return True
-    else:
-        return False
+    """Returns boolean for known exit-like API calls."""
+    return funcName == "ExitProcess" or funcName == "TerminateProcess"
 
 def retEnding(uc, mnemonic):
-    esp = uc.reg_read(UC_X86_REG_ESP)
+    esp = uc.reg_read(UC_X86_REG_ESP)  # noqa: F405
     retLoc = uc.mem_read(esp, 4)
     retLoc = unpack('<I', retLoc)[0]
     if mnemonic == 'ret' and retLoc == 0x1000:
@@ -974,5 +968,5 @@ def tryDictLocate(dictName, dll):
     dictName += '_'
     try:
         return globals()[dictName + dll]
-    except:
+    except KeyError:
         return {}

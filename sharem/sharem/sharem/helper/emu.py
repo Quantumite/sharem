@@ -1,4 +1,4 @@
-from sharem.sharem.singleton.helpers import Singleton
+from ..singleton.helpers import Singleton
 
 
 class EMU(metaclass=Singleton):

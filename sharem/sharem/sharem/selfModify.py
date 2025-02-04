@@ -1,17 +1,12 @@
 import re
 import itertools
-from math import factorial
 import timeit
-import numpy as np
 import multiprocessing 
 import time
 import math
 import dispy
-import traceback
-from . import distrFunc
+from .distrFunc import  *
 from .lists import PEB_WALK
-from . import lists
-# import lists
 from capstone import *
 import capstone
 
@@ -33,7 +28,7 @@ def get_PEB_walk_start_decode(mode, NumOpsDis ,bytesToMatch, secNum, data2):
 		#for i in range(len(bytesToMatch)): #can break out on no match for efficiency, left as is for simplicity
 		i = 0
 		for x in bytesToMatch:
-			if(found == False):
+			if not found:
 				break
 			# elif ((i+t) >= len_data2 or i >= len_bytesToMatch):
 			# 	found = False # out of range
@@ -1420,7 +1415,6 @@ def block_size(id, p, n):
 #stubParams: when being run after analyzing decoder stub, first list in stubParams tuple should be all detected values. The second should be the list of desired operations to try.
 
 def austinDecode(decodeOps, sample, mode = "default", starts = [], order = [], findAll = False, cpuCount = "auto", stubParams = ([],[]), successPoints = 3):
-# def austinDecode(*args): asdf
 	global aLimit
 	global bLimit
 	global cLimit
@@ -2247,7 +2241,6 @@ def listHelper(each,a,b,c,sample,encodeBytes4):
 	return encodeBytes4
 
 def austinDecodeFast(decodeOps, sample, mode = "default", starts = [], order = [], findAll = False, cpuCount = "auto", stubParams = ([],[])):
-# def austinDecode(*args): asdf
 	global aLimit
 	global bLimit
 	global cLimit
@@ -3068,7 +3061,6 @@ def austinDecodeFast(decodeOps, sample, mode = "default", starts = [], order = [
 	return out, early, startVals
 
 def austinListComp(decodeOps, sample, mode = "default", starts = [], order = [], findAll = False, cpuCount = "auto", stubParams = ([],[])):
-# def austinDecode(*args):
 	global aLimit
 	global bLimit
 	global cLimit
@@ -3699,21 +3691,6 @@ def austinListComp(decodeOps, sample, mode = "default", starts = [], order = [],
 						matched = rpOut[1]
 
 
-# for each in (list(itertools.permutations(mylist2))):
-		#  	print("orig each")
-		#  	print(each)
-		#  	encodeBytes4 = [doStuff_testP(each, a, b, c, sample)
-		#  				for a in range (aLimit)
-		#  				for b in range (bLimit)
-		#  				for c in range (cLimit)
-		#  				]
-		#  	for item in encodeBytes4:
-		#  		final.append(item)
-
-		
-
-
-
 		elif(len(mylist2) == 3):
 			print("listcomp confirm")
 			encodeBytes4 = [(a,b,c,each)
@@ -3723,64 +3700,9 @@ def austinListComp(decodeOps, sample, mode = "default", starts = [], order = [],
 						for each in permutations
 						]
 			rpOut = runProcs(encodeBytes4, sample, numThreads, findAll = findAll)
-			# print("HERE RPOUT ",rpOut)
-			# print("HERE EB4", encodeBytes4)
-			# print("HERE TOTALRUNS", totalRuns)
-			# for item in rpOut:
-			# 	print("\n\nRP ITEM:\n------------------------------- ")
-			# 	print(item)
-
 			if(len(rpOut) > 0):
 					out = out + rpOut[0]
 					matched = rpOut[1]						
-			# while(a < aLimit):
-			# 	while(b < bLimit):
-			# 		while(c < cLimit):
-			# 			while(eachInd < eachLen ):
-			# 				if(matched == 1):
-			# 					# print("MATCHED FLAG")
-			# 					return out,early,startVals
-			# 				encodeBytes4.append((a,b,c,permutations[eachInd]))
-			# 				eachInd += 1
-			# 				curPerm += 1
-			# 				if(curPerm > listLimit):
-			# 					early = True
-			# 					# print("RUNNING PROCS EARLY, TOTALRUNS = ",totalRuns)
-			# 					rpOut = runProcs(encodeBytes4, sample, numThreads, findAll = findAll)
-			# 					out = out + rpOut[0]
-			# 					matched = rpOut[1]
-			# 					# print("CAME BACK FROM RUNPROCS, rpOut = ", rpOut)
-			# 					totalRuns += curPerm
-			# 					curPerm = 0
-			# 					encodeBytes4 = []
-			# 					hitLimit = True
-			# 					startVals.append(a)
-			# 					startVals.append(b)
-			# 					startVals.append(c)
-			# 					#if we don't want to find them all and we found one of them, we are done
-			# 					if(matched == 1 and findAll == False):
-			# 						early = False
-			# 					# print("returning an early with early = ", early)
-			# 						return out,early,startVals
-			# 			c += 1
-			# 			eachInd = 0
-			# 		b += 1
-			# 		c = 0
-			# 	a += 1
-			# 	b = 0
-
-			# if(totalRuns < totalPerm):
-			# 	rpOut = runProcs(encodeBytes4, sample, numThreads, findAll = findAll)
-			# 	# print("HERE RPOUT ",rpOut)
-			# 	# print("HERE EB4", encodeBytes4)
-			# 	# print("HERE TOTALRUNS", totalRuns)
-			# 	# for item in rpOut:
-			# 	# 	print("\n\nRP ITEM:\n------------------------------- ")
-			# 	# 	print(item)
-
-			# 	if(len(rpOut) > 0):
-			# 			out = out + rpOut[0]
-			# 			matched = rpOut[1]
 		
 		elif(len(mylist2) == 4):
 			# print("in loop a=", a, "b=", b, "c=", c, "d=", d, "eachInd=", eachInd, "eachLen=", eachLen)
@@ -3825,13 +3747,6 @@ def austinListComp(decodeOps, sample, mode = "default", starts = [], order = [],
 				b = 0
 			if(totalRuns < totalPerm):
 				rpOut = runProcs(encodeBytes4, sample, numThreads, 4, findAll = findAll)
-				# print("HERE RPOUT ",rpOut)
-				# print("HERE EB4", encodeBytes4)
-				# print("HERE TOTALRUNS", totalRuns)
-				# for item in rpOut:
-				# 	print("\n\nRP ITEM:\n------------------------------- ")
-				# 	print(item)
-
 				if(len(rpOut) > 0):
 						out = out + rpOut[0]
 						matched = rpOut[1]
@@ -3882,13 +3797,6 @@ def austinListComp(decodeOps, sample, mode = "default", starts = [], order = [],
 				b = 0
 			if(totalRuns != totalPerm):
 				rpOut = runProcs(encodeBytes4, sample, numThreads, 5, findAll = findAll)
-				# print("HERE RPOUT ",rpOut)
-				# print("HERE EB4", encodeBytes4)
-				# print("HERE TOTALRUNS", totalRuns)
-				# for item in rpOut:
-				# 	print("\n\nRP ITEM:\n------------------------------- ")
-				# 	print(item)
-
 				if(len(rpOut) > 0):
 						out = out + rpOut[0]
 						matched = rpOut[1]
@@ -3906,15 +3814,6 @@ def austinListComp(decodeOps, sample, mode = "default", starts = [], order = [],
 	stop = timeit.default_timer()
 	print("Total time PAR: " + str(stop - start))
 
-
-	# print ("Total number of iterations:", len(encodeBytes4))
-	# for xx in encodeBytes4:
-		
-	# 	print (xx)
-	# 	print ("\n\n")
-	
-
-
 	finTime=stop-start
 	cores=240
 	print (totalPerm, "Perm")
@@ -3931,7 +3830,6 @@ def austinListComp(decodeOps, sample, mode = "default", starts = [], order = [],
 def doDistr(decodeOps, sample, numNodes, nodeIPs, mode = "default", starts = [], order = [], findAll = False, successPoints = 3):
     final = []
     finalOutput = []
-    # print("in distr")
     cluster = dispy.JobCluster(austinDecodeDistributed_new, nodes = nodeIPs, depends = [findAllPebSequences_decode, nPr, findObfusMethod,tempMax,runProcsDistr,block_low,block_high,distrFunc, lists], loglevel = dispy.logger.DEBUG)
     jobs = []
     time.sleep(10)
@@ -3941,7 +3839,6 @@ def doDistr(decodeOps, sample, numNodes, nodeIPs, mode = "default", starts = [],
         # with a parameter (random number in this case)
         job = cluster.submit(decodeOps, sample, numNodes, i, mode, starts, order, findAll, successPoints)
         jobs.append(job)
-    # cluster.wait() # wait for all scheduled jobs to finish
     
 
     if(findAll):
@@ -3949,35 +3846,22 @@ def doDistr(decodeOps, sample, numNodes, nodeIPs, mode = "default", starts = [],
             print("waiting for jobs...")
             outputs = job() # waits for job to finish and returns results
             print("outputs here")
-            # print(outputs)
-            # final.append(outputs)
             finalOutput.append(outputs[0])
             print('(%s) executed job %s at %s' % (job.ip_addr, job.id,
                                                              job.start_time))
-            # other fields of 'job' that may be useful:
-            # print(job.stdout, job.stderr, job.exception, job.ip_addr, job.start_time, job.end_time)
-
     else:
         jobDone = False
-        while(jobDone == False):
+        while not jobDone:
             for job in jobs:
                 # print("waiting for jobs")
                 outputs = job.result
-                if(job.result != None):
+                if(job.result is not None):
                     jobDone = True
-                    # outputs = job() # waits for job to finish and returns results
-                    # print("outputs here")
-                    # print(outputs)
                     final.append(outputs)
                     if(outputs is not None):
                   	    finalOutput.append(outputs[0])
                     print('(%s) executed job %s at %s' % (job.ip_addr, job.id,
                                                                      job.start_time))
-                    # j = 0
-                    # for job in jobs:
-                    # 	j += 1
-                    # 	jobout = job.result 
-                    # 	print("JOB ", j, " RESULT: ", jobout)
         cluster.print_status()
         cluster.close(terminate = True, timeout = 0)    
 
@@ -6745,13 +6629,8 @@ def specialEncoder6(myInput):
 	outputs = outputs_async.get()
 
 
-	# print("Input: {}".format(inputs)) 
-	# print("Output: {}".format(outputs)) 
 	if len(mylist2)==3:
-		# encodeBytes4 = [doStuff(each, a, b, c, sample)
 		outputs_async = [pool.map_async(test101, (each, a, b, c, sample))
-						# outputs = outputs_async.get()
-						# inputs=[a, each, b, c]
 						for a in range (aLimit)
 
 						for each in (list(itertools.permutations(mylist2)))
@@ -6772,24 +6651,10 @@ def specialEncoder6(myInput):
 	stop = timeit.default_timer()
 	print("Total time: " + str(stop - start))
 
-
-	# print ("Total number of iterations:", len(encodeBytes4))
-	# for xx in encodeBytes4:
-		
-	# 	print (xx)
-	# 	print ("\n\n")
-	
-
-
 	finTime=stop-start
 	cores=240
 	print (totalPerm, "Perm")
 	numSeconds=0.00001
-	# print (totalPerm*numSeconds, "seconds")
-	# print ((totalPerm*numSeconds)/60, "minutes")
-	# print (((totalPerm*numSeconds)/60)/60, "hours")
-	# print ((((totalPerm*numSeconds)/60)/60)/24, "days")
-	# print ("spread across " + str(cores) + " cores: ", ((((totalPerm*numSeconds)/60)/60)/24)/cores, "days")
 
 
 	print ("end time: ", z/finTime )
@@ -6916,59 +6781,5 @@ if __name__ == '__main__':
 				print("FAILED TEST")
 				testfail = True
 				break
-		if(testfail == False):
+		if not testfail:
 			print("SUCCESSFUL TEST")
-
-		# if(testSeq == testPar):
-		# 	print("SUCCESS TEST")
-		# else:
-		# 	print("FAILED TEST")
-	# specialEncoder6(inputs)              # this ones does 4
-
-# if __name__ == '__main__':
-# 	pool = multiprocessing.Pool()
-# 	inputs = [strSub, strXor,strAdd]
-
-# 	outputs_async = pool.map_async(specialEncoder6, inputs)
-# 	outputs = outputs_async.get()
-
-
-# 	print("Input: {}".format(inputs)) 
-# 	print("Output: {}".format(outputs)) 
-
-
-
-# specialEncoder5Experimental(strSub, strAdd, strXor)
-
-# ans= rol(ans,1,8)
-# print (2, hex(ans),"\n\n\n")
-
-
-
-# specialEncoder5(strSub, strAdd, strRol)#,strShRight)
-
-# specialEncoder5(strSub, strXor, strAdd)#,strShRight)
-
-
-# specialEncoder5(strSub, strXor, strNot)#,strShRight)
-
-
-
-
-# specialEncoder5(strSub, strNot, strRol, strNot)#,strShRight)
-
-# LSHstr="LSH(v)\n"
-
-
-# specialEncoder3_old(40, XORstr, ADDstr, ROTstr)
-# specialEncoder_old(XORstr, ADDstr, ROTstr)
-
-
-
-# print (nPr(3,3))
-####   2 * 3 * 1 * 3 * 2 * 1
-
-
-
-
-# 

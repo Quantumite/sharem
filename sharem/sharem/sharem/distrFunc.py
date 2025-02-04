@@ -1,17 +1,6 @@
 
 import re
-import itertools
-from math import factorial
 import timeit
-import numpy as np
-import multiprocessing 
-import time
-import math
-import dispy
-import traceback
-from . import lists
-# from capstone import *
-# from selfModify import findAllPebSequences_decode	
 
 pebPoints = 3
 
@@ -449,10 +438,3 @@ def binaryToStrDistr(binary):
 	except Exception as e:
 		print ("*Not valid format")
 		print(e)
-
-# def ord2(x):
-# 	return x
-
-# def show1(int):
-# 	show = "{0:02x}".format(int) #
-# 	return show

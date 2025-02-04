@@ -1,2 +1,1 @@
-from .sharem import *
-from .sharem_main import *
+from .sharem_main import SharemMain

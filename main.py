@@ -1,8 +1,8 @@
 from sharem import SharemMain
 import argparse
 
-if __name__ == "__main__":
-
+def main():
+    """The main function for command-line use of SHAREM."""
     try:
         parser = argparse.ArgumentParser(prog='Sharem',
       formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -39,6 +39,8 @@ Additional information:
 
         SharemMain(args)
 
-
-    except KeyboardInterrupt as ke:
+    except KeyboardInterrupt:
         exit()
+
+if __name__ == "__main__":
+    main()

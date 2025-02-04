@@ -1,38 +1,110 @@
 {
- "dateAnalyzed":"2022-12-27 16:34:48",
- "classification":"Possibly encoded shellcode.",
- "reason":"",
- "secondsSinceEpoch":1672180488.590601,
+ "dateAnalyzed":"2025-02-02 00:33:41",
+ "classification":"Very likely shellcode.",
+ "reason":"Found shellcode APIs.",
+ "secondsSinceEpoch":1738474421.226206,
  "fileType":"rawHex",
  "bits":32,
  "entryPoint":"0x0",
- "md5":"7acf4c9e3cd5642a68418ad858442e8e",
- "sha256":"43fc444126937b09e1c0054eabe8085e8c0f32c61aca43d4c29ccf3816b00eee",
- "ssdeep":"3:9qaQn9Yh:0bn+h",
+ "md5":"d965ae899d091c3b58297e0c55473d5d",
+ "sha256":"4c1f07dc22379ea0b271636d3f2971ce1ba9076536880aef4eaaeaec98d2191a",
+ "ssdeep":"12:KLAM+8Mprb9D5M1vAuqociTxUm26tVhTEES5:eVUrBD5yAuqochm2Whgd",
  "pushret":[],
  "callpop":[],
- "PEB":[],
+ "PEB":[
+  {
+   "address":"0xb2",
+   "modSecName":"rawHex",
+   "disassembly":[
+    "mov    edi, dword ptr fs:[0x30]            0xb2    ",
+    "mov    edi, dword ptr [edi + 0xc]          0xb9    ",
+    "mov    edi, dword ptr [edi + 0x14]         0xbc    ",
+    "mov    esi, dword ptr [edi + 0x28]         0xbf    ",
+    "xor    edx, edx                            0xc2    "
+   ],
+   "disasm":[
+    {
+     "offset":"0xb2",
+     "instruction":"mov edi, dword ptr fs:[0x30]"
+    },
+    {
+     "offset":"0xb9",
+     "instruction":"mov edi, dword ptr [edi + 0xc]"
+    },
+    {
+     "offset":"0xbc",
+     "instruction":"mov edi, dword ptr [edi + 0x14]"
+    },
+    {
+     "offset":"0xbf",
+     "instruction":"mov esi, dword ptr [edi + 0x28]"
+    },
+    {
+     "offset":"0xc2",
+     "instruction":"xor edx, edx"
+    }
+   ],
+   "internalData":{
+    "secNum":-1,
+    "NumOpsDis":19,
+    "points":3
+   }
+  }
+ ],
  "fstenv":[],
  "heavensGate":[],
  "syscall":[],
- "strings":[],
+ "strings":[
+  {
+   "type":"ascii",
+   "offset":"0x172",
+   "length":"12",
+   "value":"woot woot  ",
+   "source":"shellcode"
+  },
+  {
+   "type":"ascii",
+   "offset":"0x172",
+   "length":"12",
+   "value":"woot woot  ",
+   "source":"shellcode"
+  }
+ ],
  "shellcode":{
-  "rawhex":"b80090000083f803487502eb0a5f905f3d002000007e0083c004",
-  "strlit":"\\xb8\\x00\\x90\\x00\\x00\\x83\\xf8\\x03\\x48\\x75\\x02\\xeb\\x0a\\x5f\\x90\\x5f\\x3d\\x00\\x20\\x00\\x00\\x7e\\x00\\x83\\xc0\\x04"
+  "rawhex":"89c289e581ec0010000052bb8efe1f4be87f0000005a555289c58db22f0100008dba3f010000e89f0000005a5d528d9a6301000053ffb24301000058ffd05a8b8a770100004985c9750781c400100000c352bbcdff12d6e8380000005a5289c58db24b0100008dba53010000e8590000005a526a008d9a5701000053536a00ffb25301000058ffd05a6a00ffb23f01000058ffd0fc31ff648b3d300000008b7f0c8b7f148b772831d266ad84c074113c4172063c5a77020c20c1c20730c2ebe939da8b47108b3f75dbc389ea03523c8b527801ea8b5a2001eb31c957568b368b3b01ef5231d2c1c207321747803f0075f5925a39f0740c83c30441394a1875df5e5fc35e5fad565389eb89de035a248d044b0fb7008d048603421c8b0001f0ab5b5e83c30441813effff000075adc3192b909568dda0242680acc8ffff000054592d1494b52c1454f42d140d68bcabffff000024c35815776f6f7420776f6f74202000090000000010000000000000000000000000000004000000d82100000000000000000097",
+  "strlit":"\\x89\\xc2\\x89\\xe5\\x81\\xec\\x00\\x10\\x00\\x00\\x52\\xbb\\x8e\\xfe\\x1f\\x4b\\xe8\\x7f\\x00\\x00\\x00\\x5a\\x55\\x52\\x89\\xc5\\x8d\\xb2\\x2f\\x01\\x00\\x00\\x8d\\xba\\x3f\\x01\\x00\\x00\\xe8\\x9f\\x00\\x00\\x00\\x5a\\x5d\\x52\\x8d\\x9a\\x63\\x01\\x00\\x00\\x53\\xff\\xb2\\x43\\x01\\x00\\x00\\x58\\xff\\xd0\\x5a\\x8b\\x8a\\x77\\x01\\x00\\x00\\x49\\x85\\xc9\\x75\\x07\\x81\\xc4\\x00\\x10\\x00\\x00\\xc3\\x52\\xbb\\xcd\\xff\\x12\\xd6\\xe8\\x38\\x00\\x00\\x00\\x5a\\x52\\x89\\xc5\\x8d\\xb2\\x4b\\x01\\x00\\x00\\x8d\\xba\\x53\\x01\\x00\\x00\\xe8\\x59\\x00\\x00\\x00\\x5a\\x52\\x6a\\x00\\x8d\\x9a\\x57\\x01\\x00\\x00\\x53\\x53\\x6a\\x00\\xff\\xb2\\x53\\x01\\x00\\x00\\x58\\xff\\xd0\\x5a\\x6a\\x00\\xff\\xb2\\x3f\\x01\\x00\\x00\\x58\\xff\\xd0\\xfc\\x31\\xff\\x64\\x8b\\x3d\\x30\\x00\\x00\\x00\\x8b\\x7f\\x0c\\x8b\\x7f\\x14\\x8b\\x77\\x28\\x31\\xd2\\x66\\xad\\x84\\xc0\\x74\\x11\\x3c\\x41\\x72\\x06\\x3c\\x5a\\x77\\x02\\x0c\\x20\\xc1\\xc2\\x07\\x30\\xc2\\xeb\\xe9\\x39\\xda\\x8b\\x47\\x10\\x8b\\x3f\\x75\\xdb\\xc3\\x89\\xea\\x03\\x52\\x3c\\x8b\\x52\\x78\\x01\\xea\\x8b\\x5a\\x20\\x01\\xeb\\x31\\xc9\\x57\\x56\\x8b\\x36\\x8b\\x3b\\x01\\xef\\x52\\x31\\xd2\\xc1\\xc2\\x07\\x32\\x17\\x47\\x80\\x3f\\x00\\x75\\xf5\\x92\\x5a\\x39\\xf0\\x74\\x0c\\x83\\xc3\\x04\\x41\\x39\\x4a\\x18\\x75\\xdf\\x5e\\x5f\\xc3\\x5e\\x5f\\xad\\x56\\x53\\x89\\xeb\\x89\\xde\\x03\\x5a\\x24\\x8d\\x04\\x4b\\x0f\\xb7\\x00\\x8d\\x04\\x86\\x03\\x42\\x1c\\x8b\\x00\\x01\\xf0\\xab\\x5b\\x5e\\x83\\xc3\\x04\\x41\\x81\\x3e\\xff\\xff\\x00\\x00\\x75\\xad\\xc3\\x19\\x2b\\x90\\x95\\x68\\xdd\\xa0\\x24\\x26\\x80\\xac\\xc8\\xff\\xff\\x00\\x00\\x54\\x59\\x2d\\x14\\x94\\xb5\\x2c\\x14\\x54\\xf4\\x2d\\x14\\x0d\\x68\\xbc\\xab\\xff\\xff\\x00\\x00\\x24\\xc3\\x58\\x15\\x77\\x6f\\x6f\\x74\\x20\\x77\\x6f\\x6f\\x74\\x20\\x20\\x00\\x09\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x04\\x00\\x00\\x00\\xd8\\x21\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x97"
  },
  "deobfuscation":{
-  "deobfuscated":false,
-  "decoded_stub":"N/A",
-  "md5":"N/A",
-  "sha256":"N/A",
-  "ssdeep":"N/A"
+  "deobfuscated":true,
+  "decoded_stub":"\\xeb\\x14\\x58\\xb9\\x86\\x01\\x00\\x00\\x49\\x3e\\x80\\x34\\x08\\x97\\x85\\xc9\\x75\\xf6\\xff\\xd0\\x61\\xc3\\xe8\\xe7\\xff\\xff\\xff",
+  "md5":"e03aaee0f7ac3bdaf5793d7950548791",
+  "sha256":"d7a5cb704d649d1e04437704aa028d3379718d1cdac9bfa254e5138ae506e444",
+  "ssdeep":"6:rNWFauBtl+X+CEDNC3iPRn/yw05YntKrt9tnQG6staDQpRhhm/eEZEl1w3YgYKKi:gBtl+OCLyPRn4lrt3J6srDmJZxuzS"
  },
  "emulation":{
   "api_calls":[
-   {}
+   {
+    "api_name":"ExitProcess",
+    "dll_name":"kernel32.dll",
+    "return_value":"void None",
+    "address":"0x120000ad",
+    "parameters":[
+     {
+      "type":"uExitCode",
+      "value":[
+       {
+        "type":"UINT",
+        "value":"ERROR_SUCCESS"
+       }
+      ]
+     }
+    ]
+   }
   ],
   "syscalls_emulation":[],
-  "dlls":[],
+  "dlls":[
+   "kernel32.dll"
+  ],
   "path_copy":[],
   "path_move":[],
   "path_misc":[],

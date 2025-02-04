@@ -43,3 +43,6 @@ sharem/sharem/sharem/logs/logging.txt
 sharem/sharem/sharem/emulationLog.txt
 sharem/sharem/sharem/foundDLLAddresses32.json
 sharem/sharem/sharem/foundDLLAddresses64.json
+
+.venv
+.mypy_cache

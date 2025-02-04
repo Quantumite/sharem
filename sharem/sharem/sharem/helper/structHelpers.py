@@ -1,9 +1,9 @@
 from ctypes import LittleEndianStructure, c_byte, c_char, c_double, c_float, c_int16, c_int32, c_int64, c_ubyte, c_uint16, c_uint32, c_uint64, c_ushort, c_wchar
 from struct import unpack
+from unicorn import Uc
 from sharem.sharem.DLLs.emu_helpers.handles import Handle, HandlesDict
-
 from sharem.sharem.helper.ctypesUnion import LittleEndianUnion
-from ..helper.emuHelpers import Uc
+import sharem.sharem.constants as constants
 
 # Window C Type Mappings
 # Inspired by WinTypes from cTypes
@@ -406,25 +406,14 @@ def makeSubStructValsString(uc: Uc, struct):
                 pVals[i] = str(pVals[i])
                 # If fail then Param is Probably String and Just Display value
 
-    # zipped = tuple(zip(pTypes, pNames, pVals))
-    red ='\u001b[31;1m'
-    gre = '\u001b[32;1m'
-    yel = '\u001b[33;1m'
-    blu = '\u001b[34;1m'
-    mag = '\u001b[35;1m'
-    cya = '\u001b[36;1m'
-    whi = '\u001b[37m'
-    res = '\u001b[0m'
-    res2 = '\u001b[0m'
 
-    stringForm = yel + "{"
+    stringForm = constants.YELLOW + "{"
     for t, n, v in zip(pTypes, pNames, pVals):
-        stringForm += f"{gre}{t} {n}: {whi}{v}{yel}, "
+        stringForm += f"{constants.GREEN}{t} {n}: {constants.WHITE}{v}{constants.YELLOW}, "
     if stringForm[-1] == " ":
         stringForm = stringForm[:-1]
     if stringForm[-1] == ",":
         stringForm = stringForm[:-1]
-    stringForm += yel + "}"
+    stringForm += constants.YELLOW + "}"
 
-    # return (pTypes, pNames, pVals)
     return stringForm 

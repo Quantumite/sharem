@@ -1,6 +1,4 @@
 from setuptools import setup, find_packages
-import os
-import re
 
 NAME = "sharem"
 VERSION = "0.1.02"

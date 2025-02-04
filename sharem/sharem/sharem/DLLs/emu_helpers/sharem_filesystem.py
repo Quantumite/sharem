@@ -1,11 +1,10 @@
-from tkinter import Variable
-
-from sharem.sharem.parseconf import Configuration
-from .handles import Handle,HandleType,HandlesDict
+# @TODO fix import resolution
+# from sharem.sharem.parseconf import Configuration
 from .sharem_artifacts import Artifacts_regex
 import re
 import urllib3
 import hashlib
+from sharem.sharem.parseconf import Configuration
 
 class Dir_nodes:
 	def __init__(self, nameString,parent = None):
@@ -86,10 +85,7 @@ class Directory_system:
 		user.childrenDir.update(self.CreateNewFolder('Saved Games',user))
 		user.childrenDir.update(self.CreateNewFolder('Videos',user))
 	
-	def getFileDependencies(self,config):
-		#get the inputted files from the user that the shellcode depends on
-		#!!DOES NOT WORK CURRENTLY!!
-		print(1)
+
 	################################
 	## Api Functions
 	################################
@@ -147,7 +143,7 @@ class Directory_system:
 
 			#get file data if it exists, otherwise create the file and put our sample data within it.
 			fileData = folderOrigin.files.get(fileName)
-			if(fileData == None):
+			if not fileData:
 				self.createFile(origin[:-1],fileName)
 				fileData = folderOrigin.files.get(fileName)
 
@@ -171,7 +167,7 @@ class Directory_system:
 
 			#get file data if it exists, otherwise create the file and put our sample data within it.
 			fileData = folderOrigin.files.get(fileName)
-			if(fileData == None):
+			if not fileData:
 				self.createFile(origin[:-1],fileName)
 				fileData = folderOrigin.files.get(fileName)
 
@@ -191,7 +187,7 @@ class Directory_system:
 
 		#get file data if it exists, otherwise create the file and put our sample data within it.
 		fileData = folderOrigin.files.get(fileName)
-		if(fileData == None):
+		if not fileData:
 			self.createFile(origin[:-1],fileName)
 			fileData = folderOrigin.files.get(fileName)
 
@@ -263,7 +259,6 @@ class Directory_system:
 			# print('download is disabled')
 			self.createFile(dest,fileName)
 			hashedData = ''
-			statusCode = ''
 
 			
 		return '\\'.join(dest),fileName,hashedData,r.status
@@ -357,7 +352,7 @@ class Directory_system:
 			return self.recurseCreateFolder(dirNode,dirName,0)
 	
 	def getPath(self,dirNode,returnList):
-		if(dirNode.parentDir == None):
+		if not dirNode.parentDir:
 			if("\\" in dirNode.name):
 				returnList.insert(0,dirNode.name[0:-1])
 			else:
@@ -461,7 +456,7 @@ class Directory_system:
 				return altFileName
 			else:
 				#ex altFile = TestDo~1
-				altFilename = filename[0:6] + "~"+str(n)+"."+fileExt
+				altFileName = filename[0:6] + "~"+str(n)+"."+fileExt
 				return altFileName
 		return filename
 

@@ -244,7 +244,7 @@ def retR32(reg, mode):
 	r1,r2,r3,r4,s= printReg
 	res= hxR(r1)+hxR(r2)+hxR(r3)+hxR(r4)
 	if (mode =="x"):
-		res= "0x"+res
+		res= "0x"constants.RESET
 	return res
 
 def retR32Int(reg):

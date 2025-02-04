@@ -1,9 +1,3 @@
-# from capstone import *
-import re
-import pefile
-import sys
-import binascii
-import copy
 #import prog
 global MyBytes
 global objs

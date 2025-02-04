@@ -1,25 +1,10 @@
 import json
-import pprint
-import time
 import datetime
 import pathlib
 import os
-import re
-from sharem.sharem.helper.variable import Variables
+from .variable import Variables
 import platform
 
-
-
-
-platformType = platform.uname()[0]
-
-slash = ""
-if platformType == "Windows":
-	slash = "\\"
-else:
-	slash = "/"
-
-# from sharem.sharem.helper.variable import Variables
 
 class jsonPrint:
 	def __init__(self,  
@@ -32,6 +17,7 @@ class jsonPrint:
 		self.filename = filename
 		self.rawHex = rawHex
 		self.current_arch = current_arch
+		self.slash = "\\" if platform.uname()[0] == "Windows" else "/"
 		
 		
 		#add these in when creating the class
@@ -39,7 +25,7 @@ class jsonPrint:
 		# data for output
 		self.jsonDissasembly = ''
 		self.jsonImports = ''
-		self.jsonData = {
+		self.jsonData: dict[str, list] = {
 			"dateAnalyzed":[],
 			"classification":[],
 			"reason":[],
@@ -58,7 +44,7 @@ class jsonPrint:
 			"deobfuscation":[],
 			"emulation":[],
 			}
-		self.emulation_dict = { 
+		self.emulation_dict: dict[str, list] = { 
 			"api_calls":[],
 			"syscalls_emulation":[],
 			"dlls":[],
@@ -87,11 +73,9 @@ class jsonPrint:
 ###  remove later ###
 #####################
 	def checkForLabel(self,addb, labels):
-	# dprint ("checkForLabel " + addb)
 		for label in labels:
 			if label==addb:
 				val="	 label_"+addb+":\n"
-				# dprint (val)
 				return True, val
 		return False,0
 
@@ -100,7 +84,6 @@ class jsonPrint:
 		self.jsonData = importedData
 		self.FoundApisName = FoundApisName
 		self.filename = filename
-		# self.variableGlobals.mBool = mBool
 		self.jsonDissasembly = importDiss
 #####################
 ##  Main Shellcode ##
@@ -115,14 +98,6 @@ class jsonPrint:
 		#create filenames and folder names
 		folder_out, default_folder, mainName, importName, dissName, defaultMain, defaultDiss = self.createFileNames(fileNameTime, filename, peName, sharem_out_dir)
 
-		# print ("folder_out", folder_out)
-		# print ("default_folder", default_folder)
-		# print ("mainName", mainName)
-		# print ("importName", importName)
-		# print ("dissName", dissName)
-		# print ("defaultMain", defaultMain)
-		# print ("defaultDiss", defaultDiss)
-		#create the output folder
 		os.makedirs(folder_out, exist_ok=True)
 		os.makedirs(default_folder, exist_ok=True)
 		
@@ -147,7 +122,7 @@ class jsonPrint:
 
 		## This fancy stem stuff FAILS with PE files - leaving it with no filename! Thus, this is backup. The above works for shellcode, but if it fails, this will fix it.
 		if fileNameOnly=="":
-			filename = filename.split(slash)[-1]
+			filename = filename.split(self.slash)[-1]
 			if filename == "":
 				outfile = peName.split(".")[0]
 				outfileName = peName
@@ -199,13 +174,10 @@ class jsonPrint:
 		
 		return  folder_out, default_folder, mainName, importName, dissName, defaultMain, defaultDiss
 		
-	def getImports(self):
-		print(1)
-		
 	def hashes(self,o,sh):
 		binLit = ''
 
-		if sh.decryptSuccess == True:
+		if sh.decryptSuccess:
 			for i in sh.decoderStub:
 				binLit += '\\x' + '{:02x}'.format(i) +""
 			self.jsonData['deobfuscated'] = True
@@ -233,131 +205,8 @@ class jsonPrint:
 		#import off_Label,labels,res,sBy
 		red,gre,yel,blu,mag,cya,whi,res,res2 = self.variableGlobals.colors()
 		# maxOpDisplay=self.variableGlobals.mBool[self.variableGlobals.o].maxOpDisplay
-		Varaibles().mBool
-		# btsV=self.variableGlobals.mBool[self.variableGlobals.o].btsV
+		Variables().mBool
 		
-		# if not decoder:
-		#     shellArg=self.variableGlobals.m[self.variableGlobals.o].rawData2
-		# else:
-		#     shellArg=self.variableGlobals.sh.decoderStub
-		
-		# showOpcodes = self.variableGlobals.mBool[self.variableGlobals.o].bDoshowOpcodes
-		# showLabels = self.variableGlobals.mBool[self.variableGlobals.o].bShowLabels
-		# if self.variableGlobals.caller=="final" and self.variableGlobals.mBool[self.variableGlobals.o].bDoEnableComments:
-		#     addComments()
-
-		# mode="ascii"
-		# if not self.variableGlobals.mBool[self.variableGlobals.o].bDoShowOffsets:
-		#     mode="NoOffsets"
-		# j=0
-		# nada=""
-		# finalOutput="\n"
-		# myStrOut=""
-		# myHex=""
-		# disList = []
-		# disFullDict = {}
-		# for cAddress in self.variableGlobals.sBy.shAddresses:
-		#     disDict = {}
-			
-
-		#     pAddress= gre+str(hex(cAddress))+res2  #print address
-		#     startHex=cAddress
-		#     try:
-		#         endHex=self.variableGlobals.sBy.shAddresses[j+1]
-		#     except:
-		#         endHex=len(shellArg)
-		#     sizeDisplay=endHex-startHex
-		#     if mode=="ascii":
-		#         try:
-		#             if sizeDisplay > maxOpDisplay:
-		#                 myHex=red+binaryToStr(shellArg[startHex:startHex+maxOpDisplay],btsV)+"..."+res2+""
-		#                 myStrOut=cya+" "+toString(shellArg[startHex:endHex])+res2+""
-		#             else:
-		#                 myHex=red+binaryToStr(shellArg[startHex:endHex],btsV)+res2+""
-		#                 if self.variableGlobals.mBool[self.variableGlobals.o].bDoShowAscii:
-		#                     myStrOut=cya+" "+toString(shellArg[startHex:endHex])+res2+""
-		#                 else:
-		#                     myStrOut=""
-		#         except Exception as e:
-		#             print ("ERROR: ", e)
-
-
-		#         if not showOpcodes:	 # If no hex, then move ASCII to left
-		#             myHex=myStrOut
-		#             myStrOut=""
-		#         pAddress = self.variableGlobals.cleanColors(pAddress)
-		#         disDict["address"] = pAddress.strip()
-		#         disDict["instruction"] = self.variableGlobals.cleanColors(self.variableGlobals.sBy.shMnemonic[j] + " " + self.variableGlobals.sBy.shOp_str[j]).strip()
-		#         disDict["hex"] = self.variableGlobals.cleanColors(myHex).strip()
-
-
-		#         # pAddressInt = int(pAddress, 16)
-		#         # print(type(pAddress), pAddress, int(pAddress, 16))
-		#         out='{:<12s} {:<45s} {:<33s}{:<10s}\n'.format(pAddress, whi+self.variableGlobals.sBy.shMnemonic[j] + " " + self.variableGlobals.sBy.shOp_str[j], myHex,myStrOut )
-		#         if re.search( r'align|db 0xff x', self.variableGlobals.sBy.shMnemonic[j], re.M|re.I):
-		#             myHex=red+binaryToStr(shellArg[startHex:startHex+4],btsV)+"..."+res2+""
-		#             if self.variableGlobals.mBool[self.variableGlobals.o].bDoShowAscii:
-		#                 myStrOut=cya+" "+toString(shellArg[startHex:startHex+4])+"..."+res2+""
-		#             else:
-		#                 myStrOut=""
-
-		#             if not showOpcodes:   # If no hex, then move ASCII to left
-		#                 myHex=myStrOut
-		#                 myStrOut=""
-		#             out='{:<12s} {:<45s} {:<33s}{:<10s}\n'.format(pAddress, whi+self.variableGlobals.sBy.shMnemonic[j] + " " + self.variableGlobals.sBy.shOp_str[j], myHex, myStrOut)
-		#             pass
-		#         disDict["string"] = self.variableGlobals.cleanColors(myStrOut).strip()
-
-
-		#         # out=out+"\n"
-			
-		#     if self.variableGlobals.mBool[self.variableGlobals.o].bDoEnableComments:
-		#         if self.variableGlobals.sBy.comments[cAddress] !="":
-		#             val_b2=self.variableGlobals.sBy.comments[cAddress]
-		#             val_comment =('{:<10s} {:<45s} {:<33s}{:<10s}\n'.format(mag+nada, val_b2, nada, nada))
-		#             out+=val_comment
-		#             disDict["comment"] = self.variableGlobals.cleanColors(val_comment).strip()	
-		#         else:
-		#             disDict["comment"] = ""
-
-		#     if showLabels:
-		#         truth,myLabel=self.checkForLabel(str(hex(cAddress)),self.variableGlobals.labels)
-		#         if truth:
-		#             out=yel+myLabel+res2+out
-		#             disDict["label"] = self.variableGlobals.cleanColors(myLabel).strip()
-		#         else:
-		#             disDict["label"] = ""
-
-		#     if re.search( r'\bjmp\b|\bje\b|\bjne\b|\bjg\b|\bjge\b|\bja\b|\bjl\b|\bjle\b|\bjb\b|\bjbe\b|\bjo\b|\bjno\b|\bjz\b|\bjnz\b|\bjs\b|\bjns\b|\bjcxz\b|\bjrcxz\b|\bjecxz\b|\bret\b|\bjnae\b|\bjc\b|\bjnb\b|\bjae\b|\bjnc\b|\bjna\b|\bjnbe\b|\bjnge\b|\bjnl\b|\bjng\b|\bjnle\b|\bjp\b|\bjpe\b|\bjnp\b|\bjpo\b', self.variableGlobals.sBy.shMnemonic[j], re.M|re.I):
-		#         out=out+"\n"
-		#         # disList[1] = disList[1] + "\n"
-			
-		#     # valCheck=i.mnemonic + " " + i.op_str 
-		#     # controlFlow= re.match( r'\bjmp\b|\bje\b|\bjne\b|\bjg\b|\bjge\b|\bja\b|\bjl\b|\bjle\b|\bjb\b|\bjbe\b|\bjo\b|\bjno\b|\bjz\b|\bjnz\b|\bjs\b|\bjns\b|\bjcxz\b|\bjrcxz\b|\bjecxz\b|\bret\b|\bjnae\b|\bjc\b|\bjnb\b|\bjae\b|\bjnc\b|\bjna\b|\bjnbe\b|\bjnge\b|\bjnl\b|\bjng\b|\bjnle\b|\bjp\b|\bjpe\b|\bjnp\b|\bjpo\b', valCheck, re.M|re.I)
-		#     # if controlFlow:
-		#     # 	val=val+"\n"	
-		#     ############Stack strings begin
-		#     try:
-		#         cur=cAddress
-		#         if (self.variableGlobals.sBy.pushStringEnd[cur]-2) == cur:
-		#             msg="; "+self.variableGlobals.sBy.pushStringValue[cur] + " - Stack string"
-		#             # disList[4] = cleanColors(disList[4] + "; "+self.variableGlobals.sBy.pushStringValue[cur] + " - Stack string")
-		#             disDict["comment"] = disDict["comment"] + self.variableGlobals.cleanColors("; "+self.variableGlobals.sBy.pushStringValue[cur] + " - Stack string")
-		#             newVal =('{:<12} {:<45s} {:<33}{:<10s}\n'.format(nada, msg, nada, nada))
-		#             out= newVal+out
-		#     except Exception as e:
-		#         # print ("weird error", e)
-		#         pass
-
-		#     # disTuple = tuple(disList)
-		#     disList.append(disDict)
-		#     # disDict[pAddressInt] = disTuple
-
-		#     finalOutput+=out
-		#     j+=1		
-		
-		# self.jsonDissasembly.update({'disassembly':disList})
-		print(1)
 #####################
 ####    Output   ####
 #####################
@@ -614,17 +463,11 @@ class jsonPrint:
 	def jsonTuples(self,paramValues,params_types,params_names,dictName):
 		t = 0
 		for pv in paramValues:
-			if( type(paramValues[t]) == tuple):
+			if isinstance(paramValues[t], tuple):
 				struct_values_list = []
 				struct_name = paramValues[t][0]
 				struct_type = paramValues[t][1]
 				struct_value = paramValues[t][2]
-				# print(struct_name)
-				# print(1)
-				# print(struct_type)
-				# print(1)
-				# print(struct_value)
-				# print(2)
 				i = 0
 				for each in struct_value:
 					#found a union sturcutre

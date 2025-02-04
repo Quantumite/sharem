@@ -2,11 +2,10 @@ from struct import pack, unpack
 import ctypes
 import os
 import pefile
-from pathlib import Path
 import json
-from .helper.moduleHelpers import *
+from .helper.moduleHelpers import insertIntoBytes
 import platform
-from sharem.sharem.helper.variable import Variables
+from .helper.variable import Variables
 
 platformType = platform.uname()[0]
 
@@ -327,11 +326,12 @@ def iter_and_dump_dlls(mu, em, export_dict, source_path, save_path, mods):
         mods[dll_name].base = base
         if platformType == "Windows":
             with disable_file_system_redirection():
-                if os.path.exists(source_path+dll_file) == False:
+                if not os.path.exists(source_path+dll_file):
                     continue
 
         if os.path.exists(save_path+dll_file):
-            rawDll = readRaw(save_path + dll_file)
+            with open(save_path+dll_file, 'rb') as f:
+                rawDll = f.read()
 
         # Inflate dlls so PE offsets are correct
         elif platformType == "Windows":
@@ -370,15 +370,16 @@ def padDLL(dllPath, dllName, expandedDLLsPath):
     while True:
         try:
             section = pe.sections[i]
+        except IndexError:
+            print("[!] Invalid PE Section index.")
+            break
 
-            pointerToRaw = section.PointerToRawData
-            sectionVA = section.VirtualAddress
-            sizeOfRawData = section.SizeOfRawData
+        pointerToRaw = section.PointerToRawData
+        sectionVA = section.VirtualAddress
+        sizeOfRawData = section.SizeOfRawData
 
-            if (virtualAddress >= sectionVA and virtualAddress < (sectionVA + sizeOfRawData)):
-                padding = virtualAddress - (virtualAddress - sectionVA + pointerToRaw)
-                break
-        except:
+        if (virtualAddress >= sectionVA and virtualAddress < (sectionVA + sizeOfRawData)):
+            padding = virtualAddress - (virtualAddress - sectionVA + pointerToRaw)
             break
 
         i += 1
@@ -391,13 +392,15 @@ def padDLL(dllPath, dllName, expandedDLLsPath):
     pe.write(tmpPath)
 
     # Add padding to dll, then save it.
-    out = readRaw(tmpPath)
+    with open(tmpPath, 'r') as f:
+        out = f.read()
     final = insertIntoBytes(out, 0x40, padding, 0x00)
     newBin = open(tmpPath, "wb")
     newBin.write(final)
     newBin.close()
 
-    rawDll = readRaw(tmpPath)
+    with open(tmpPath, 'rb') as f:
+        rawDll = f.read()
 
     return rawDll, padding
 
@@ -417,15 +420,6 @@ def saveDLLAddsToFile(foundDLLAddrs, export_dict):
             # print ("currentData==0")
             with open(foundDLLAddrs, 'w') as out:
                 json.dump(export_dict, out)
-
-        # else:
-        #     with open(foundDLLAddrs, 'a') as out:
-        #         for apiAddr, apiInfo in export_dict.items():
-        #             if apiAddr not in currentData.keys():
-        #                 print ("apiAddr", apiInfo)
-        #                 newRecord = {}
-        #                 newRecord[apiAddr] = apiInfo
-        #                 json.dump(newRecord, out)
 
 def initMods(uc, em, export_dict, source_path, save_path):
     # print ("export_dict size2", len(export_dict))

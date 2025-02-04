@@ -1,11 +1,4 @@
 import json
-import os
-import traceback
-def readRaw(appName):
-    f = open(appName, "rb")
-    myBinary = f.read()
-    f.close()
-    return myBinary
 
 def readDLLsAddsFromFile(foundDLLAddrs, export_dict):
     try:

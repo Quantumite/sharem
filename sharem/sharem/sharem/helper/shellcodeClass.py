@@ -1,8 +1,6 @@
+import sharem.sharem.constants as constants
+
 class shellcode:
-# #	o="shellcode"
-# #shBody="decoded body"
-# #shStub="decoder stub"
-## shDec="decoded shellcode (full)"
 	def __init__(self, rawData=None, decodedBody=None, decoderStub=None, decodedFull=None):
 		# print ("init")
 		self.rawData2 = rawData  # This is current - it is variable
@@ -26,14 +24,6 @@ class shellcode:
 		self.decoderStub=decoderStub
 	def setDecoded(self, decodedFull):
 		self.decodedFull=decodedFull
-	def useDecBody(self):
-		o=shBody
-	def useDecStub(self):
-		o=shStub
-		# self.rawData2=self.useDecoderStub
-	def useDecoded(self):
-		o=shDec
-		# self.rawData2=self.decodedFull
 	def isDecrypted(self):
 		return self.decryptSuccess
 	def hasDecStub(self):
