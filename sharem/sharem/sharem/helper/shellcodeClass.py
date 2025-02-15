@@ -1,4 +1,3 @@
-import sharem.sharem.constants as constants
 
 
 class shellcode:

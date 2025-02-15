@@ -2,12 +2,17 @@ from ..DLLs.emu_helpers.sharem_artifacts import Artifacts_emulation
 from .emu import EMU, emulationOptions
 from ..singleton.helpers import Singleton
 import sharem.sharem.constants as constants
-
+from sharem.sharem.helper.foundbooleans import foundBooleans
 
 class Variables(metaclass=Singleton):
     def __init__(self):
         # Startup Modules
-        self.mBool = {}  # []   # start modules CHANGED to dicitonary
+        self.moduleBooleans: dict[str, foundBooleans] = {
+            constants.ShellcodeLabel.SHELLCODE_LABEL: foundBooleans(),
+            constants.ShellcodeLabel.SHELLCODE_DECODED_STUB_LABEL: foundBooleans(),
+            constants.ShellcodeLabel.SHELLCODE_DECODED_BODY_LABEL: foundBooleans(),
+            constants.ShellcodeLabel.SHELLCODE_DECODED_FULL_LABEL: foundBooleans()
+        }  # start modules dicitonary
         self.m = {}
         self.dictName_mBool = (
             "shellcode"  # this is for the mBool object, was previous named 'o'

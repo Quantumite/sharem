@@ -1,5 +1,8 @@
+from typing import Optional
+
 class foundBooleans:
-    def __init__(self, name):
+    """Storage of all boolean configurations for module."""
+    def __init__(self, name: Optional[str]=None):
         self.bAnaHiddenCallsDone = False
         self.bAnaHiddenCnt = 0
         self.bAnaConvertBytesDone = False
@@ -32,3 +35,34 @@ class foundBooleans:
         self.bAsciiStrings = False
         self.bStringsFound = False
         self.bEmulationFound = False
+
+        self.bStrings = True
+        self.bAsciiStrings = True
+        self.bWideCharStrings = True
+        self.bModules = True
+        self.bpEvilImports = True
+        self.bEvilImports = True
+        self.bpPushRet = True
+        self.bpFstenv = True
+        self.bFstenv = True
+        self.bpSyscall = True
+        self.bSyscall = True
+        self.bpHeaven = True
+        self.bHeaven = True
+        self.bpPEB = True
+        self.bPEB = True
+        self.bPushRet = True
+        self.bpCallPop = True
+        self.bCallPop = True
+        self.bpStrings = True
+        self.bPushStackStrings = True
+        self.bpPushStrings = True
+        self.bpEvilImports = True
+        self.bpModules = True
+        self.bPushStrings = True
+        self.bShellcodeAll = True
+        self.bExportAll = True
+        self.bDisassembly = True
+        self.bEgg = True
+        self.bpAll = True
+        self.bAll = True

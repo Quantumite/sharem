@@ -44,7 +44,7 @@ from .helper.emuHelpers import (
 )
 from .helper.moduleHelpers import readDLLsAddsFromFile
 from .helper.emuHelpers import findRetVal
-from .helper.sharemuDeob import binaryToStr, sharDeobf
+from .helper.sharemuDeob import binaryToStr
 from .helper.variable import Variables
 from .sharem_debugger import debugger
 from .DLLs.emu_helpers.sharem_artifacts import Artifacts_regex
@@ -939,7 +939,7 @@ def hook_sysCall(uc, address, size):
             hook_syscallDefault(
                 uc, eip, esp, exportAddress, sysCallName, syscallID, address
             )
-        except Exception as e:
+        except Exception:
             print("\n\tHook failed at " + str(hex(exportAddress)) + ".")
     if sysCallName == "NtTerminateProcess":
         stopProcess = True

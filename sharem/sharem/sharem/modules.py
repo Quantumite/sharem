@@ -1,4 +1,4 @@
-from struct import pack, unpack
+from struct import pack
 import ctypes
 import os
 import pefile

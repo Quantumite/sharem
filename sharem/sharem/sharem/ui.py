@@ -1,12 +1,11 @@
 import colorama
 import itertools
-from typing import Literal, Optional
+from typing import Literal
 from abc import abstractmethod
 
 from .parseconf import Configuration
 import sharem.sharem.constants as constants
 from sharem.sharem.helper.listhelpers import get_max_length
-from sharem.sharem.helper.foundbooleans import foundBooleans
 from sharem.sharem.helper.variable import Variables
 
 colorama.init()
@@ -208,9 +207,7 @@ def printBitMenu():
     print(BitMenuScreen())
 
 
-def displayCurrentInstructions(
-    bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, bAll
-):  # Display current shellcode instruction selections
+def displayCurrentInstructions(variables: Variables, shellcode_label):  # Display current shellcode instruction selections
     iMenu = "\n"
     iMenu += " Shellcode instructions to find:\n"
     iMenu += (
@@ -223,7 +220,7 @@ def displayCurrentInstructions(
         + constants.RESET
         + "["
     )
-    iMenu += constants.CYAN + "x" + constants.RESET if bPushRet else " "
+    iMenu += constants.CYAN + "x" + constants.RESET if variables.moduleBooleans[shellcode_label].bPushRet else " "
     iMenu += "]\n"
     iMenu += (
         constants.CYAN
@@ -235,7 +232,7 @@ def displayCurrentInstructions(
         + constants.RESET
         + "["
     )
-    iMenu += constants.CYAN + "x" + constants.RESET if bCallPop else " "
+    iMenu += constants.CYAN + "x" + constants.RESET if variables.moduleBooleans[shellcode_label].bCallPop else " "
     iMenu += "]\n"
     iMenu += (
         constants.CYAN
@@ -247,7 +244,7 @@ def displayCurrentInstructions(
         + constants.RESET
         + "["
     )
-    iMenu += constants.CYAN + "x" + constants.RESET if bFstenv else " "
+    iMenu += constants.CYAN + "x" + constants.RESET if variables.moduleBooleans[shellcode_label].bFstenv else " "
     iMenu += "]\n"
     iMenu += (
         constants.CYAN
@@ -259,7 +256,7 @@ def displayCurrentInstructions(
         + constants.RESET
         + "["
     )
-    iMenu += constants.CYAN + "x" + constants.RESET if bEgg else " "
+    iMenu += constants.CYAN + "x" + constants.RESET if variables.moduleBooleans[shellcode_label].bEgg else " "
     iMenu += "]\n"
     iMenu += (
         constants.CYAN
@@ -271,7 +268,7 @@ def displayCurrentInstructions(
         + constants.RESET
         + "["
     )
-    iMenu += constants.CYAN + "x" + constants.RESET if bHeaven else " "
+    iMenu += constants.CYAN + "x" + constants.RESET if variables.moduleBooleans[shellcode_label].bHeaven else " "
     iMenu += "]\n"
     iMenu += (
         constants.CYAN
@@ -283,7 +280,7 @@ def displayCurrentInstructions(
         + constants.RESET
         + "["
     )
-    iMenu += constants.CYAN + "x" + constants.RESET if bPEB else " "
+    iMenu += constants.CYAN + "x" + constants.RESET if variables.moduleBooleans[shellcode_label].bPEB else " "
     iMenu += "]\n"
     iMenu += (
         constants.CYAN
@@ -295,7 +292,7 @@ def displayCurrentInstructions(
         + constants.RESET
         + "["
     )
-    iMenu += constants.CYAN + "x" + constants.RESET if bDisass else " "
+    iMenu += constants.CYAN + "x" + constants.RESET if variables.moduleBooleans[shellcode_label].bDisassembly else " "
     iMenu += "]\n"
     iMenu += (
         constants.CYAN
@@ -307,7 +304,7 @@ def displayCurrentInstructions(
         + constants.RESET
         + "["
     )
-    iMenu += constants.CYAN + "x" + constants.RESET if bAll else " "
+    iMenu += constants.CYAN + "x" + constants.RESET if variables.moduleBooleans[shellcode_label].bAll else " "
     iMenu += "]\n\t\t*Default\n\n"
     # print(iMenu)
     return iMenu
@@ -493,10 +490,8 @@ def displayCurrentSelections(
 
 
 # ui Discover Menu text
-def instructionsMenu(bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, bAll):
-    iMenu = displayCurrentInstructions(
-        bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, bAll
-    )
+def instructionsMenu(variables: Variables, shellcode_label):
+    iMenu = displayCurrentInstructions(variables, shellcode_label)
     iMenu += (
         constants.GREEN
         + "\n h"

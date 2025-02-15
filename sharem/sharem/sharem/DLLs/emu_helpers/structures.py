@@ -55,7 +55,6 @@ from sharem.sharem.helper.structHelpers import (
     PVOID_64BIT,
     PWSTR_32BIT,
     PWSTR_64BIT,
-    QWORD,
     SECURITY_DESCRIPTOR_CONTROL,
     SIZE_T_32BIT,
     SIZE_T_64BIT,

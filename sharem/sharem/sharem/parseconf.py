@@ -303,7 +303,7 @@ class Configuration(metaclass=Singleton):
         except:
             self.decrypt_stub_end = int(conr["SHAREM DECRYPT"]["stub_end"], 16)
 
-    def searchConf(self, conr):
+    def searchConf(self, conr, variables: Variables):
         vars = Variables()
 
         self.default_outdir = conr["SHAREM SEARCH"]["default_outdir"]
@@ -323,13 +323,13 @@ class Configuration(metaclass=Singleton):
 
         self.search_imports = conr.getboolean("SHAREM SEARCH", "imports")
 
-        if vars.rawHex and not vars.bit32_argparse:
+        if variables.rawHex and not variables.bit32_argparse:
             self.search_bit32 = conr.getboolean("SHAREM SEARCH", "bit32")
 
             if self.search_bit32:
-                vars.shellBit = 32
+                variables.shellBit = 32
             else:
-                vars.shellBit = 64
+                variables.shellBit = 64
 
         self.search_print_to_screen = conr.getboolean(
             "SHAREM SEARCH", "print_to_screen"
@@ -389,7 +389,7 @@ class Configuration(metaclass=Singleton):
 
         self.search_print_format_style = conr["SHAREM SEARCH"]["print_format_style"]
 
-    def disassemblyConf(self, conr):
+    def disassemblyConf(self, conr, variables):
         self.dissassembly_enable_hidden_calls = conr.getboolean(
             "SHAREM DISASSEMBLY", "enable_hidden_calls"
         )
@@ -425,28 +425,19 @@ class Configuration(metaclass=Singleton):
         )
 
         # init shellsize
-        var = Variables()
-        var.shellSizeLimit = self.dissassembly_shellcode_size_limit
+        variables.shellSizeLimit = self.dissassembly_shellcode_size_limit
 
         # init the mbool Dict with values from config
-        mBool = var.mBool
-        o_shell = constants.SHELLCODE_LABEL
-        print("o_shell", o_shell)
-        print("mBool", mBool, "len", len(mBool))
-        print(
-            "self.dissassembly_enable_hidden_calls",
-            self.dissassembly_enable_hidden_calls,
-        )
-        # mBool[o_shell].bDoFindHiddenCalls = self.dissassembly_enable_hidden_calls
-        mBool[o_shell].bDoEnableComments = self.dissassembly_enable_hidden_calls
-        mBool[o_shell].bDoShowAscii = self.dissassembly_enable_hidden_calls
-        mBool[o_shell].bDoFindStrings = self.dissassembly_enable_hidden_calls
-        mBool[o_shell].ignoreDisDiscovery = self.dissassembly_enable_hidden_calls
-        mBool[o_shell].maxOpDisplay = self.dissassembly_enable_hidden_calls
-        mBool[o_shell].btsV = self.dissassembly_enable_hidden_calls
-        mBool[o_shell].bDoShowOffsets = self.dissassembly_enable_hidden_calls
-        mBool[o_shell].bDoShowOpcodes = self.dissassembly_enable_hidden_calls
-        mBool[o_shell].bDoShowLabels = self.dissassembly_enable_hidden_calls
+        shellcode_label = constants.ShellcodeLabel.SHELLCODE_LABEL
+        variables.moduleBooleans[shellcode_label].bDoEnableComments = self.dissassembly_enable_hidden_calls
+        variables.moduleBooleans[shellcode_label].bDoShowAscii = self.dissassembly_enable_hidden_calls
+        variables.moduleBooleans[shellcode_label].bDoFindStrings = self.dissassembly_enable_hidden_calls
+        variables.moduleBooleans[shellcode_label].ignoreDisDiscovery = self.dissassembly_enable_hidden_calls
+        variables.moduleBooleans[shellcode_label].maxOpDisplay = self.dissassembly_enable_hidden_calls
+        variables.moduleBooleans[shellcode_label].btsV = self.dissassembly_enable_hidden_calls
+        variables.moduleBooleans[shellcode_label].bDoShowOffsets = self.dissassembly_enable_hidden_calls
+        variables.moduleBooleans[shellcode_label].bDoShowOpcodes = self.dissassembly_enable_hidden_calls
+        variables.moduleBooleans[shellcode_label].bDoShowLabels = self.dissassembly_enable_hidden_calls
 
     def emulationConf(self, conr):
         self.emulation_print_emulation_result = conr.getboolean(

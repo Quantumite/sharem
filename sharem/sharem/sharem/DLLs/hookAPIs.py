@@ -9,18 +9,12 @@ from struct import pack, unpack
 from .emu_helpers.atom import AtomTable
 from .emu_helpers.memHelper import Memory
 from ..helper.emu import EMU
-from ..parseconf import Configuration
-from .emu_helpers.sharem_artifacts import Artifacts_emulation
-from .emu_helpers.sharem_filesystem import Directory_system
 from .emu_helpers.handles import Handle, HandleType, HandlesDict
 from .emu_helpers.heap import Heap, HeapsDict
 from .emu_helpers.registry import RegKey, RegValueTypes, RegistryKeys
 from .emu_helpers.sim_values import emuSimVals
-from .emu_helpers.sharem_filesystem import Directory_system
 from .emu_helpers.tool_snapshot import System_SnapShot
 from .emu_helpers.reverseLookUps import ReverseLookUps
-from ..helper.printingOutput import PrintingOutput
-from ..helper.jsonPrinting import jsonPrint
 from .emu_helpers.structures import *
 from ..helper.structHelpers import makeStructVals
 from ..helper.variable import Variables
@@ -32,7 +26,6 @@ var = Variables()
 # Artifacts class initialization
 art = var.art
 
-conr = Configuration()
 
 FakeProcess = 0xBADD0000
 
@@ -6121,13 +6114,13 @@ class CustomWinAPIs:
                     )
                     uc.mem_write(pVals[6], pack("<I", len(keyValue.data)))
                 elif type == RegValueTypes.REG_DWORD:
-                    uc.mem_write(pVals[5], pack(f"<I", keyValue.data))
+                    uc.mem_write(pVals[5], pack("<I", keyValue.data))
                     uc.mem_write(pVals[6], pack("<I", 4))
                 elif type == RegValueTypes.REG_DWORD_BIG_ENDIAN:
-                    uc.mem_write(pVals[5], pack(f">I", keyValue.data))
+                    uc.mem_write(pVals[5], pack(">I", keyValue.data))
                     uc.mem_write(pVals[6], pack("<I", 4))
                 elif type == RegValueTypes.REG_QWORD:
-                    uc.mem_write(pVals[5], pack(f"<Q", keyValue.data))
+                    uc.mem_write(pVals[5], pack("<Q", keyValue.data))
                     uc.mem_write(pVals[6], pack("<I", 8))
                 elif type == RegValueTypes.REG_SZ:
                     uc.mem_write(
@@ -6291,13 +6284,13 @@ class CustomWinAPIs:
                     )
                     uc.mem_write(pVals[6], pack("<I", len(keyValue.data)))
                 elif type == RegValueTypes.REG_DWORD:
-                    uc.mem_write(pVals[5], pack(f"<I", keyValue.data))
+                    uc.mem_write(pVals[5], pack("<I", keyValue.data))
                     uc.mem_write(pVals[6], pack("<I", 4))
                 elif type == RegValueTypes.REG_DWORD_BIG_ENDIAN:
-                    uc.mem_write(pVals[5], pack(f">I", keyValue.data))
+                    uc.mem_write(pVals[5], pack(">I", keyValue.data))
                     uc.mem_write(pVals[6], pack("<I", 4))
                 elif type == RegValueTypes.REG_QWORD:
-                    uc.mem_write(pVals[5], pack(f"<Q", keyValue.data))
+                    uc.mem_write(pVals[5], pack("<Q", keyValue.data))
                     uc.mem_write(pVals[6], pack("<I", 8))
                 elif type == RegValueTypes.REG_SZ:
                     uc.mem_write(
@@ -6586,13 +6579,13 @@ class CustomWinAPIs:
                     )
                     uc.mem_write(pVals[5], pack("<I", len(keyValue.data)))
                 elif type == RegValueTypes.REG_DWORD:
-                    uc.mem_write(pVals[4], pack(f"<I", keyValue.data))
+                    uc.mem_write(pVals[4], pack("<I", keyValue.data))
                     uc.mem_write(pVals[5], pack("<I", 4))
                 elif type == RegValueTypes.REG_DWORD_BIG_ENDIAN:
-                    uc.mem_write(pVals[4], pack(f">I", keyValue.data))
+                    uc.mem_write(pVals[4], pack(">I", keyValue.data))
                     uc.mem_write(pVals[5], pack("<I", 4))
                 elif type == RegValueTypes.REG_QWORD:
-                    uc.mem_write(pVals[4], pack(f"<Q", keyValue.data))
+                    uc.mem_write(pVals[4], pack("<Q", keyValue.data))
                     uc.mem_write(pVals[5], pack("<I", 8))
                 elif type == RegValueTypes.REG_SZ:
                     uc.mem_write(
@@ -6709,13 +6702,13 @@ class CustomWinAPIs:
                     )
                     uc.mem_write(pVals[5], pack("<I", len(keyValue.data)))
                 elif type == RegValueTypes.REG_DWORD:
-                    uc.mem_write(pVals[4], pack(f"<I", keyValue.data))
+                    uc.mem_write(pVals[4], pack("<I", keyValue.data))
                     uc.mem_write(pVals[5], pack("<I", 4))
                 elif type == RegValueTypes.REG_DWORD_BIG_ENDIAN:
-                    uc.mem_write(pVals[4], pack(f">I", keyValue.data))
+                    uc.mem_write(pVals[4], pack(">I", keyValue.data))
                     uc.mem_write(pVals[5], pack("<I", 4))
                 elif type == RegValueTypes.REG_QWORD:
-                    uc.mem_write(pVals[4], pack(f"<Q", keyValue.data))
+                    uc.mem_write(pVals[4], pack("<Q", keyValue.data))
                     uc.mem_write(pVals[5], pack("<I", 8))
                 elif type == RegValueTypes.REG_SZ:
                     uc.mem_write(
@@ -8991,13 +8984,13 @@ class CustomWinAPIs:
                             )
                             uc.mem_write(pVals[7], pack("<I", len(keyValue.data)))
                         elif type == RegValueTypes.REG_DWORD:
-                            uc.mem_write(pVals[6], pack(f"<I", keyValue.data))
+                            uc.mem_write(pVals[6], pack("<I", keyValue.data))
                             uc.mem_write(pVals[7], pack("<I", 4))
                         elif type == RegValueTypes.REG_DWORD_BIG_ENDIAN:
-                            uc.mem_write(pVals[6], pack(f">I", keyValue.data))
+                            uc.mem_write(pVals[6], pack(">I", keyValue.data))
                             uc.mem_write(pVals[7], pack("<I", 4))
                         elif type == RegValueTypes.REG_QWORD:
-                            uc.mem_write(pVals[6], pack(f"<Q", keyValue.data))
+                            uc.mem_write(pVals[6], pack("<Q", keyValue.data))
                             uc.mem_write(pVals[7], pack("<I", 8))
                         elif type == RegValueTypes.REG_SZ:
                             uc.mem_write(
@@ -9135,13 +9128,13 @@ class CustomWinAPIs:
                             )
                             uc.mem_write(pVals[7], pack("<I", len(keyValue.data)))
                         elif type == RegValueTypes.REG_DWORD:
-                            uc.mem_write(pVals[6], pack(f"<I", keyValue.data))
+                            uc.mem_write(pVals[6], pack("<I", keyValue.data))
                             uc.mem_write(pVals[7], pack("<I", 4))
                         elif type == RegValueTypes.REG_DWORD_BIG_ENDIAN:
-                            uc.mem_write(pVals[6], pack(f">I", keyValue.data))
+                            uc.mem_write(pVals[6], pack(">I", keyValue.data))
                             uc.mem_write(pVals[7], pack("<I", 4))
                         elif type == RegValueTypes.REG_QWORD:
-                            uc.mem_write(pVals[6], pack(f"<Q", keyValue.data))
+                            uc.mem_write(pVals[6], pack("<Q", keyValue.data))
                             uc.mem_write(pVals[7], pack("<I", 8))
                         elif type == RegValueTypes.REG_SZ:
                             uc.mem_write(
@@ -21890,7 +21883,7 @@ class CustomWinSysCalls:
         try:
             uc.mem_map(allocLoc, size)
             uc.reg_write(UC_X86_REG_EAX, retVal)
-        except Exception as e:
+        except Exception:
             # print("Error: ", e)
             # print(traceback.format_exc())
             try:

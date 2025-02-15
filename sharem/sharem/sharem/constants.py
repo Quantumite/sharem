@@ -1,6 +1,6 @@
 """Constants used throughout SHAREM."""
 
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 RED = "\u001b[31;1m"
 GREEN = "\u001b[32;1m"
@@ -11,10 +11,11 @@ CYAN = "\u001b[36;1m"
 WHITE = "\u001b[37m"
 RESET = "\u001b[0m"
 
-SHELLCODE_LABEL = "shellcode"
-SHELLCODE_DECODED_BODY_LABEL = "decoded body"
-SHELLCODE_DECODED_STUB_LABEL = "decoded stub"
-SHELLCODE_DECODED_FULL_LABEL = "decoded shellcode (full)"
+class ShellcodeLabel(str, Enum):
+    SHELLCODE_LABEL = "shellcode"
+    SHELLCODE_DECODED_BODY_LABEL = "decoded body"
+    SHELLCODE_DECODED_STUB_LABEL = "decoded stub"
+    SHELLCODE_DECODED_FULL_LABEL = "decoded shellcode (full)"
 
 
 class ModeEnum(IntEnum):

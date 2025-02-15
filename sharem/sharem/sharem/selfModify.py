@@ -8,7 +8,6 @@ import dispy
 from .distrFunc import *
 from .lists import PEB_WALK
 from capstone import *
-import capstone
 
 pebPoints = 3
 
@@ -37,7 +36,7 @@ def get_PEB_walk_start_decode(mode, NumOpsDis, bytesToMatch, secNum, data2):
                 # input("enter..")
                 if (data2[t + i]) != (bytesToMatch[i]):
                     found = False  # no match
-            except Exception as e:
+            except Exception:
                 pass
             i += 1
 
@@ -4630,15 +4629,9 @@ def austinDecodeDistributed_new(
     successPoints=3,
 ):
     try:
-        import re
         import itertools
-        from math import factorial
         import timeit
-        import numpy as np
         import multiprocessing
-        import time
-        import math
-        import dispy
         import traceback
 
         global aLimit
@@ -5933,11 +5926,6 @@ def runProcsDistr(
 ):
     from distrFunc import (
         p2EncodeDistr,
-        doStuffP2Distr,
-        doStuffP24Distr,
-        doStuffP25Distr,
-        doStuffP22Distr,
-        doStuffP21Distr,
     )
 
     endFlag = multiprocessing.Value("i", 0)

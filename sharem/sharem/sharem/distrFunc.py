@@ -30,7 +30,7 @@ def get_PEB_walk_start_decodeDistr(mode, NumOpsDis, bytesToMatch, secNum, data2)
                 # input("enter..")
                 if (data2[t + i]) != (bytesToMatch[i]):
                     found = False  # no match
-            except Exception as e:
+            except Exception:
                 pass
             i += 1
 

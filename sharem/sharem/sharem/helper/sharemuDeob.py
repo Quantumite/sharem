@@ -107,7 +107,7 @@ class sharDeobf:
                     pass
 
                 t += 1
-        except Exception as e:
+        except Exception:
             print(traceback.format_exc())
 
     def show2(self):

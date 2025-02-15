@@ -6,7 +6,7 @@ def readDLLsAddsFromFile(foundDLLAddrs, export_dict):
         with open(foundDLLAddrs, "r") as f:
             export_dict = json.load(f)
         return export_dict
-    except Exception as e:
+    except Exception:
         # print ("this is the traceback:")
         # print(traceback.format_exc())
         # print("error:",e)
