@@ -27,7 +27,7 @@ class Atom:
 
 class AtomTable:
     IdCounter = 0x1234
-    Atoms: 'set[Atom]' = set()
+    Atoms: "set[Atom]" = set()
 
     def add(name: str):
         for atom in AtomTable.Atoms:

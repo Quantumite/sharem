@@ -5,41 +5,41 @@ import sharem.sharem.constants as constants
 
 
 class Variables(metaclass=Singleton):
-	def __init__(self):
-		# Startup Modules
-		self.mBool = {} #[]   # start modules CHANGED to dicitonary
-		self.m = {}
-		self.dictName_mBool = 'shellcode' #this is for the mBool object, was previous named 'o'
-		
-		
-		self.bit32_argparse = False
-		self.shellBit = 32
-		self.rawHex = False
-		self.filename = ''
-		self.logged_syscalls = []
-		self.emulation_multiline = True
-		self.shellSizeLimit = ''
-		self.bShellcodeAll = False
-		
-		###initilize our classes for sharem
-		self.emu = EMU()
-		self.art = Artifacts_emulation()
-		self.emuObj = emulationOptions()
-		
-		#call the class inits
-		# self.CreateClasses
-		self.filename = ''
-		self.text = '1'
+    def __init__(self):
+        # Startup Modules
+        self.mBool = {}  # []   # start modules CHANGED to dicitonary
+        self.m = {}
+        self.dictName_mBool = (
+            "shellcode"  # this is for the mBool object, was previous named 'o'
+        )
 
-	def cleanColors(self, out):
-		"""Find and replace all term sequences giving color to output."""
-		out = out.replace(constants.RED, "")
-		out = out.replace(constants.GREEN, "")
-		out = out.replace(constants.YELLOW, "")
-		out = out.replace(constants.BLUE, "")
-		out = out.replace(constants.MAGENTA, "")
-		out = out.replace(constants.CYAN, "")
-		out = out.replace(constants.WHITE, "")
-		out = out.replace(constants.RESET, "")
-		return out
-		
+        self.bit32_argparse = False
+        self.shellBit = 32
+        self.rawHex = False
+        self.filename = ""
+        self.logged_syscalls = []
+        self.emulation_multiline = True
+        self.shellSizeLimit = ""
+        self.bShellcodeAll = False
+
+        ###initilize our classes for sharem
+        self.emu = EMU()
+        self.art = Artifacts_emulation()
+        self.emuObj = emulationOptions()
+
+        # call the class inits
+        # self.CreateClasses
+        self.filename = ""
+        self.text = "1"
+
+    def cleanColors(self, out):
+        """Find and replace all term sequences giving color to output."""
+        out = out.replace(constants.RED, "")
+        out = out.replace(constants.GREEN, "")
+        out = out.replace(constants.YELLOW, "")
+        out = out.replace(constants.BLUE, "")
+        out = out.replace(constants.MAGENTA, "")
+        out = out.replace(constants.CYAN, "")
+        out = out.replace(constants.WHITE, "")
+        out = out.replace(constants.RESET, "")
+        return out

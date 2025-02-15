@@ -2,9 +2,10 @@ from struct import pack
 from .sim_values import emuSimVals
 from unicorn import Uc, UcError
 
-HeapsDict: 'dict[int,Heap]' = {}  # Dictionary of All Heaps
+HeapsDict: "dict[int,Heap]" = {}  # Dictionary of All Heaps
 
 # Convert Heaps to Handles Some Day Shelby
+
 
 # Heap Functions
 class HeapAllocation:
@@ -15,14 +16,17 @@ class HeapAllocation:
             uc.mem_map(self.address, self.size)
             emuSimVals.availMem += self.size
         except ImportError as ie:
-            print('Heap Allocation failed because unicorn could not be imported.')
+            print("Heap Allocation failed because unicorn could not be imported.")
             print(ie)
         except Exception as e:
-            print("An unknown exception was raised during HeapAllocation initialization.")
+            print(
+                "An unknown exception was raised during HeapAllocation initialization."
+            )
             print(e)
             self.address = 0
             self.size = 0
-            print('Heap Allocation Failed')
+            print("Heap Allocation Failed")
+
 
 class Heap:
     realSize = 4096
@@ -34,7 +38,7 @@ class Heap:
             uc.mem_map(self.baseAddress, self.realSize)
             emuSimVals.availMem += self.realSize
         except ImportError as ie:
-            print('Heap Create Failed because unicorn could not be imported.')
+            print("Heap Create Failed because unicorn could not be imported.")
             print(ie)
         except Exception as e:
             print("An unknown exception was raised during Heap initialization.")
@@ -44,7 +48,7 @@ class Heap:
             self.handle = self.baseAddress
         else:
             self.handle = handle
-        self.allocations: dict[int,HeapAllocation] = {}
+        self.allocations: dict[int, HeapAllocation] = {}
         self.usedSize = 0
         HeapsDict.update({self.handle: self})
 
@@ -70,7 +74,7 @@ class Heap:
 
         try:
             memory = uc.mem_read(oldAllo.address, oldAllo.size)
-            fmt = '<' + str(oldAllo.size) + 's'
+            fmt = "<" + str(oldAllo.size) + "s"
             uc.mem_write(newAllo.address, pack(fmt, memory))
         except UcError:
             print("[!] reAlloc failed. Returning old allocation.")
@@ -89,9 +93,13 @@ class Heap:
         """Free memory using Unicorn's mem_unmap() and remove from allocations."""
         if addr in self.allocations:
             try:
-                uc.mem_unmap(self.allocations[addr].address, self.allocations[addr].size)
+                uc.mem_unmap(
+                    self.allocations[addr].address, self.allocations[addr].size
+                )
             except UcError:
-                print(f"[!] Underlying unicorn unmap failed to unmap {self.allocations[addr].address}")
+                print(
+                    f"[!] Underlying unicorn unmap failed to unmap {self.allocations[addr].address}"
+                )
             self.usedSize -= self.allocations[addr].size
             self.allocations.pop(addr)
 
@@ -102,7 +110,9 @@ class Heap:
             try:
                 uc.mem_unmap(self.allocations[i].address, self.allocations[i].size)
             except UcError:
-                print(f"[!] Underlying unicorn unmap failed to unmap {self.allocations[i].address}.")
+                print(
+                    f"[!] Underlying unicorn unmap failed to unmap {self.allocations[i].address}."
+                )
         self.allocations = {}
         try:
             uc.mem_unmap(self.baseAddress, self.realSize)
@@ -111,13 +121,16 @@ class Heap:
         HeapsDict.pop(self.baseAddress)
 
     def printInfo(self):
-        print('Heap Info')
-        print('Handle: ', hex(self.handle))
-        print('BaseAddress: ', hex(self.baseAddress))
-        print('Used Size: ', self.usedSize)
-        print('Total Size: ', self.availableSize)
-        print('Allocations: ', len(self.allocations))
+        print("Heap Info")
+        print("Handle: ", hex(self.handle))
+        print("BaseAddress: ", hex(self.baseAddress))
+        print("Used Size: ", self.usedSize)
+        print("Total Size: ", self.availableSize)
+        print("Allocations: ", len(self.allocations))
         for i in self.allocations:
-            print(' Address:', hex(self.allocations[i].address), 'Size:', self.allocations[i].size)
-
-
+            print(
+                " Address:",
+                hex(self.allocations[i].address),
+                "Size:",
+                self.allocations[i].size,
+            )

@@ -34,8 +34,10 @@ def banner() -> str:
 """
     return text
 
+
 class Screen:
     """Base class of print the UI to the screen."""
+
     def __init__(self):
         """Initialize Screen Class."""
         pass
@@ -44,17 +46,23 @@ class Screen:
     def __repr__(self):
         """Display content to screen."""
 
+
 class ImportScreen(Screen):
     """Parent class of the import menu screen."""
-    OPTIONS_LABEL = constants.YELLOW + """
+
+    OPTIONS_LABEL = (
+        constants.YELLOW
+        + """
   .............
      Options
   .............
-""" + constants.RESET
+"""
+        + constants.RESET
+    )
 
-    def __init__(self, shellBit: Literal[32,64], name:str, hMd5:str) -> None:
+    def __init__(self, shellBit: Literal[32, 64], name: str, hMd5: str) -> None:
         """Initialize common values for Screen."""
-        self.shellBit: Literal[32,64] = shellBit
+        self.shellBit: Literal[32, 64] = shellBit
         self.name = name
         self.hMd5 = hMd5
         self.showType: str = ""
@@ -66,42 +74,48 @@ class ImportScreen(Screen):
         if self.showType:
             return f"\n\t{self.showType}: "
         return ""
-        
+
     def _init_output(self) -> None:
         """Initialize output with constant values."""
         self.output += constants.GREEN + banner() + constants.RESET
-        self.output += constants.WHITE + "  Shellcode Analysis & Emulation Framework, v. 1.024" + constants.RESET
         self.output += (
-            constants.GREEN + 
-            self._format_showType() + 
-            constants.CYAN + 
-            self.name + 
-            constants.GREEN + 
-            "\tMd5: " + 
-            constants.CYAN + 
-            self.hMd5 + 
-            constants.RESET
+            constants.WHITE
+            + "  Shellcode Analysis & Emulation Framework, v. 1.024"
+            + constants.RESET
+        )
+        self.output += (
+            constants.GREEN
+            + self._format_showType()
+            + constants.CYAN
+            + self.name
+            + constants.GREEN
+            + "\tMd5: "
+            + constants.CYAN
+            + self.hMd5
+            + constants.RESET
         )
 
     @abstractmethod
     def _set_options_content(self) -> None:
         """Set options content for Screen."""
 
-    def _append_output(self, content:str) -> None:
+    def _append_output(self, content: str) -> None:
         """Append content to the screen output."""
         self.output += content
 
+
 class RawHexScreen(ImportScreen):
     """Class to handle displaying screens for Raw Hex inputs."""
-    def __init__(self, shellBit: Literal[32,64], name: str, hMd5:str) -> None:
+
+    def __init__(self, shellBit: Literal[32, 64], name: str, hMd5: str) -> None:
         super().__init__(shellBit, name, hMd5)
         self.showType = "Shellcode"
 
     def _set_options_content(self) -> None:
         """Create options menu for Raw Hex input."""
         self._append_output(
-        constants.CYAN
-        + f"""
+            constants.CYAN
+            + f"""
    h		{constants.RESET + "Display options." + constants.CYAN}
    l		{constants.RESET + "Shellcode Emulator" + constants.CYAN}
    z		{constants.RESET + "Do everything with current selections." + constants.CYAN}
@@ -118,16 +132,19 @@ class RawHexScreen(ImportScreen):
    c		{constants.RESET + "Save current configuration." + constants.CYAN}
    q		{constants.RESET + "Quick find all." + constants.CYAN}
    x		{constants.RESET + "Exit." + constants.CYAN}
-    """)
+    """
+        )
 
     def __repr__(self):
         """String representation of Raw Hex Screen."""
         self._set_options_content()
         return ImportScreen.OPTIONS_LABEL + self.output
 
+
 class PEFileScreen(ImportScreen):
     """Class to handle displaying options screen for PE File inputs."""
-    def __init__(self, shellBit: Literal[32,64], name:str, hMd5:str) -> None:
+
+    def __init__(self, shellBit: Literal[32, 64], name: str, hMd5: str) -> None:
         """Initialize PEFileScreen."""
         super().__init__(shellBit, name, hMd5)
         self.showType = "PE File"
@@ -145,19 +162,22 @@ class PEFileScreen(ImportScreen):
    m		{constants.RESET + "Find modules in the IAT and beyond." + constants.CYAN}
    e		{constants.RESET + "Find imports." + constants.CYAN}
    i		{constants.RESET + "Show basic " + self.showType + " info." + constants.CYAN}
-   a		{constants.RESET + "Change architecture, 32-bit or 64-bit." + constants.YELLOW + " [ "+ constants.CYAN + str(self.shellBit) + "-bit" + constants.YELLOW+ " ]" + constants.CYAN}
+   a		{constants.RESET + "Change architecture, 32-bit or 64-bit." + constants.YELLOW + " [ " + constants.CYAN + str(self.shellBit) + "-bit" + constants.YELLOW + " ]" + constants.CYAN}
    c		{constants.RESET + "Save current configuration." + constants.CYAN}
    q		{constants.RESET + "Quick find all." + constants.CYAN}
    x		{constants.RESET + "Exit." + constants.CYAN}
-    """)
+    """
+        )
 
     def __repr__(self):
         """String representation of PE File Screen."""
         self._set_options_content()
         return ImportScreen.OPTIONS_LABEL + self.output
 
+
 class BitMenuScreen(Screen):
     """Bit Menu Screen."""
+
     def __init__(self):
         """Initialize BitMenu Screen."""
         super().__init__()
@@ -176,7 +196,8 @@ class BitMenuScreen(Screen):
             + "Enter 32 or 64: "
         )
 
-def showOptions(shellBit: Literal[32,64], rawHex, name, hMd5):
+
+def showOptions(shellBit: Literal[32, 64], rawHex, name, hMd5):
     if rawHex:
         print(RawHexScreen(shellBit, name, hMd5))
     else:
@@ -476,10 +497,26 @@ def instructionsMenu(bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, 
     iMenu = displayCurrentInstructions(
         bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, bAll
     )
-    iMenu += constants.GREEN + "\n h" + constants.RESET + constants.WHITE + " - Show options.\n"
-    iMenu += constants.GREEN + " g" + constants.RESET + constants.WHITE + " - Toggle selections.\n"
     iMenu += (
-        constants.GREEN + " c" + constants.RESET + constants.WHITE + " - Clear all selections.\n"
+        constants.GREEN
+        + "\n h"
+        + constants.RESET
+        + constants.WHITE
+        + " - Show options.\n"
+    )
+    iMenu += (
+        constants.GREEN
+        + " g"
+        + constants.RESET
+        + constants.WHITE
+        + " - Toggle selections.\n"
+    )
+    iMenu += (
+        constants.GREEN
+        + " c"
+        + constants.RESET
+        + constants.WHITE
+        + " - Clear all selections.\n"
     )
     iMenu += (
         constants.GREEN
@@ -488,7 +525,13 @@ def instructionsMenu(bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, 
         + constants.WHITE
         + " - Change technical setttings for finding shellcode instructions.\n"
     )
-    iMenu += constants.GREEN + " z" + constants.RESET + constants.WHITE + " - Find instructions.\n"
+    iMenu += (
+        constants.GREEN
+        + " z"
+        + constants.RESET
+        + constants.WHITE
+        + " - Find instructions.\n"
+    )
     iMenu += (
         constants.GREEN
         + " r"
@@ -497,13 +540,19 @@ def instructionsMenu(bPushRet, bCallPop, bFstenv, bEgg, bHeaven, bPEB, bDisass, 
         + " - reset found instructions.\n"
     )
     iMenu += (
-        constants.GREEN + " x" + constants.RESET + constants.WHITE + " - Exit.\n" + constants.RESET
+        constants.GREEN
+        + " x"
+        + constants.RESET
+        + constants.WHITE
+        + " - Exit.\n"
+        + constants.RESET
     )
     print(iMenu)
 
 
 class InstructionSelectScreen(Screen):
     """Class for the Instruction Select Menu."""
+
     def __init__(self):
         """Initialize Instruction Select Menu Screen."""
         super().__init__()
@@ -518,6 +567,7 @@ class InstructionSelectScreen(Screen):
             "\t e.g. cp, fe, peb, all, none\n\n"
             " x to exit.\n\n"
         )
+
 
 def instructionSelectMenu():
     print(InstructionSelectScreen())
@@ -732,7 +782,8 @@ def printMenu(
         constants.WHITE + "- Print selections." + constants.RESET,
     )
     iMenu += " {} {}\n".format(
-        constants.GREEN + "x" + constants.RESET, constants.WHITE + "- Exit." + constants.RESET
+        constants.GREEN + "x" + constants.RESET,
+        constants.WHITE + "- Exit." + constants.RESET,
     )
     print(iMenu)
 
@@ -875,8 +926,6 @@ def newSysCallPrint(syscallSelection):
                 print("\t{}  {} {:>{x}}[ ]".format(code2, name2))
 
 
-
-
 def syscallSelectionMenu():
     print("#### WINDOWS XP ####")
     print("Windows XP (SP1)")
@@ -981,6 +1030,7 @@ def syscallSelectionMenu():
 
 class EmulationSyscallSubScreen(Screen):
     """Displays the Emulation Syscalls Print Sub-Menu."""
+
     def __init__(self, emuSyscallSelection):
         """Initialize Emulation Syscalls Print Sub-Menu."""
         self.output: str = ""
@@ -995,14 +1045,14 @@ class EmulationSyscallSubScreen(Screen):
 
             tog = "x" if code != "NA" and self.emuSyscallSelection[code][0] else " "
             if description.split()[0] == "Windows" or description.split()[0] == "All":
-                self.output+= "\n{}\n".format(constants.CYAN + description + constants.RESET)
+                self.output += "\n{}\n".format(
+                    constants.CYAN + description + constants.RESET
+                )
             else:
-                self.output += (
-                    "{}\t{}  {}\n".format(
-                        "[" + constants.RED + tog + constants.RESET + "]",
-                        constants.YELLOW + code + constants.RESET,
-                        description,
-                    )
+                self.output += "{}\t{}  {}\n".format(
+                    "[" + constants.RED + tog + constants.RESET + "]",
+                    constants.YELLOW + code + constants.RESET,
+                    description,
                 )
 
     def __repr__(self) -> str:
@@ -1011,18 +1061,23 @@ class EmulationSyscallSubScreen(Screen):
         self.output += "Note: "
         self.output += constants.RESET
         self.output += "  Only one OSBuild may be selected for emulation."
-        self.output += constants.MAGENTA 
-        self.output += " \n OSBuild Selection:\n" 
+        self.output += constants.MAGENTA
+        self.output += " \n OSBuild Selection:\n"
         self.output += constants.RESET
         self.emuNewSysCallPrint()
-        self.output += constants.MAGENTA 
-        self.output += " \n\n Functional Commands:\n\n" 
+        self.output += constants.MAGENTA
+        self.output += " \n\n Functional Commands:\n\n"
         self.output += constants.RESET
         self.output += " {} - Options.\n".format(constants.CYAN + "h" + constants.RESET)
-        self.output += " {} - Clear syscall selection.\n".format(constants.CYAN + "c" + constants.RESET)
-        self.output += " {} - Enter syscall selection.\n".format(constants.CYAN + "g" + constants.RESET)
+        self.output += " {} - Clear syscall selection.\n".format(
+            constants.CYAN + "c" + constants.RESET
+        )
+        self.output += " {} - Enter syscall selection.\n".format(
+            constants.CYAN + "g" + constants.RESET
+        )
         self.output += " {} - Exit.\n".format(constants.CYAN + "x" + constants.RESET)
         return self.output
+
 
 def emuSyscallPrintSubMenu(emuSyscallSelection):
     print(EmulationSyscallSubScreen(emuSyscallSelection))
@@ -1081,10 +1136,11 @@ def syscallPrintSubMenu(
 
 class ModulesMenuScreen(Screen):
     """Menu Screen for loaded Modules."""
-    def __init__(self, modulesMode: Literal[1,2,3]):
+
+    def __init__(self, modulesMode: Literal[1, 2, 3]):
         """Initialize screen for loaded Modules."""
         super().__init__()
-        self.modulesMode: Literal[1,2,3] = modulesMode
+        self.modulesMode: Literal[1, 2, 3] = modulesMode
         self.output: str = ""
 
     def __repr__(self):
@@ -1095,13 +1151,19 @@ class ModulesMenuScreen(Screen):
             + constants.RESET
         )
         self.output += "Select one of the following options:\n"
-        self.output += "\t" + constants.CYAN + "1" + constants.RESET + " - Find only DLLs in IAT"
+        self.output += (
+            "\t" + constants.CYAN + "1" + constants.RESET + " - Find only DLLs in IAT"
+        )
         if self.modulesMode == 1:
             self.output += "\t\t[" + constants.RED + "x" + constants.RESET + "]\n"
         else:
             self.output += "\t\t[ ]\n"
         self.output += (
-            "\t" + constants.CYAN + "2" + constants.RESET + " - Find DLLs in IAT and beyond"
+            "\t"
+            + constants.CYAN
+            + "2"
+            + constants.RESET
+            + " - Find DLLs in IAT and beyond"
         )
         if self.modulesMode == 2:
             self.output += "\t\t[" + constants.RED + "x" + constants.RESET + "]\n"
@@ -1119,7 +1181,9 @@ class ModulesMenuScreen(Screen):
         else:
             self.output += "\t[ ]\n"
         self.output += constants.GREEN + "\t\tDefault\n" + constants.RESET
-        self.output += "\t " + constants.CYAN + "h" + constants.RESET + " - Show options.\n"
+        self.output += (
+            "\t " + constants.CYAN + "h" + constants.RESET + " - Show options.\n"
+        )
         self.output += "\t " + constants.CYAN + "p" + constants.RESET + " - Print.\n"
         self.output += "\t " + constants.CYAN + "z" + constants.RESET + " - Execute.\n"
         self.output += "\t " + constants.CYAN + "r" + constants.RESET + " - reset .\n"
@@ -1848,7 +1912,9 @@ def emuSimValuesMenu():
             f"{constants.CYAN}    b {constants.WHITE}- {constants.YELLOW}Clipboard Data {constants.WHITE}[{constants.CYAN}{conr.simulatedValues_clipboard_data}{constants.WHITE}]"
         )
 
-        print(f"\n{constants.CYAN}  h {constants.WHITE}- {constants.YELLOW}Show this menu")
+        print(
+            f"\n{constants.CYAN}  h {constants.WHITE}- {constants.YELLOW}Show this menu"
+        )
 
     emuSimValHelpList()
     print(
@@ -1966,10 +2032,22 @@ def disPrintStyle(disassemblyFound, toggList):
         generated = "NOT DISASSEMBLED"
 
     maxOpval = (
-        constants.WHITE + "[" + constants.CYAN + str(maxOpDisplay) + constants.WHITE + "]" + constants.RESET
+        constants.WHITE
+        + "["
+        + constants.CYAN
+        + str(maxOpDisplay)
+        + constants.WHITE
+        + "]"
+        + constants.RESET
     )
     printStyleVal = (
-        constants.WHITE + "[" + constants.CYAN + str(btsV) + constants.WHITE + "]" + constants.RESET
+        constants.WHITE
+        + "["
+        + constants.CYAN
+        + str(btsV)
+        + constants.WHITE
+        + "]"
+        + constants.RESET
     )
     text = ""
     text += (
@@ -2060,7 +2138,9 @@ def disPrintStyle(disassemblyFound, toggList):
     )
     text += "    {} {}  [{}]              \n".format(
         constants.GREEN + "r" + constants.WHITE + ":" + constants.RESET,
-        constants.WHITE + "  Regenerate disassembly with new settings" + constants.RESET,
+        constants.WHITE
+        + "  Regenerate disassembly with new settings"
+        + constants.RESET,
         constants.CYAN + generated + constants.RESET,
     )
     text += "    {} {}              \n".format(
@@ -2164,16 +2244,40 @@ def disassembleUiMenu(
 ):
     dfOut = ""
     if ignoreDisDiscovery:
-        ignDiscTogg = constants.WHITE + "[" + constants.CYAN + "x" + constants.WHITE + "]" + constants.RESET
+        ignDiscTogg = (
+            constants.WHITE
+            + "["
+            + constants.CYAN
+            + "x"
+            + constants.WHITE
+            + "]"
+            + constants.RESET
+        )
     else:
         ignDiscTogg = constants.WHITE + "[ ]" + constants.RESET
 
     if disassemblyFound:
-        dfOut = constants.WHITE + "[" + constants.CYAN + "FOUND" + constants.WHITE + "]" + constants.RESET
+        dfOut = (
+            constants.WHITE
+            + "["
+            + constants.CYAN
+            + "FOUND"
+            + constants.WHITE
+            + "]"
+            + constants.RESET
+        )
     shellsize = constants.CYAN + str(shellSizeLimit) + " kb" + constants.RESET
 
     if disassemblyFound:
-        printDis = constants.WHITE + "[" + constants.CYAN + "FOUND" + constants.WHITE+ "]" + constants.RESET
+        printDis = (
+            constants.WHITE
+            + "["
+            + constants.CYAN
+            + "FOUND"
+            + constants.WHITE
+            + "]"
+            + constants.RESET
+        )
     else:
         printDis = (
             constants.WHITE

@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-HandlesDict: 'dict[int,Handle]' = {}  # Dictionary of All Handles
+HandlesDict: "dict[int,Handle]" = {}  # Dictionary of All Handles
 
 
 class HandleType(Enum):
@@ -64,7 +64,7 @@ class HandleType(Enum):
 class Handle:
     nextValue = 0x88880000  # Start of Handle IDs
 
-    def __init__(self, type: HandleType, data=None, name='', handleValue=0):
+    def __init__(self, type: HandleType, data=None, name="", handleValue=0):
         if handleValue == 0:
             # Generate Handle Value
             handleValue = Handle.nextValue

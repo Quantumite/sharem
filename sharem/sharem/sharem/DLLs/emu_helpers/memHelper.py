@@ -1,13 +1,26 @@
 from ctypes import sizeof
 
-from sharem.sharem.helper.structHelpers import BOOL, DWORD, INT, LONG, LONGLONG, QWORD, SHORT, UINT, ULONG, ULONGLONG, USHORT, WCHAR, WORD, CHAR
+from sharem.sharem.helper.structHelpers import (
+    BOOL,
+    DWORD,
+    INT,
+    LONG,
+    LONGLONG,
+    QWORD,
+    SHORT,
+    UINT,
+    ULONG,
+    ULONGLONG,
+    USHORT,
+    WCHAR,
+    WORD,
+    CHAR,
+)
 from unicorn import Uc, UcError
 
 
 class Memory:
-
     class Read:
-
         def CHAR(uc: Uc, address: int):
             try:
                 return CHAR.from_buffer_copy(uc.mem_read(address, sizeof(CHAR))).value
@@ -59,7 +72,9 @@ class Memory:
 
         def USHORT(uc: Uc, address: int):
             try:
-                return USHORT.from_buffer_copy(uc.mem_read(address, sizeof(USHORT))).value
+                return USHORT.from_buffer_copy(
+                    uc.mem_read(address, sizeof(USHORT))
+                ).value
             except UcError:
                 print(f"[!] Failed to read memory at {address}")
                 return 0
@@ -94,14 +109,18 @@ class Memory:
 
         def LONGLONG(uc: Uc, address: int):
             try:
-                return LONGLONG.from_buffer_copy(uc.mem_read(address, sizeof(LONGLONG))).value
+                return LONGLONG.from_buffer_copy(
+                    uc.mem_read(address, sizeof(LONGLONG))
+                ).value
             except UcError:
                 print(f"[!] Failed to read memory at {address}")
                 return 0
 
         def ULONGLONG(uc: Uc, address: int):
             try:
-                return ULONGLONG.from_buffer_copy(uc.mem_read(address, sizeof(ULONGLONG))).value
+                return ULONGLONG.from_buffer_copy(
+                    uc.mem_read(address, sizeof(ULONGLONG))
+                ).value
             except UcError:
                 print(f"[!] Failed to read memory at {address}")
                 return 0

@@ -5,8 +5,8 @@ class EmulationSimulationValues:
         self.lastErrorCode = 0x0
         self.nextProcessID = 10000
         self.nextThreadID = 20000
-        self.processIDs: 'list[int]' = [] # Figure Out How To Track ProcessIDs
-        self.threadIDs: 'list[int]' = []
+        self.processIDs: "list[int]" = []  # Figure Out How To Track ProcessIDs
+        self.threadIDs: "list[int]" = []
 
         # Values From Config
         self.user_name = "administrator"

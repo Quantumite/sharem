@@ -1,12 +1,14 @@
 from sharem import SharemMain
 import argparse
 
+
 def main():
     """The main function for command-line use of SHAREM."""
     try:
-        parser = argparse.ArgumentParser(prog='Sharem',
-      formatter_class=argparse.RawDescriptionHelpFormatter,
-      epilog='''
+        parser = argparse.ArgumentParser(
+            prog="Sharem",
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog="""
          \rExamples:
   python sharem.py -r32 shellcode.bin
   python sharem.py -r64 shellcode.txt
@@ -22,25 +24,35 @@ Additional information:
   The .txt is an ascii representation of raw bytes.
   If -d argument is used, the shellcode will be processed as 32 and 64 bit since the architecture is unknown.
 
-         ''')
+         """,
+        )
 
         group = parser.add_mutually_exclusive_group(required=True)
-        group.add_argument('-pe', type=str, help="Reads PE file only.")
-        group.add_argument('-r',type=str, help="Read shellcode architecture from the config file")
-        group.add_argument('-r64',  type=str, help="Reads 64-bit shellcode only")
-        group.add_argument('-r32', type=str, help="Reads 32-bit shellcode only.")
-        group.add_argument('-d', type=str, required=False, help="Parse shellcodes or pe files from a given directory.")
+        group.add_argument("-pe", type=str, help="Reads PE file only.")
+        group.add_argument(
+            "-r", type=str, help="Read shellcode architecture from the config file"
+        )
+        group.add_argument("-r64", type=str, help="Reads 64-bit shellcode only")
+        group.add_argument("-r32", type=str, help="Reads 32-bit shellcode only.")
+        group.add_argument(
+            "-d",
+            type=str,
+            required=False,
+            help="Parse shellcodes or pe files from a given directory.",
+        )
 
-        parser.add_argument('-c', type=str, required=False, help="Read config file from a given path.")
+        parser.add_argument(
+            "-c", type=str, required=False, help="Read config file from a given path."
+        )
 
-
-        # SharemMain(parser)    
+        # SharemMain(parser)
         args = parser.parse_args()
 
         SharemMain(args)
 
     except KeyboardInterrupt:
         exit()
+
 
 if __name__ == "__main__":
     main()

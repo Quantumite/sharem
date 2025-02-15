@@ -6,7 +6,75 @@ from .sim_values import emuSimVals
 
 from sharem.sharem.helper.ctypesUnion import LittleEndianUnion
 from sharem.sharem.helper.emu import EMU
-from sharem.sharem.helper.structHelpers import BOOL, BYTE, DWORD, DWORD_PTR_32BIT, DWORD_PTR_64BIT, HANDLE_32BIT, HANDLE_64BIT, HBITMAP_32BIT, HBITMAP_64BIT, HBRUSH_32BIT, HBRUSH_64BIT, HINSTANCE_32BIT, HINSTANCE_64BIT, HKEY_32BIT, HKEY_64BIT, HMENU_32BIT, HMENU_64BIT, HWND_32BIT, HWND_64BIT, INT, LMSTR, LONG, LONGLONG, LPARAM_32BIT, LPARAM_64BIT, LPBYTE_32BIT, LPBYTE_64BIT, LPCSTR_32BIT, LPCSTR_64BIT, LPCWSTR_32BIT, LPCWSTR_64BIT, LPPROC_THREAD_ATTRIBUTE_LIST_32BIT, LPPROC_THREAD_ATTRIBUTE_LIST_64BIT, LPSTR_32BIT, LPSTR_64BIT, LPVOID_32BIT, LPVOID_64BIT, LPWSTR_32BIT, LPWSTR_64BIT, MAX_PATH, PCHAR_32BIT, PCHAR_64BIT, POINTER_32BIT, POINTER_64BIT, PVOID_32BIT, PVOID_64BIT, PWSTR_32BIT, PWSTR_64BIT, QWORD, SECURITY_DESCRIPTOR_CONTROL, SIZE_T_32BIT, SIZE_T_64BIT, UCHAR, UINT, ULONG, ULONG64, ULONG_PTR_32BIT, ULONG_PTR_64BIT, ULONGLONG, USHORT, WCHAR, WORD, CHAR, WPARAM_32BIT, WPARAM_64BIT, StructFieldsFromTypeHints, UnionFieldsFromTypeHints
+from sharem.sharem.helper.structHelpers import (
+    BOOL,
+    BYTE,
+    DWORD,
+    DWORD_PTR_32BIT,
+    DWORD_PTR_64BIT,
+    HANDLE_32BIT,
+    HANDLE_64BIT,
+    HBITMAP_32BIT,
+    HBITMAP_64BIT,
+    HBRUSH_32BIT,
+    HBRUSH_64BIT,
+    HINSTANCE_32BIT,
+    HINSTANCE_64BIT,
+    HKEY_32BIT,
+    HKEY_64BIT,
+    HMENU_32BIT,
+    HMENU_64BIT,
+    HWND_32BIT,
+    HWND_64BIT,
+    INT,
+    LMSTR,
+    LONG,
+    LONGLONG,
+    LPARAM_32BIT,
+    LPARAM_64BIT,
+    LPBYTE_32BIT,
+    LPBYTE_64BIT,
+    LPCSTR_32BIT,
+    LPCSTR_64BIT,
+    LPCWSTR_32BIT,
+    LPCWSTR_64BIT,
+    LPPROC_THREAD_ATTRIBUTE_LIST_32BIT,
+    LPPROC_THREAD_ATTRIBUTE_LIST_64BIT,
+    LPSTR_32BIT,
+    LPSTR_64BIT,
+    LPVOID_32BIT,
+    LPVOID_64BIT,
+    LPWSTR_32BIT,
+    LPWSTR_64BIT,
+    MAX_PATH,
+    PCHAR_32BIT,
+    PCHAR_64BIT,
+    POINTER_32BIT,
+    POINTER_64BIT,
+    PVOID_32BIT,
+    PVOID_64BIT,
+    PWSTR_32BIT,
+    PWSTR_64BIT,
+    QWORD,
+    SECURITY_DESCRIPTOR_CONTROL,
+    SIZE_T_32BIT,
+    SIZE_T_64BIT,
+    UCHAR,
+    UINT,
+    ULONG,
+    ULONG64,
+    ULONG_PTR_32BIT,
+    ULONG_PTR_64BIT,
+    ULONGLONG,
+    USHORT,
+    WCHAR,
+    WORD,
+    CHAR,
+    WPARAM_32BIT,
+    WPARAM_64BIT,
+    StructFieldsFromTypeHints,
+    UnionFieldsFromTypeHints,
+)
 
 from unicorn import Uc
 
@@ -14,11 +82,17 @@ from unicorn import Uc
 # Alias Names: _PROCESS_INFORMATION
 # Alias Pointer Names: *PPROCESS_INFORMATION, *LPPROCESS_INFORMATION
 
+
 def get_PROCESS_INFORMATION(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return PROCESS_INFORMATION.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(PROCESS_INFORMATION.ARCH32)))
+        return PROCESS_INFORMATION.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(PROCESS_INFORMATION.ARCH32))
+        )
     else:
-        return PROCESS_INFORMATION.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(PROCESS_INFORMATION.ARCH64)))
+        return PROCESS_INFORMATION.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(PROCESS_INFORMATION.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__PROCESS_INFORMATION = get_PROCESS_INFORMATION
@@ -29,9 +103,10 @@ PPROCESS_INFORMATION_64BIT = POINTER_64BIT
 LPPROCESS_INFORMATION_32BIT = POINTER_32BIT
 LPPROCESS_INFORMATION_64BIT = POINTER_64BIT
 
+
 class PROCESS_INFORMATION:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['HANDLE', 'HANDLE', 'DWORD', 'DWORD']
+        types = ["HANDLE", "HANDLE", "DWORD", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -56,7 +131,7 @@ class PROCESS_INFORMATION:
                 self.dwThreadId = emuSimVals.getNextTID()
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['HANDLE', 'HANDLE', 'DWORD', 'DWORD']
+        types = ["HANDLE", "HANDLE", "DWORD", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -83,17 +158,33 @@ class PROCESS_INFORMATION:
 
 def get_PROCESSENTRY32(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return PROCESSENTRY32.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(PROCESSENTRY32.ARCH32)))
+        return PROCESSENTRY32.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(PROCESSENTRY32.ARCH32))
+        )
     else:
-        return PROCESSENTRY32.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(PROCESSENTRY32.ARCH64)))
+        return PROCESSENTRY32.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(PROCESSENTRY32.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get_tagPROCESSENTRY32 = get_PROCESSENTRY32
 
-class PROCESSENTRY32:
 
+class PROCESSENTRY32:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'ULONG_PTR', 'DWORD', 'DWORD', 'DWORD', 'LONG', 'DWORD', 'CHAR']
+        types = [
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "ULONG_PTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "LONG",
+            "DWORD",
+            "CHAR",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -111,9 +202,19 @@ class PROCESSENTRY32:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
-
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'ULONG_PTR', 'DWORD', 'DWORD', 'DWORD', 'LONG', 'DWORD', 'CHAR']
+        types = [
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "ULONG_PTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "LONG",
+            "DWORD",
+            "CHAR",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -131,23 +232,41 @@ class PROCESSENTRY32:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct PROCESSENTRY32W
 # Alias Names: tagPROCESSENTRY32W
-# Alias Pointer Names: 
+# Alias Pointer Names:
+
 
 def get_PROCESSENTRY32W(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return PROCESSENTRY32W.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(PROCESSENTRY32W.ARCH32)))
+        return PROCESSENTRY32W.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(PROCESSENTRY32W.ARCH32))
+        )
     else:
-        return PROCESSENTRY32W.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(PROCESSENTRY32W.ARCH64)))
+        return PROCESSENTRY32W.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(PROCESSENTRY32W.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get_tagPROCESSENTRY32W = get_PROCESSENTRY32W
 
-class PROCESSENTRY32W:
 
+class PROCESSENTRY32W:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'ULONG_PTR', 'DWORD', 'DWORD', 'DWORD', 'LONG', 'DWORD', 'WCHAR']
+        types = [
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "ULONG_PTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "LONG",
+            "DWORD",
+            "WCHAR",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -166,7 +285,18 @@ class PROCESSENTRY32W:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'ULONG_PTR', 'DWORD', 'DWORD', 'DWORD', 'LONG', 'DWORD', 'WCHAR']
+        types = [
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "ULONG_PTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "LONG",
+            "DWORD",
+            "WCHAR",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -184,28 +314,56 @@ class PROCESSENTRY32W:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
-class THREADENTRY32: # Needs Redone
-    types = ['DWORD','DWORD','DWORD','DWORD','DWORD','DWORD','LONG','LONG','DWORD']
-    names = ['dwSize','cntUsage','th32ThreadID','th32OwnerProcessID','tpBasePri','tpDeltaPri','dwFlags']
-    
+
+class THREADENTRY32:  # Needs Redone
+    types = [
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "LONG",
+        "LONG",
+        "DWORD",
+    ]
+    names = [
+        "dwSize",
+        "cntUsage",
+        "th32ThreadID",
+        "th32OwnerProcessID",
+        "tpBasePri",
+        "tpDeltaPri",
+        "dwFlags",
+    ]
+
     def __init__(self, ThreadID, OwnerProcessID, tpBasePri):
         self.dwSize = 28
-        self.cntUsage = 0 # No Longer Used
+        self.cntUsage = 0  # No Longer Used
         self.th32ThreadID = ThreadID
         self.th32OwnerProcessID = OwnerProcessID
-        if tpBasePri < 0 or tpBasePri > 31: # Value 0 to 31
-            tpBasePri = 16 # Set to Middle Priority
+        if tpBasePri < 0 or tpBasePri > 31:  # Value 0 to 31
+            tpBasePri = 16  # Set to Middle Priority
         self.tpBasePri = tpBasePri
-        self.tpDeltaPri = 0 # No Longer Used
-        self.dwFlags = 0 # No Longer Used
+        self.tpDeltaPri = 0  # No Longer Used
+        self.dwFlags = 0  # No Longer Used
 
     def writeToMemory(self, uc: Uc, address):
-        packedStruct = pack('<IIIIllI', self.dwSize, self.cntUsage, self.th32ThreadID, self.th32OwnerProcessID, self.tpBasePri, self.tpDeltaPri, self.dwFlags)
+        packedStruct = pack(
+            "<IIIIllI",
+            self.dwSize,
+            self.cntUsage,
+            self.th32ThreadID,
+            self.th32OwnerProcessID,
+            self.tpBasePri,
+            self.tpDeltaPri,
+            self.dwFlags,
+        )
         uc.mem_write(address, packedStruct)
 
     def readFromMemory(self, uc: Uc, address):
         data = uc.mem_read(address, self.dwSize)
-        unpackedStruct = unpack('<IIIIllI', data)
+        unpackedStruct = unpack("<IIIIllI", data)
         self.dwSize = unpackedStruct[0]
         self.cntUsage = unpackedStruct[1]
         self.th32ThreadID = unpackedStruct[2]
@@ -214,15 +372,46 @@ class THREADENTRY32: # Needs Redone
         self.tpDeltaPri = unpackedStruct[5]
         self.dwFlags = unpackedStruct[6]
 
-class MODULEENTRY32: # Needs Redone
-    # Backs both MODULEENTRY32 and MODULEENTRY32W
-    types = ['DWORD','DWORD','DWORD','DWORD','DWORD','BYTE','DWORD','HMODULE','char','char']
-    names = ['dwSize','th32ModuleID','th32ProcessID','GlblcntUsage','ProccntUsage','*modBaseAddr','modBaseSize','hModule','szModule','szExePath']
 
-    def __init__(self, th32ProcessID, modBaseAddr, modBaseSize, hModule, szModule: str, szExePath: str):
-        self.dwSizeA = 548 # Ascii Size
-        self.dwSizeW = 1064 # unicode Size
-        self.th32ModuleID = 1 # No Longer Used
+class MODULEENTRY32:  # Needs Redone
+    # Backs both MODULEENTRY32 and MODULEENTRY32W
+    types = [
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "BYTE",
+        "DWORD",
+        "HMODULE",
+        "char",
+        "char",
+    ]
+    names = [
+        "dwSize",
+        "th32ModuleID",
+        "th32ProcessID",
+        "GlblcntUsage",
+        "ProccntUsage",
+        "*modBaseAddr",
+        "modBaseSize",
+        "hModule",
+        "szModule",
+        "szExePath",
+    ]
+
+    def __init__(
+        self,
+        th32ProcessID,
+        modBaseAddr,
+        modBaseSize,
+        hModule,
+        szModule: str,
+        szExePath: str,
+    ):
+        self.dwSizeA = 548  # Ascii Size
+        self.dwSizeW = 1064  # unicode Size
+        self.th32ModuleID = 1  # No Longer Used
         self.th32ProcessID = th32ProcessID
         self.GlblcntUsage = 0xFFFF
         self.ProccntUsage = 0xFFFF
@@ -233,12 +422,24 @@ class MODULEENTRY32: # Needs Redone
         self.szExePath = szExePath
 
     def writeToMemoryA(self, uc: Uc, address):
-        packedStruct = pack('<IIIIIIII256s260s', self.dwSizeA, self.th32ModuleID, self.th32ProcessID, self.GlblcntUsage, self.ProccntUsage, self.modBaseAddr, self.modBaseSize, self.hModule, self.szModule.encode('ascii'), self.szExePath.encode('ascii'))
+        packedStruct = pack(
+            "<IIIIIIII256s260s",
+            self.dwSizeA,
+            self.th32ModuleID,
+            self.th32ProcessID,
+            self.GlblcntUsage,
+            self.ProccntUsage,
+            self.modBaseAddr,
+            self.modBaseSize,
+            self.hModule,
+            self.szModule.encode("ascii"),
+            self.szExePath.encode("ascii"),
+        )
         uc.mem_write(address, packedStruct)
 
     def readFromMemoryA(self, uc: Uc, address):
         data = uc.mem_read(address, self.dwSizeA)
-        unpackedStruct = unpack('<IIIIIIII256s260s', data)
+        unpackedStruct = unpack("<IIIIIIII256s260s", data)
         self.dwSizeA = unpackedStruct[0]
         self.th32ModuleID = unpackedStruct[1]
         self.th32ProcessID = unpackedStruct[2]
@@ -251,12 +452,24 @@ class MODULEENTRY32: # Needs Redone
         self.szExePath = unpackedStruct[9].decode()
 
     def writeToMemoryW(self, uc: Uc, address):
-        packedStruct = pack('<IIIIIIII512s520s', self.dwSizeW, self.th32ModuleID, self.th32ProcessID, self.GlblcntUsage, self.ProccntUsage, self.modBaseAddr, self.modBaseSize, self.hModule, self.szModule.encode('utf-16')[2:], self.szExePath.encode('utf-16')[2:])
+        packedStruct = pack(
+            "<IIIIIIII512s520s",
+            self.dwSizeW,
+            self.th32ModuleID,
+            self.th32ProcessID,
+            self.GlblcntUsage,
+            self.ProccntUsage,
+            self.modBaseAddr,
+            self.modBaseSize,
+            self.hModule,
+            self.szModule.encode("utf-16")[2:],
+            self.szExePath.encode("utf-16")[2:],
+        )
         uc.mem_write(address, packedStruct)
 
     def readFromMemoryW(self, uc: Uc, address):
         data = uc.mem_read(address, self.dwSizeW)
-        unpackedStruct = unpack('<IIIIIIII512s520s', data)
+        unpackedStruct = unpack("<IIIIIIII512s520s", data)
         self.dwSizeW = unpackedStruct[0]
         self.th32ModuleID = unpackedStruct[1]
         self.th32ProcessID = unpackedStruct[2]
@@ -268,15 +481,22 @@ class MODULEENTRY32: # Needs Redone
         self.szModule = unpackedStruct[8].decode()
         self.szExePath = unpackedStruct[9].decode()
 
+
 # Struct SECURITY_DESCRIPTOR
 # Alias Names: _SECURITY_DESCRIPTOR
 # Alias Pointer Names: PSECURITY_DESCRIPTOR
 
+
 def get_SECURITY_DESCRIPTOR(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return SECURITY_DESCRIPTOR.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(SECURITY_DESCRIPTOR.ARCH32)))
+        return SECURITY_DESCRIPTOR.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(SECURITY_DESCRIPTOR.ARCH32))
+        )
     else:
-        return SECURITY_DESCRIPTOR.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(SECURITY_DESCRIPTOR.ARCH64)))
+        return SECURITY_DESCRIPTOR.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(SECURITY_DESCRIPTOR.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__SECURITY_DESCRIPTOR = get_SECURITY_DESCRIPTOR
@@ -285,10 +505,18 @@ def get_SECURITY_DESCRIPTOR(uc: Uc, address: int, em: EMU):
 PSECURITY_DESCRIPTOR_32BIT = POINTER_32BIT
 PSECURITY_DESCRIPTOR_64BIT = POINTER_64BIT
 
-class SECURITY_DESCRIPTOR:
 
+class SECURITY_DESCRIPTOR:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['BYTE', 'BYTE', 'SECURITY_DESCRIPTOR_CONTROL', 'PSID', 'PSID', 'PACL', 'PACL']
+        types = [
+            "BYTE",
+            "BYTE",
+            "SECURITY_DESCRIPTOR_CONTROL",
+            "PSID",
+            "PSID",
+            "PACL",
+            "PACL",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -304,7 +532,15 @@ class SECURITY_DESCRIPTOR:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['BYTE', 'BYTE', 'SECURITY_DESCRIPTOR_CONTROL', 'PSID', 'PSID', 'PACL', 'PACL']
+        types = [
+            "BYTE",
+            "BYTE",
+            "SECURITY_DESCRIPTOR_CONTROL",
+            "PSID",
+            "PSID",
+            "PACL",
+            "PACL",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -319,12 +555,15 @@ class SECURITY_DESCRIPTOR:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct SHARE_INFO_0
 # Alias Names: _SHARE_INFO_0
 # Alias Pointer Names: PSHARE_INFO_0, LPSHARE_INFO_0
 
+
 def get_SHARE_INFO_0(uc: Uc, address: int, em: EMU):
     return SHARE_INFO_0.from_buffer_copy(uc.mem_read(address, sizeof(SHARE_INFO_0)))
+
 
 # Struct Aliases:
 # get__SHARE_INFO_0 = get_SHARE_INFO_0
@@ -335,8 +574,9 @@ PSHARE_INFO_0_64BIT = POINTER_64BIT
 LPSHARE_INFO_0_32BIT = POINTER_32BIT
 LPSHARE_INFO_0_64BIT = POINTER_64BIT
 
+
 class SHARE_INFO_0(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LMSTR']
+    types = ["LMSTR"]
     lookUps = {}
 
     # Struct Members
@@ -350,8 +590,10 @@ class SHARE_INFO_0(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
 # Alias Names: _SHARE_INFO_1
 # Alias Pointer Names: PSHARE_INFO_1, LPSHARE_INFO_1
 
+
 def get_SHARE_INFO_1(uc: Uc, address: int, em: EMU):
     return SHARE_INFO_1.from_buffer_copy(uc.mem_read(address, sizeof(SHARE_INFO_1)))
+
 
 # Struct Aliases:
 # get__SHARE_INFO_1 = get_SHARE_INFO_1
@@ -362,8 +604,9 @@ PSHARE_INFO_1_64BIT = POINTER_64BIT
 LPSHARE_INFO_1_32BIT = POINTER_32BIT
 LPSHARE_INFO_1_64BIT = POINTER_64BIT
 
+
 class SHARE_INFO_1(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LMSTR', 'DWORD', 'LMSTR']
+    types = ["LMSTR", "DWORD", "LMSTR"]
     lookUps = {}
 
     # Struct Members
@@ -379,8 +622,10 @@ class SHARE_INFO_1(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
 # Alias Names: _SHARE_INFO_2
 # Alias Pointer Names: PSHARE_INFO_2, LPSHARE_INFO_2
 
+
 def get_SHARE_INFO_2(uc: Uc, address: int, em: EMU):
     return SHARE_INFO_2.from_buffer_copy(uc.mem_read(address, sizeof(SHARE_INFO_2)))
+
 
 # Struct Aliases:
 # get__SHARE_INFO_2 = get_SHARE_INFO_2
@@ -391,8 +636,9 @@ PSHARE_INFO_2_64BIT = POINTER_64BIT
 LPSHARE_INFO_2_32BIT = POINTER_32BIT
 LPSHARE_INFO_2_64BIT = POINTER_64BIT
 
+
 class SHARE_INFO_2(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LMSTR', 'DWORD', 'LMSTR', 'DWORD', 'DWORD', 'DWORD', 'LMSTR', 'LMSTR']
+    types = ["LMSTR", "DWORD", "LMSTR", "DWORD", "DWORD", "DWORD", "LMSTR", "LMSTR"]
     lookUps = {}
 
     # Struct Members
@@ -413,8 +659,10 @@ class SHARE_INFO_2(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
 # Alias Names: _SHARE_INFO_501
 # Alias Pointer Names: PSHARE_INFO_501, LPSHARE_INFO_501
 
+
 def get_SHARE_INFO_501(uc: Uc, address: int, em: EMU):
     return SHARE_INFO_501.from_buffer_copy(uc.mem_read(address, sizeof(SHARE_INFO_501)))
+
 
 # Struct Aliases:
 # get__SHARE_INFO_501 = get_SHARE_INFO_501
@@ -425,8 +673,9 @@ PSHARE_INFO_501_64BIT = POINTER_64BIT
 LPSHARE_INFO_501_32BIT = POINTER_32BIT
 LPSHARE_INFO_501_64BIT = POINTER_64BIT
 
+
 class SHARE_INFO_501(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LMSTR', 'DWORD', 'LMSTR', 'DWORD']
+    types = ["LMSTR", "DWORD", "LMSTR", "DWORD"]
     lookUps = {}
 
     # Struct Members
@@ -438,15 +687,22 @@ class SHARE_INFO_501(LittleEndianStructure, metaclass=StructFieldsFromTypeHints)
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct SHARE_INFO_502
 # Alias Names: _SHARE_INFO_502
 # Alias Pointer Names: PSHARE_INFO_502, LPSHARE_INFO_502
 
+
 def get_SHARE_INFO_502(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return SHARE_INFO_502.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(SHARE_INFO_502.ARCH32)))
+        return SHARE_INFO_502.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(SHARE_INFO_502.ARCH32))
+        )
     else:
-        return SHARE_INFO_502.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(SHARE_INFO_502.ARCH64)))
+        return SHARE_INFO_502.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(SHARE_INFO_502.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__SHARE_INFO_502 = get_SHARE_INFO_502
@@ -457,10 +713,21 @@ PSHARE_INFO_502_64BIT = POINTER_64BIT
 LPSHARE_INFO_502_32BIT = POINTER_32BIT
 LPSHARE_INFO_502_64BIT = POINTER_64BIT
 
-class SHARE_INFO_502:
 
+class SHARE_INFO_502:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LMSTR', 'DWORD', 'LMSTR', 'DWORD', 'DWORD', 'DWORD', 'LMSTR', 'LMSTR', 'DWORD', 'PSECURITY_DESCRIPTOR']
+        types = [
+            "LMSTR",
+            "DWORD",
+            "LMSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "LMSTR",
+            "LMSTR",
+            "DWORD",
+            "PSECURITY_DESCRIPTOR",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -479,7 +746,18 @@ class SHARE_INFO_502:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LMSTR', 'DWORD', 'LMSTR', 'DWORD', 'DWORD', 'DWORD', 'LMSTR', 'LMSTR', 'DWORD', 'PSECURITY_DESCRIPTOR']
+        types = [
+            "LMSTR",
+            "DWORD",
+            "LMSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "LMSTR",
+            "LMSTR",
+            "DWORD",
+            "PSECURITY_DESCRIPTOR",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -502,11 +780,17 @@ class SHARE_INFO_502:
 # Alias Names: _SHARE_INFO_503
 # Alias Pointer Names: PSHARE_INFO_503, LPSHARE_INFO_503
 
+
 def get_SHARE_INFO_503(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return SHARE_INFO_503.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(SHARE_INFO_503.ARCH32)))
+        return SHARE_INFO_503.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(SHARE_INFO_503.ARCH32))
+        )
     else:
-        return SHARE_INFO_503.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(SHARE_INFO_503.ARCH64)))
+        return SHARE_INFO_503.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(SHARE_INFO_503.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__SHARE_INFO_503 = get_SHARE_INFO_503
@@ -517,15 +801,42 @@ PSHARE_INFO_503_64BIT = POINTER_64BIT
 LPSHARE_INFO_503_32BIT = POINTER_32BIT
 LPSHARE_INFO_503_64BIT = POINTER_64BIT
 
+
 class SHARE_INFO_503:
-
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LMSTR', 'DWORD', 'LMSTR', 'DWORD', 'DWORD', 'DWORD', 'LMSTR', 'LMSTR', 'LMSTR', 'DWORD', 'PSECURITY_DESCRIPTOR']
-        
-        rw1 = {0: 'STYPE_DISKTREE',  1: 'STYPE_PRINTQ', 2: 'STYPE_DEVICE', 3: 'STYPE_IPC', 2147483648: 'STYPE_SPECIAL', 1073741824: 'STYPE_TEMPORARY'}
-        rw2 = {1: 'ACCESS_READ', 2: 'ACCESS_WRITE', 4: 'ACCESS_CREATE', 8: 'ACCESS_EXEC', 16: 'ACCESS_DELETE', 32: 'ACCESS_ATRIB', 64: 'ACCESS_PERM', 32768: 'ACCESS_ALL'}
-        lookUps = {1: rw1, 3: rw2}
+        types = [
+            "LMSTR",
+            "DWORD",
+            "LMSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "LMSTR",
+            "LMSTR",
+            "LMSTR",
+            "DWORD",
+            "PSECURITY_DESCRIPTOR",
+        ]
 
+        rw1 = {
+            0: "STYPE_DISKTREE",
+            1: "STYPE_PRINTQ",
+            2: "STYPE_DEVICE",
+            3: "STYPE_IPC",
+            2147483648: "STYPE_SPECIAL",
+            1073741824: "STYPE_TEMPORARY",
+        }
+        rw2 = {
+            1: "ACCESS_READ",
+            2: "ACCESS_WRITE",
+            4: "ACCESS_CREATE",
+            8: "ACCESS_EXEC",
+            16: "ACCESS_DELETE",
+            32: "ACCESS_ATRIB",
+            64: "ACCESS_PERM",
+            32768: "ACCESS_ALL",
+        }
+        lookUps = {1: rw1, 3: rw2}
 
         # Struct Members
         shi503_netname: LMSTR
@@ -544,12 +855,39 @@ class SHARE_INFO_503:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LMSTR', 'DWORD', 'LMSTR', 'DWORD', 'DWORD', 'DWORD', 'LMSTR', 'LMSTR', 'LMSTR', 'DWORD', 'PSECURITY_DESCRIPTOR']
+        types = [
+            "LMSTR",
+            "DWORD",
+            "LMSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "LMSTR",
+            "LMSTR",
+            "LMSTR",
+            "DWORD",
+            "PSECURITY_DESCRIPTOR",
+        ]
 
-        rw1 = {0: 'STYPE_DISKTREE',  1: 'STYPE_PRINTQ', 2: 'STYPE_DEVICE', 3: 'STYPE_IPC', 2147483648: 'STYPE_SPECIAL', 1073741824: 'STYPE_TEMPORARY'}
-        rw2 = {1: 'ACCESS_READ', 2: 'ACCESS_WRITE', 4: 'ACCESS_CREATE', 8: 'ACCESS_EXEC', 16: 'ACCESS_DELETE', 32: 'ACCESS_ATRIB', 64: 'ACCESS_PERM', 32768: 'ACCESS_ALL'}
+        rw1 = {
+            0: "STYPE_DISKTREE",
+            1: "STYPE_PRINTQ",
+            2: "STYPE_DEVICE",
+            3: "STYPE_IPC",
+            2147483648: "STYPE_SPECIAL",
+            1073741824: "STYPE_TEMPORARY",
+        }
+        rw2 = {
+            1: "ACCESS_READ",
+            2: "ACCESS_WRITE",
+            4: "ACCESS_CREATE",
+            8: "ACCESS_EXEC",
+            16: "ACCESS_DELETE",
+            32: "ACCESS_ATRIB",
+            64: "ACCESS_PERM",
+            32768: "ACCESS_ALL",
+        }
         lookUps = {1: rw1, 3: rw2}
-
 
         # Struct Members
         shi503_netname: LMSTR
@@ -572,8 +910,12 @@ class SHARE_INFO_503:
 # Alias Names: _SHARE_INFO_1005
 # Alias Pointer Names: PSHARE_INFO_1005, LPSHARE_INFO_1005
 
+
 def get_SHARE_INFO_1005(uc: Uc, address: int, em: EMU):
-    return SHARE_INFO_1005.from_buffer_copy(uc.mem_read(address, sizeof(SHARE_INFO_1005)))
+    return SHARE_INFO_1005.from_buffer_copy(
+        uc.mem_read(address, sizeof(SHARE_INFO_1005))
+    )
+
 
 # Struct Aliases:
 # get__SHARE_INFO_1005 = get_SHARE_INFO_1005
@@ -584,9 +926,21 @@ PSHARE_INFO_1005_64BIT = POINTER_64BIT
 LPSHARE_INFO_1005_32BIT = POINTER_32BIT
 LPSHARE_INFO_1005_64BIT = POINTER_64BIT
 
+
 class SHARE_INFO_1005(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD']
-    rw = {1: 'SHI1005_FLAGS_DFS', 2: 'SHI1005_FLAGS_DFS_ROOT', 256: 'SHI1005_FLAGS_RESTRICT_EXCLUSIVE_OPENS', 512: 'SHI1005_FLAGS_FORCE_SHARED_DELETE', 1024: 'SHI1005_FLAGS_ALLOW_NAMESPACE_CACHING', 2048: 'SHI1005_FLAGS_ACCESS_BASED_DIRECTORY_ENUM', 4096: 'SHI1005_FLAGS_FORCE_LEVELII_OPLOCK', 8192:'SHI1005_FLAGS_ENABLE_HASH', 48: 'CSC_MASK', 8240: 'CSC_MASK_EXT'}
+    types = ["DWORD"]
+    rw = {
+        1: "SHI1005_FLAGS_DFS",
+        2: "SHI1005_FLAGS_DFS_ROOT",
+        256: "SHI1005_FLAGS_RESTRICT_EXCLUSIVE_OPENS",
+        512: "SHI1005_FLAGS_FORCE_SHARED_DELETE",
+        1024: "SHI1005_FLAGS_ALLOW_NAMESPACE_CACHING",
+        2048: "SHI1005_FLAGS_ACCESS_BASED_DIRECTORY_ENUM",
+        4096: "SHI1005_FLAGS_FORCE_LEVELII_OPLOCK",
+        8192: "SHI1005_FLAGS_ENABLE_HASH",
+        48: "CSC_MASK",
+        8240: "CSC_MASK_EXT",
+    }
     lookUps = {0: rw}
 
     # Struct Members
@@ -595,15 +949,22 @@ class SHARE_INFO_1005(LittleEndianStructure, metaclass=StructFieldsFromTypeHints
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct STARTUPINFOA
 # Alias Names: _STARTUPINFOA
 # Alias Pointer Names: LPSTARTUPINFOA
 
+
 def get_STARTUPINFOA(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return STARTUPINFOA.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(STARTUPINFOA.ARCH32)))
+        return STARTUPINFOA.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(STARTUPINFOA.ARCH32))
+        )
     else:
-        return STARTUPINFOA.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(STARTUPINFOA.ARCH64)))
+        return STARTUPINFOA.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(STARTUPINFOA.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__STARTUPINFOA = get_STARTUPINFOA
@@ -612,10 +973,29 @@ def get_STARTUPINFOA(uc: Uc, address: int, em: EMU):
 LPSTARTUPINFOA_32BIT = POINTER_32BIT
 LPSTARTUPINFOA_64BIT = POINTER_64BIT
 
-class STARTUPINFOA:
 
+class STARTUPINFOA:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPSTR', 'LPSTR', 'LPSTR', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'WORD', 'WORD', 'LPBYTE', 'HANDLE', 'HANDLE', 'HANDLE']
+        types = [
+            "DWORD",
+            "LPSTR",
+            "LPSTR",
+            "LPSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "WORD",
+            "WORD",
+            "LPBYTE",
+            "HANDLE",
+            "HANDLE",
+            "HANDLE",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -642,7 +1022,26 @@ class STARTUPINFOA:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPSTR', 'LPSTR', 'LPSTR', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'WORD', 'WORD', 'LPBYTE', 'HANDLE', 'HANDLE', 'HANDLE']
+        types = [
+            "DWORD",
+            "LPSTR",
+            "LPSTR",
+            "LPSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "WORD",
+            "WORD",
+            "LPBYTE",
+            "HANDLE",
+            "HANDLE",
+            "HANDLE",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -668,15 +1067,22 @@ class STARTUPINFOA:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct STARTUPINFOEXA
 # Alias Names: _STARTUPINFOEXA
 # Alias Pointer Names: LPSTARTUPINFOEXA
 
+
 def get_STARTUPINFOEXA(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return STARTUPINFOEXA.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(STARTUPINFOEXA.ARCH32)))
+        return STARTUPINFOEXA.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(STARTUPINFOEXA.ARCH32))
+        )
     else:
-        return STARTUPINFOEXA.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(STARTUPINFOEXA.ARCH64)))
+        return STARTUPINFOEXA.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(STARTUPINFOEXA.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__STARTUPINFOEXA = get_STARTUPINFOEXA
@@ -685,10 +1091,10 @@ def get_STARTUPINFOEXA(uc: Uc, address: int, em: EMU):
 LPSTARTUPINFOEXA_32BIT = POINTER_32BIT
 LPSTARTUPINFOEXA_64BIT = POINTER_64BIT
 
-class STARTUPINFOEXA:
 
+class STARTUPINFOEXA:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['STARTUPINFOA', 'LPPROC_THREAD_ATTRIBUTE_LIST']
+        types = ["STARTUPINFOA", "LPPROC_THREAD_ATTRIBUTE_LIST"]
         lookUps = {}
 
         # Struct Members
@@ -699,7 +1105,7 @@ class STARTUPINFOEXA:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['STARTUPINFOA', 'LPPROC_THREAD_ATTRIBUTE_LIST']
+        types = ["STARTUPINFOA", "LPPROC_THREAD_ATTRIBUTE_LIST"]
         lookUps = {}
 
         # Struct Members
@@ -714,8 +1120,10 @@ class STARTUPINFOEXA:
 # Alias Names: _RECTL
 # Alias Pointer Names: PRECTL
 
+
 def get_RECTL(uc: Uc, address: int, em: EMU):
     return RECTL.from_buffer_copy(uc.mem_read(address, sizeof(RECTL)))
+
 
 # Struct Aliases:
 # get__RECTL = get_RECTL
@@ -724,8 +1132,9 @@ def get_RECTL(uc: Uc, address: int, em: EMU):
 PRECTL_32BIT = POINTER_32BIT
 PRECTL_64BIT = POINTER_64BIT
 
+
 class RECTL(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LONG', 'LONG', 'LONG', 'LONG']
+    types = ["LONG", "LONG", "LONG", "LONG"]
     lookUps = {}
 
     # Struct Members
@@ -742,11 +1151,17 @@ class RECTL(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
 # Alias Names: _MODULEINFO
 # Alias Pointer Names: LPMODULEINFO
 
+
 def get_MODULEINFO(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return MODULEINFO.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(MODULEINFO.ARCH32)))
+        return MODULEINFO.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(MODULEINFO.ARCH32))
+        )
     else:
-        return MODULEINFO.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(MODULEINFO.ARCH64)))
+        return MODULEINFO.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(MODULEINFO.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__MODULEINFO = get_MODULEINFO
@@ -755,10 +1170,10 @@ def get_MODULEINFO(uc: Uc, address: int, em: EMU):
 LPMODULEINFO_32BIT = POINTER_32BIT
 LPMODULEINFO_64BIT = POINTER_64BIT
 
-class MODULEINFO:
 
+class MODULEINFO:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LPVOID', 'DWORD', 'LPVOID']
+        types = ["LPVOID", "DWORD", "LPVOID"]
         lookUps = {}
 
         # Struct Members
@@ -770,7 +1185,7 @@ class MODULEINFO:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LPVOID', 'DWORD', 'LPVOID']
+        types = ["LPVOID", "DWORD", "LPVOID"]
         lookUps = {}
 
         # Struct Members
@@ -786,11 +1201,17 @@ class MODULEINFO:
 # Alias Names: MENUINFO
 # Alias Pointer Names: LPMENUINFO
 
+
 def get_tagMENUINFO(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return tagMENUINFO.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(tagMENUINFO.ARCH32)))
+        return tagMENUINFO.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(tagMENUINFO.ARCH32))
+        )
     else:
-        return tagMENUINFO.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(tagMENUINFO.ARCH64)))
+        return tagMENUINFO.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(tagMENUINFO.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get_MENUINFO = get_tagMENUINFO
@@ -799,12 +1220,26 @@ def get_tagMENUINFO(uc: Uc, address: int, em: EMU):
 LPMENUINFO_32BIT = POINTER_32BIT
 LPMENUINFO_64BIT = POINTER_64BIT
 
-class tagMENUINFO:
 
+class tagMENUINFO:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'UINT', 'HBRUSH', 'DWORD', 'ULONG_PTR']
-        rv1 = {2147483648: 'MIM_APPLYTOSUBMENUS', 2: 'MIM_BACKGROUND', 4: 'MIM_HELPID', 1: 'MIM_MAXHEIGHT', 8: 'MIM_MENUDATA', 16: 'MIM_STYLE', }
-        rv2 = {2147483648: 'MNS_NOCHECK', 268435456: 'MNS_AUTODISMISS', 67108864: 'MNS_CHECKORBMP', 536870912: 'MNS_DRAGDROP', 1073741824: 'MNS_MODELESS', 134217728: 'MNS_NOTIFYBYPOS'}
+        types = ["DWORD", "DWORD", "DWORD", "UINT", "HBRUSH", "DWORD", "ULONG_PTR"]
+        rv1 = {
+            2147483648: "MIM_APPLYTOSUBMENUS",
+            2: "MIM_BACKGROUND",
+            4: "MIM_HELPID",
+            1: "MIM_MAXHEIGHT",
+            8: "MIM_MENUDATA",
+            16: "MIM_STYLE",
+        }
+        rv2 = {
+            2147483648: "MNS_NOCHECK",
+            268435456: "MNS_AUTODISMISS",
+            67108864: "MNS_CHECKORBMP",
+            536870912: "MNS_DRAGDROP",
+            1073741824: "MNS_MODELESS",
+            134217728: "MNS_NOTIFYBYPOS",
+        }
         lookUps = {1: rv1, 2: rv2}
 
         # Struct Members
@@ -820,9 +1255,23 @@ class tagMENUINFO:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'UINT', 'HBRUSH', 'DWORD', 'ULONG_PTR']
-        rv1 = {2147483648: 'MIM_APPLYTOSUBMENUS', 2: 'MIM_BACKGROUND', 4: 'MIM_HELPID', 1: 'MIM_MAXHEIGHT', 8: 'MIM_MENUDATA', 16: 'MIM_STYLE', }
-        rv2 = {2147483648: 'MNS_NOCHECK', 268435456: 'MNS_AUTODISMISS', 67108864: 'MNS_CHECKORBMP', 536870912: 'MNS_DRAGDROP', 1073741824: 'MNS_MODELESS', 134217728: 'MNS_NOTIFYBYPOS'}
+        types = ["DWORD", "DWORD", "DWORD", "UINT", "HBRUSH", "DWORD", "ULONG_PTR"]
+        rv1 = {
+            2147483648: "MIM_APPLYTOSUBMENUS",
+            2: "MIM_BACKGROUND",
+            4: "MIM_HELPID",
+            1: "MIM_MAXHEIGHT",
+            8: "MIM_MENUDATA",
+            16: "MIM_STYLE",
+        }
+        rv2 = {
+            2147483648: "MNS_NOCHECK",
+            268435456: "MNS_AUTODISMISS",
+            67108864: "MNS_CHECKORBMP",
+            536870912: "MNS_DRAGDROP",
+            1073741824: "MNS_MODELESS",
+            134217728: "MNS_NOTIFYBYPOS",
+        }
         lookUps = {1: rv1, 2: rv2}
 
         # Struct Members
@@ -842,8 +1291,12 @@ class tagMENUINFO:
 # Alias Names: DRAWTEXTPARAMS
 # Alias Pointer Names: LPDRAWTEXTPARAMS
 
+
 def get_tagDRAWTEXTPARAMS(uc: Uc, address: int, em: EMU):
-    return tagDRAWTEXTPARAMS.from_buffer_copy(uc.mem_read(address, sizeof(tagDRAWTEXTPARAMS)))
+    return tagDRAWTEXTPARAMS.from_buffer_copy(
+        uc.mem_read(address, sizeof(tagDRAWTEXTPARAMS))
+    )
+
 
 # Struct Aliases:
 # get_DRAWTEXTPARAMS = get_tagDRAWTEXTPARAMS
@@ -852,8 +1305,9 @@ def get_tagDRAWTEXTPARAMS(uc: Uc, address: int, em: EMU):
 LPDRAWTEXTPARAMS_32BIT = POINTER_32BIT
 LPDRAWTEXTPARAMS_64BIT = POINTER_64BIT
 
+
 class tagDRAWTEXTPARAMS(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['UINT', 'int', 'int', 'int', 'UINT']
+    types = ["UINT", "int", "int", "int", "UINT"]
     lookUps = {}
 
     # Struct Members
@@ -871,8 +1325,12 @@ class tagDRAWTEXTPARAMS(LittleEndianStructure, metaclass=StructFieldsFromTypeHin
 # Alias Names: _IMAGE_DATA_DIRECTORY
 # Alias Pointer Names: PIMAGE_DATA_DIRECTORY
 
+
 def get_IMAGE_DATA_DIRECTORY(uc: Uc, address: int, em: EMU):
-    return IMAGE_DATA_DIRECTORY.from_buffer_copy(uc.mem_read(address, sizeof(IMAGE_DATA_DIRECTORY)))
+    return IMAGE_DATA_DIRECTORY.from_buffer_copy(
+        uc.mem_read(address, sizeof(IMAGE_DATA_DIRECTORY))
+    )
+
 
 # Struct Aliases:
 # get__IMAGE_DATA_DIRECTORY = get_IMAGE_DATA_DIRECTORY
@@ -881,8 +1339,9 @@ def get_IMAGE_DATA_DIRECTORY(uc: Uc, address: int, em: EMU):
 PIMAGE_DATA_DIRECTORY_32BIT = POINTER_32BIT
 PIMAGE_DATA_DIRECTORY_64BIT = POINTER_64BIT
 
+
 class IMAGE_DATA_DIRECTORY(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'DWORD']
+    types = ["DWORD", "DWORD"]
     lookUps = {}
 
     # Struct Members
@@ -897,8 +1356,10 @@ class IMAGE_DATA_DIRECTORY(LittleEndianStructure, metaclass=StructFieldsFromType
 # Alias Names: _SYSTEMTIME
 # Alias Pointer Names: *PSYSTEMTIME, *LPSYSTEMTIME
 
+
 def get_SYSTEMTIME(uc: Uc, address: int, em: EMU):
     return SYSTEMTIME.from_buffer_copy(uc.mem_read(address, sizeof(SYSTEMTIME)))
+
 
 # Struct Aliases:
 # get__SYSTEMTIME = get_SYSTEMTIME
@@ -909,8 +1370,9 @@ PSYSTEMTIME_64BIT = POINTER_64BIT
 LPSYSTEMTIME_32BIT = POINTER_32BIT
 LPSYSTEMTIME_64BIT = POINTER_64BIT
 
+
 class SYSTEMTIME(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['WORD', 'WORD', 'WORD', 'WORD', 'WORD', 'WORD', 'WORD', 'WORD']
+    types = ["WORD", "WORD", "WORD", "WORD", "WORD", "WORD", "WORD", "WORD"]
     lookUps = {}
 
     # Struct Members
@@ -926,7 +1388,7 @@ class SYSTEMTIME(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
-    def setTime(self, utc: bool, customTime= 0):
+    def setTime(self, utc: bool, customTime=0):
         if utc:
             if customTime == 0:
                 timeVal = gmtime()
@@ -940,25 +1402,32 @@ class SYSTEMTIME(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
 
         self.wYear = timeVal.tm_year
         self.wMonth = timeVal.tm_mon
-        dayOfWeek = timeVal.tm_wday + 1 # Convert Monday 0 to Sunday 0
-        if dayOfWeek == 7: dayOfWeek = 0
+        dayOfWeek = timeVal.tm_wday + 1  # Convert Monday 0 to Sunday 0
+        if dayOfWeek == 7:
+            dayOfWeek = 0
         self.wDayOfWeek = dayOfWeek
         self.wDay = timeVal.tm_mday
         self.wHour = timeVal.tm_hour
         self.wMinute = timeVal.tm_min
         self.wSecond = timeVal.tm_sec
         self.wMilliseconds = 0
-    
+
 
 # Struct SYSTEM_INFO
 # Alias Names: _SYSTEM_INFO
 # Alias Pointer Names: *LPSYSTEM_INFO
 
+
 def get_SYSTEM_INFO(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return SYSTEM_INFO.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(SYSTEM_INFO.ARCH32)))
+        return SYSTEM_INFO.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(SYSTEM_INFO.ARCH32))
+        )
     else:
-        return SYSTEM_INFO.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(SYSTEM_INFO.ARCH64)))
+        return SYSTEM_INFO.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(SYSTEM_INFO.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__SYSTEM_INFO = get_SYSTEM_INFO
@@ -967,19 +1436,31 @@ def get_SYSTEM_INFO(uc: Uc, address: int, em: EMU):
 LPSYSTEM_INFO_32BIT = POINTER_32BIT
 LPSYSTEM_INFO_64BIT = POINTER_64BIT
 
+
 class SYSTEM_INFO_Helpers:
     class DummyStruct(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['WORD', 'WORD']
+        types = ["WORD", "WORD"]
         lookUps = {0: ReverseLookUps.Processor}
-        
+
         # Struct Members
         wProcessorArchitecture: WORD
         wReserved: WORD
 
-class SYSTEM_INFO:
 
+class SYSTEM_INFO:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['struct','DWORD','LPVOID','LPVOID','DWORD_PTR','DWORD','DWORD','DWORD','WORD','WORD']
+        types = [
+            "struct",
+            "DWORD",
+            "LPVOID",
+            "LPVOID",
+            "DWORD_PTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "WORD",
+            "WORD",
+        ]
         lookUps = {6: ReverseLookUps.ProcessorType}
 
         # Struct Members
@@ -998,7 +1479,18 @@ class SYSTEM_INFO:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['struct','DWORD','LPVOID','LPVOID','DWORD_PTR','DWORD','DWORD','DWORD','WORD','WORD']
+        types = [
+            "struct",
+            "DWORD",
+            "LPVOID",
+            "LPVOID",
+            "DWORD_PTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "WORD",
+            "WORD",
+        ]
         lookUps = {6: ReverseLookUps.ProcessorType}
 
         # Struct Members
@@ -1021,11 +1513,17 @@ class SYSTEM_INFO:
 # Alias Names: _LIST_ENTRY
 # Alias Pointer Names: *PLIST_ENTRY, PRLIST_ENTRY
 
+
 def get_LIST_ENTRY(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return LIST_ENTRY.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(LIST_ENTRY.ARCH32)))
+        return LIST_ENTRY.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(LIST_ENTRY.ARCH32))
+        )
     else:
-        return LIST_ENTRY.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(LIST_ENTRY.ARCH64)))
+        return LIST_ENTRY.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(LIST_ENTRY.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__LIST_ENTRY = get_LIST_ENTRY
@@ -1036,11 +1534,11 @@ PLIST_ENTRY_64BIT = POINTER_64BIT
 PRLIST_ENTRY_32BIT = POINTER_32BIT
 PRLIST_ENTRY_64BIT = POINTER_64BIT
 
-class LIST_ENTRY:
 
+class LIST_ENTRY:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['PLIST_ENTRY', 'PLIST_ENTRY']
-        
+        types = ["PLIST_ENTRY", "PLIST_ENTRY"]
+
         # Struct Members
         Flink: PLIST_ENTRY_32BIT
         Blink: PLIST_ENTRY_32BIT
@@ -1049,8 +1547,8 @@ class LIST_ENTRY:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['PLIST_ENTRY', 'PLIST_ENTRY']
-        
+        types = ["PLIST_ENTRY", "PLIST_ENTRY"]
+
         # Struct Members
         Flink: PLIST_ENTRY_64BIT
         Blink: PLIST_ENTRY_64BIT
@@ -1058,15 +1556,22 @@ class LIST_ENTRY:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct SINGLE_LIST_ENTRY
 # Alias Names: _SINGLE_LIST_ENTRY
 # Alias Pointer Names: *PSINGLE_LIST_ENTRY
 
+
 def get_SINGLE_LIST_ENTRY(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return SINGLE_LIST_ENTRY.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(SINGLE_LIST_ENTRY.ARCH32)))
+        return SINGLE_LIST_ENTRY.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(SINGLE_LIST_ENTRY.ARCH32))
+        )
     else:
-        return SINGLE_LIST_ENTRY.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(SINGLE_LIST_ENTRY.ARCH64)))
+        return SINGLE_LIST_ENTRY.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(SINGLE_LIST_ENTRY.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__SINGLE_LIST_ENTRY = get_SINGLE_LIST_ENTRY
@@ -1075,10 +1580,10 @@ def get_SINGLE_LIST_ENTRY(uc: Uc, address: int, em: EMU):
 PSINGLE_LIST_ENTRY_32BIT = POINTER_32BIT
 PSINGLE_LIST_ENTRY_64BIT = POINTER_64BIT
 
-class SINGLE_LIST_ENTRY:
 
+class SINGLE_LIST_ENTRY:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['PSINGLE_LIST_ENTRY']
+        types = ["PSINGLE_LIST_ENTRY"]
         lookUps = {}
 
         # Struct Members
@@ -1088,7 +1593,7 @@ class SINGLE_LIST_ENTRY:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['PSINGLE_LIST_ENTRY']
+        types = ["PSINGLE_LIST_ENTRY"]
         lookUps = {}
 
         # Struct Members
@@ -1102,8 +1607,10 @@ class SINGLE_LIST_ENTRY:
 # Alias Names: RECT, NPRECT
 # Alias Pointer Names: PRECT, LPRECT
 
+
 def get_tagRECT(uc: Uc, address: int, em: EMU):
     return tagRECT.from_buffer_copy(uc.mem_read(address, sizeof(tagRECT)))
+
 
 # Struct Aliases:
 # get_RECT = get_tagRECT
@@ -1115,8 +1622,9 @@ PRECT_64BIT = POINTER_64BIT
 LPRECT_32BIT = POINTER_32BIT
 LPRECT_64BIT = POINTER_64BIT
 
+
 class tagRECT(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LONG', 'LONG', 'LONG', 'LONG']
+    types = ["LONG", "LONG", "LONG", "LONG"]
     lookUps = {}
 
     # Struct Members
@@ -1128,12 +1636,15 @@ class tagRECT(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct FILETIME
 # Alias Names: _FILETIME
 # Alias Pointer Names: PFILETIME, LPFILETIME
 
+
 def get_FILETIME(uc: Uc, address: int, em: EMU):
     return FILETIME.from_buffer_copy(uc.mem_read(address, sizeof(FILETIME)))
+
 
 # Struct Aliases:
 # get__FILETIME = get_FILETIME
@@ -1144,8 +1655,9 @@ PFILETIME_64BIT = POINTER_64BIT
 LPFILETIME_32BIT = POINTER_32BIT
 LPFILETIME_64BIT = POINTER_64BIT
 
+
 class FILETIME(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'DWORD']
+    types = ["DWORD", "DWORD"]
     lookUps = {}
 
     # Struct Members
@@ -1159,19 +1671,26 @@ class FILETIME(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
         # time is in epoch 100 nanoseconds split into low and high
         timeEpoch = time_ns()
         highEndData = timeEpoch >> 32
-        lowEndData = timeEpoch & 0xffffffff
+        lowEndData = timeEpoch & 0xFFFFFFFF
         self.dwLowDateTime = lowEndData
         self.dwHighDateTime = highEndData
+
 
 # Struct UNICODE_STRING
 # Alias Names: _UNICODE_STRING
 # Alias Pointer Names: PUNICODE_STRING
 
+
 def get_UNICODE_STRING(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return UNICODE_STRING.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(UNICODE_STRING.ARCH32)))
+        return UNICODE_STRING.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(UNICODE_STRING.ARCH32))
+        )
     else:
-        return UNICODE_STRING.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(UNICODE_STRING.ARCH64)))
+        return UNICODE_STRING.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(UNICODE_STRING.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__UNICODE_STRING = get_UNICODE_STRING
@@ -1180,10 +1699,10 @@ def get_UNICODE_STRING(uc: Uc, address: int, em: EMU):
 PUNICODE_STRING_32BIT = POINTER_32BIT
 PUNICODE_STRING_64BIT = POINTER_64BIT
 
-class UNICODE_STRING:
 
+class UNICODE_STRING:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['USHORT', 'USHORT', 'PWSTR']
+        types = ["USHORT", "USHORT", "PWSTR"]
         lookUps = {}
 
         # Struct Members
@@ -1195,7 +1714,7 @@ class UNICODE_STRING:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['USHORT', 'USHORT', 'PWSTR']
+        types = ["USHORT", "USHORT", "PWSTR"]
         lookUps = {}
 
         # Struct Members
@@ -1206,23 +1725,30 @@ class UNICODE_STRING:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct STRING
 # Alias Names: _STRING
 # Alias Pointer Names:
 
+
 def get_STRING(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return STRING.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(STRING.ARCH32)))
+        return STRING.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(STRING.ARCH32))
+        )
     else:
-        return STRING.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(STRING.ARCH64)))
+        return STRING.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(STRING.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__STRING = get_STRING
 
-class STRING:
 
+class STRING:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['USHORT', 'USHORT', 'PCHAR']
+        types = ["USHORT", "USHORT", "PCHAR"]
         lookUps = {}
 
         # Struct Members
@@ -1234,7 +1760,7 @@ class STRING:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['USHORT', 'USHORT', 'PCHAR']
+        types = ["USHORT", "USHORT", "PCHAR"]
         lookUps = {}
 
         # Struct Members
@@ -1245,12 +1771,17 @@ class STRING:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct TIME_ZONE_INFORMATION
 # Alias Names: _TIME_ZONE_INFORMATION
 # Alias Pointer Names: *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION
 
+
 def get_TIME_ZONE_INFORMATION(uc: Uc, address: int, em: EMU):
-    return TIME_ZONE_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(TIME_ZONE_INFORMATION)))
+    return TIME_ZONE_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(TIME_ZONE_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__TIME_ZONE_INFORMATION = get_TIME_ZONE_INFORMATION
@@ -1261,8 +1792,9 @@ PTIME_ZONE_INFORMATION_64BIT = POINTER_64BIT
 LPTIME_ZONE_INFORMATION_32BIT = POINTER_32BIT
 LPTIME_ZONE_INFORMATION_64BIT = POINTER_64BIT
 
+
 class TIME_ZONE_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LONG', 'WCHAR', 'SYSTEMTIME', 'LONG', 'WCHAR', 'SYSTEMTIME', 'LONG']
+    types = ["LONG", "WCHAR", "SYSTEMTIME", "LONG", "WCHAR", "SYSTEMTIME", "LONG"]
     lookUps = {}
 
     # Struct Members
@@ -1282,16 +1814,19 @@ class TIME_ZONE_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTyp
 # Alias Names: _REG_TZI_FORMAT
 # Alias Pointer Names:
 
+
 def get_REG_TZI_FORMAT(uc: Uc, address: int, em: EMU):
     return REG_TZI_FORMAT.from_buffer_copy(uc.mem_read(address, sizeof(REG_TZI_FORMAT)))
+
 
 # Struct Aliases:
 # get__REG_TZI_FORMAT = get_REG_TZI_FORMAT
 
+
 class REG_TZI_FORMAT(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LONG', 'LONG', 'LONG', 'SYSTEMTIME', 'SYSTEMTIME']
+    types = ["LONG", "LONG", "LONG", "SYSTEMTIME", "SYSTEMTIME"]
     lookUps = {}
-    
+
     # Struct Members
     Bias: LONG
     StandardBias: LONG
@@ -1302,24 +1837,50 @@ class REG_TZI_FORMAT(LittleEndianStructure, metaclass=StructFieldsFromTypeHints)
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct STARTUPINFOA
 # Alias Names:
 # Alias Pointer Names: *LPSTARTUPINFOA
 
+
 def get_STARTUPINFOA(uc: Uc, address: int, em: EMU):
-        if em.arch == 32:
-            return STARTUPINFOA.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(STARTUPINFOA.ARCH32)))
-        else:
-            return STARTUPINFOA.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(STARTUPINFOA.ARCH64)))
+    if em.arch == 32:
+        return STARTUPINFOA.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(STARTUPINFOA.ARCH32))
+        )
+    else:
+        return STARTUPINFOA.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(STARTUPINFOA.ARCH64))
+        )
+
 
 # Struct Pointers:
 LPSTARTUPINFOA_32BIT = POINTER_32BIT
 LPSTARTUPINFOA_64BIT = POINTER_64BIT
 
-class STARTUPINFOA:
 
+class STARTUPINFOA:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPSTR', 'LPSTR', 'LPSTR', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'WORD', 'WORD', 'LPBYTE', 'HANDLE', 'HANDLE', 'HANDLE']
+        types = [
+            "DWORD",
+            "LPSTR",
+            "LPSTR",
+            "LPSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "WORD",
+            "WORD",
+            "LPBYTE",
+            "HANDLE",
+            "HANDLE",
+            "HANDLE",
+        ]
         lookUps = {11: ReverseLookUps.StartupInfo.flags}
 
         # Struct Members
@@ -1344,7 +1905,26 @@ class STARTUPINFOA:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPSTR', 'LPSTR', 'LPSTR', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'WORD', 'WORD', 'LPBYTE', 'HANDLE', 'HANDLE', 'HANDLE']
+        types = [
+            "DWORD",
+            "LPSTR",
+            "LPSTR",
+            "LPSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "WORD",
+            "WORD",
+            "LPBYTE",
+            "HANDLE",
+            "HANDLE",
+            "HANDLE",
+        ]
         lookUps = {11: ReverseLookUps.StartupInfo.flags}
 
         # Struct Members
@@ -1368,15 +1948,22 @@ class STARTUPINFOA:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct STARTUPINFOW
 # Alias Names: _STARTUPINFOW
 # Alias Pointer Names: *LPSTARTUPINFOW
 
+
 def get_STARTUPINFOW(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return STARTUPINFOW.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(STARTUPINFOW.ARCH32)))
+        return STARTUPINFOW.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(STARTUPINFOW.ARCH32))
+        )
     else:
-        return STARTUPINFOW.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(STARTUPINFOW.ARCH64)))
+        return STARTUPINFOW.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(STARTUPINFOW.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__STARTUPINFOW = get_STARTUPINFOW
@@ -1385,10 +1972,29 @@ def get_STARTUPINFOW(uc: Uc, address: int, em: EMU):
 LPSTARTUPINFOW_32BIT = POINTER_32BIT
 LPSTARTUPINFOW_64BIT = POINTER_64BIT
 
-class STARTUPINFOW:
 
+class STARTUPINFOW:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPWSTR', 'LPWSTR', 'LPWSTR', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'WORD', 'WORD', 'LPBYTE', 'HANDLE', 'HANDLE', 'HANDLE']
+        types = [
+            "DWORD",
+            "LPWSTR",
+            "LPWSTR",
+            "LPWSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "WORD",
+            "WORD",
+            "LPBYTE",
+            "HANDLE",
+            "HANDLE",
+            "HANDLE",
+        ]
         lookUps = {11: ReverseLookUps.StartupInfo.flags}
 
         # Struct Members
@@ -1413,7 +2019,26 @@ class STARTUPINFOW:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPWSTR', 'LPWSTR', 'LPWSTR', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'WORD', 'WORD', 'LPBYTE', 'HANDLE', 'HANDLE', 'HANDLE']
+        types = [
+            "DWORD",
+            "LPWSTR",
+            "LPWSTR",
+            "LPWSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "WORD",
+            "WORD",
+            "LPBYTE",
+            "HANDLE",
+            "HANDLE",
+            "HANDLE",
+        ]
         lookUps = {11: ReverseLookUps.StartupInfo.flags}
 
         # Struct Members
@@ -1442,11 +2067,17 @@ class STARTUPINFOW:
 # Alias Names: _OBJECT_ATTRIBUTES
 # Alias Pointer Names: POBJECT_ATTRIBUTES
 
+
 def get_OBJECT_ATTRIBUTES(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return OBJECT_ATTRIBUTES.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(OBJECT_ATTRIBUTES.ARCH32)))
+        return OBJECT_ATTRIBUTES.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(OBJECT_ATTRIBUTES.ARCH32))
+        )
     else:
-        return OBJECT_ATTRIBUTES.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(OBJECT_ATTRIBUTES.ARCH64)))
+        return OBJECT_ATTRIBUTES.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(OBJECT_ATTRIBUTES.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__OBJECT_ATTRIBUTES = get_OBJECT_ATTRIBUTES
@@ -1455,10 +2086,10 @@ def get_OBJECT_ATTRIBUTES(uc: Uc, address: int, em: EMU):
 POBJECT_ATTRIBUTES_32BIT = POINTER_32BIT
 POBJECT_ATTRIBUTES_64BIT = POINTER_64BIT
 
-class OBJECT_ATTRIBUTES:
 
+class OBJECT_ATTRIBUTES:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['ULONG', 'HANDLE', 'PUNICODE_STRING', 'ULONG', 'PVOID', 'PVOID']
+        types = ["ULONG", "HANDLE", "PUNICODE_STRING", "ULONG", "PVOID", "PVOID"]
         lookUps = {3: ReverseLookUps.ObjectAttributes.Attributes}
 
         # Struct Members
@@ -1473,7 +2104,7 @@ class OBJECT_ATTRIBUTES:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['ULONG', 'HANDLE', 'PUNICODE_STRING', 'ULONG', 'PVOID', 'PVOID']
+        types = ["ULONG", "HANDLE", "PUNICODE_STRING", "ULONG", "PVOID", "PVOID"]
         lookUps = {3: ReverseLookUps.ObjectAttributes.Attributes}
 
         # Struct Members
@@ -1491,6 +2122,7 @@ class OBJECT_ATTRIBUTES:
 def get_LARGE_INTEGER(uc: Uc, address: int, em: EMU):
     return LARGE_INTEGER.from_buffer_copy(uc.mem_read(address, sizeof(LARGE_INTEGER)))
 
+
 # Struct Aliases:
 # get__LARGE_INTEGER = get_LARGE_INTEGER
 
@@ -1498,25 +2130,27 @@ def get_LARGE_INTEGER(uc: Uc, address: int, em: EMU):
 PLARGE_INTEGER_32BIT = POINTER_32BIT
 PLARGE_INTEGER_64BIT = POINTER_64BIT
 
+
 class LARGE_INTEGER_Helpers:
     class u(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD','LONG']
+        types = ["DWORD", "LONG"]
         lookUps = {}
 
         # Struct Members
         LowPart: DWORD
         HighPart: LONG
-    
+
     class DUMMYSTRUCTNAME(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD','LONG']
+        types = ["DWORD", "LONG"]
         lookUps = {}
 
         # Struct Members
         LowPart: DWORD
         HighPart: LONG
+
 
 class LARGE_INTEGER(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-    types = ['struct','struct','LONGLONG']
+    types = ["struct", "struct", "LONGLONG"]
     lookUps = {}
 
     # Struct Members
@@ -1527,8 +2161,10 @@ class LARGE_INTEGER(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 def get_ULARGE_INTEGER(uc: Uc, address: int, em: EMU):
     return LARGE_INTEGER.from_buffer_copy(uc.mem_read(address, sizeof(ULARGE_INTEGER)))
+
 
 # Struct Aliases:
 # get__ULARGE_INTEGER = get_ULARGE_INTEGER
@@ -1537,9 +2173,10 @@ def get_ULARGE_INTEGER(uc: Uc, address: int, em: EMU):
 PULARGE_INTEGER_32BIT = POINTER_32BIT
 PULARGE_INTEGER_64BIT = POINTER_64BIT
 
+
 class ULARGE_INTEGER_Helpers:
     class u(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD','DWORD']
+        types = ["DWORD", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -1547,15 +2184,16 @@ class ULARGE_INTEGER_Helpers:
         HighPart: DWORD
 
     class DUMMYSTRUCTNAME(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD','DWORD']
+        types = ["DWORD", "DWORD"]
         lookUps = {}
 
         # Struct Members
         LowPart: DWORD
         HighPart: DWORD
 
+
 class ULARGE_INTEGER(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-    types = ['struct','ULONGLONG']
+    types = ["struct", "ULONGLONG"]
     lookUps = {}
 
     # Struct Members
@@ -1566,18 +2204,22 @@ class ULARGE_INTEGER(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct GUID
 # Alias Names: _GUID
 # Alias Pointer Names:
 
+
 def get_GUID(uc: Uc, address: int, em: EMU):
     return GUID.from_buffer_copy(uc.mem_read(address, sizeof(GUID)))
+
 
 # Struct Aliases:
 # get__GUID = get_GUID
 
+
 class GUID(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['ULONG', 'USHORT', 'USHORT', 'UCHAR']
+    types = ["ULONG", "USHORT", "USHORT", "UCHAR"]
     lookUps = {}
 
     # Struct Members
@@ -1594,11 +2236,17 @@ class GUID(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
 # Alias Names: _SECURITY_ATTRIBUTES
 # Alias Pointer Names: *PSECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES
 
+
 def get_SECURITY_ATTRIBUTES(uc: Uc, address: int, em: EMU):
-        if em.arch == 32:
-            return SECURITY_ATTRIBUTES.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(SECURITY_ATTRIBUTES.ARCH32)))
-        else:
-            return SECURITY_ATTRIBUTES.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(SECURITY_ATTRIBUTES.ARCH64)))
+    if em.arch == 32:
+        return SECURITY_ATTRIBUTES.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(SECURITY_ATTRIBUTES.ARCH32))
+        )
+    else:
+        return SECURITY_ATTRIBUTES.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(SECURITY_ATTRIBUTES.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__SECURITY_ATTRIBUTES = get_SECURITY_ATTRIBUTES
@@ -1609,10 +2257,10 @@ PSECURITY_ATTRIBUTES_64BIT = POINTER_64BIT
 LPSECURITY_ATTRIBUTES_32BIT = POINTER_32BIT
 LPSECURITY_ATTRIBUTES_64BIT = POINTER_64BIT
 
-class SECURITY_ATTRIBUTES:
 
+class SECURITY_ATTRIBUTES:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPVOID', 'BOOL']
+        types = ["DWORD", "LPVOID", "BOOL"]
         lookUps = {}
 
         # Struct Members
@@ -1624,7 +2272,7 @@ class SECURITY_ATTRIBUTES:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPVOID', 'BOOL']
+        types = ["DWORD", "LPVOID", "BOOL"]
         lookUps = {}
 
         # Struct Members
@@ -1635,15 +2283,22 @@ class SECURITY_ATTRIBUTES:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct value_entA
 # Alias Names: VALENTA
 # Alias Pointer Names: *PVALENTA
 
+
 def get_value_entA(uc: Uc, address: int, em: EMU):
-        if em.arch == 32:
-            return value_entA.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(value_entA.ARCH32)))
-        else:
-            return value_entA.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(value_entA.ARCH64)))
+    if em.arch == 32:
+        return value_entA.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(value_entA.ARCH32))
+        )
+    else:
+        return value_entA.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(value_entA.ARCH64))
+        )
+
 
 # Struct Aliases:
 get_VALENTA = get_value_entA
@@ -1652,10 +2307,10 @@ get_VALENTA = get_value_entA
 PVALENTA_32BIT = POINTER_32BIT
 PVALENTA_64BIT = POINTER_64BIT
 
-class value_entA:
 
+class value_entA:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LPSTR', 'DWORD', 'DWORD_PTR', 'DWORD']
+        types = ["LPSTR", "DWORD", "DWORD_PTR", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -1668,7 +2323,7 @@ class value_entA:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LPSTR', 'DWORD', 'DWORD_PTR', 'DWORD']
+        types = ["LPSTR", "DWORD", "DWORD_PTR", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -1680,15 +2335,22 @@ class value_entA:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct value_entW
 # Alias Names: VALENTW
 # Alias Pointer Names: *PVALENTW
 
+
 def get_value_entW(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return value_entW.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(value_entW.ARCH32)))
+        return value_entW.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(value_entW.ARCH32))
+        )
     else:
-        return value_entW.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(value_entW.ARCH64)))
+        return value_entW.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(value_entW.ARCH64))
+        )
+
 
 # Struct Aliases:
 get_VALENTW = get_value_entW
@@ -1697,10 +2359,10 @@ get_VALENTW = get_value_entW
 PVALENTW_32BIT = POINTER_32BIT
 PVALENTW_64BIT = POINTER_64BIT
 
-class value_entW:
 
+class value_entW:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LPWSTR', 'DWORD', 'DWORD_PTR', 'DWORD']
+        types = ["LPWSTR", "DWORD", "DWORD_PTR", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -1713,7 +2375,7 @@ class value_entW:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LPWSTR', 'DWORD', 'DWORD_PTR', 'DWORD']
+        types = ["LPWSTR", "DWORD", "DWORD_PTR", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -1725,12 +2387,15 @@ class value_entW:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct POINT
 # Alias Names: NPPOINT
 # Alias Pointer Names: POINT, PPOINT, LPPOINT
 
+
 def get_POINT(uc: Uc, address: int, em: EMU):
     return POINT.from_buffer_copy(uc.mem_read(address, sizeof(POINT)))
+
 
 # Struct Aliases:
 # get_NPPOINT = get_POINT
@@ -1743,8 +2408,9 @@ PPOINT_64BIT = POINTER_64BIT
 LPPOINT_32BIT = POINTER_32BIT
 LPPOINT_64BIT = POINTER_64BIT
 
+
 class POINT(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LONG', 'LONG']
+    types = ["LONG", "LONG"]
     lookUps = {}
 
     # Struct Members
@@ -1754,15 +2420,18 @@ class POINT(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct MSG
 # Alias Names: tagMSG, NPMSG
 # Alias Pointer Names: PMSG, LPMSG
+
 
 def get_MSG(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
         return MSG.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(MSG.ARCH32)))
     else:
         return MSG.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(MSG.ARCH64)))
+
 
 # Struct Aliases:
 # get_tagMSG = get_MSG
@@ -1774,10 +2443,10 @@ PMSG_64BIT = POINTER_64BIT
 LPMSG_32BIT = POINTER_32BIT
 LPMSG_64BIT = POINTER_64BIT
 
-class MSG:
 
+class MSG:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['HWND', 'UINT', 'WPARAM', 'LPARAM', 'DWORD', 'POINT', 'DWORD']
+        types = ["HWND", "UINT", "WPARAM", "LPARAM", "DWORD", "POINT", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -1793,7 +2462,7 @@ class MSG:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['HWND', 'UINT', 'WPARAM', 'LPARAM', 'DWORD', 'POINT', 'DWORD']
+        types = ["HWND", "UINT", "WPARAM", "LPARAM", "DWORD", "POINT", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -1808,12 +2477,17 @@ class MSG:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct DISPLAY_DEVICEA
 # Alias Names: _DISPLAY_DEVICEA
 # Alias Pointer Names:  *PDISPLAY_DEVICEA, *LPDISPLAY_DEVICEA;
 
+
 def get_DISPLAY_DEVICEA(uc: Uc, address: int, em: EMU):
-    return DISPLAY_DEVICEA.from_buffer_copy(uc.mem_read(address, sizeof(DISPLAY_DEVICEA)))
+    return DISPLAY_DEVICEA.from_buffer_copy(
+        uc.mem_read(address, sizeof(DISPLAY_DEVICEA))
+    )
+
 
 # Struct Aliases:
 # get__DISPLAY_DEVICEA = get_DISPLAY_DEVICEA
@@ -1824,8 +2498,9 @@ PDISPLAY_64BIT = POINTER_64BIT
 LPDISPLAY_32BIT = POINTER_32BIT
 LPDISPLAY_64BIT = POINTER_64BIT
 
+
 class DISPLAY_DEVICEA(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD','CHAR','CHAR','DWORD','CHAR','CHAR']
+    types = ["DWORD", "CHAR", "CHAR", "DWORD", "CHAR", "CHAR"]
     lookUps = {}
 
     # Struct Members
@@ -1841,18 +2516,23 @@ class DISPLAY_DEVICEA(LittleEndianStructure, metaclass=StructFieldsFromTypeHints
 
     def screenDC(self):
         self.cb = sizeof(self)
-        self.DeviceName = '\\\\.\\DISPLAY1\\Monitor0'
-        self.DeviceString = 'GENEREIC PNP MONITOR'
+        self.DeviceName = "\\\\.\\DISPLAY1\\Monitor0"
+        self.DeviceString = "GENEREIC PNP MONITOR"
         self.StateFlags = 0x1
-        #self.DeviceID = not used
-        #self.DeviceKey = reserved
+        # self.DeviceID = not used
+        # self.DeviceKey = reserved
+
 
 # Struct DISPLAY_DEVICEW
 # Alias Names: _DISPLAY_DEVICEW
 # Alias Pointer Names: PDISPLAY_DEVICEW, LPDISPLAY_DEVICEW
 
+
 def get_DISPLAY_DEVICEW(uc: Uc, address: int, em: EMU):
-    return DISPLAY_DEVICEW.from_buffer_copy(uc.mem_read(address, sizeof(DISPLAY_DEVICEW)))
+    return DISPLAY_DEVICEW.from_buffer_copy(
+        uc.mem_read(address, sizeof(DISPLAY_DEVICEW))
+    )
+
 
 # Struct Aliases:
 # get__DISPLAY_DEVICEW = get_DISPLAY_DEVICEW
@@ -1863,8 +2543,9 @@ PDISPLAY_DEVICEW_64BIT = POINTER_64BIT
 LPDISPLAY_DEVICEW_32BIT = POINTER_32BIT
 LPDISPLAY_DEVICEW_64BIT = POINTER_64BIT
 
+
 class DISPLAY_DEVICEW(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'WCHAR', 'WCHAR', 'DWORD', 'WCHAR', 'WCHAR']
+    types = ["DWORD", "WCHAR", "WCHAR", "DWORD", "WCHAR", "WCHAR"]
     lookUps = {}
 
     # Struct Members
@@ -1880,28 +2561,28 @@ class DISPLAY_DEVICEW(LittleEndianStructure, metaclass=StructFieldsFromTypeHints
 
     def screenDC(self):
         self.cb = sizeof(self)
-        self.DeviceName = '\\\\.\\DISPLAY1\\Monitor0'
-        self.DeviceString = 'GENEREIC PNP MONITOR'
+        self.DeviceName = "\\\\.\\DISPLAY1\\Monitor0"
+        self.DeviceString = "GENEREIC PNP MONITOR"
         self.StateFlags = 0x1
-        #self.DeviceID = not used
-        #self.DeviceKey = reserved
+        # self.DeviceID = not used
+        # self.DeviceKey = reserved
 
 
-## Struct VIDEOPARAMETERS 
+## Struct VIDEOPARAMETERS
 ## Alias Names: _VIDEOPARAMETERS
 ## Alias Pointer Names: *PVIDEOPARAMETERS
 
-#def get_VIDEOPARAMETERS(uc: Uc, address: int, em: EMU):
+# def get_VIDEOPARAMETERS(uc: Uc, address: int, em: EMU):
 #    return VIDEOPARAMETERS.from_buffer_copy(uc.mem_read(address, sizeof(VIDEOPARAMETERS)))
 
 ## Struct Aliases:
 ## get__VIDEOPARAMETERS = get_VIDEOPARAMETERS
 
 ## Struct Pointers:
-#PVIDEOPARAMETERS_32BIT = POINTER_32BIT
-#PVIDEOPARAMETERS_64BIT = POINTER_64BIT
+# PVIDEOPARAMETERS_32BIT = POINTER_32BIT
+# PVIDEOPARAMETERS_64BIT = POINTER_64BIT
 
-#class VIDEOPARAMETERS (LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
+# class VIDEOPARAMETERS (LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
 #    types = ['GUID','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','ULONG','UCHAR']
 #    names = ['guid','dwOffset','dwCommand','dwFlags','dwMode','dwTVStandard','dwAvailableModes','dwAvailableTVStandard','dwFlickerFilter','dwOverScanX','dwOverScanY','dwMaxUnscaledX','dwMaxUnscaledY','dwPositionX','dwPositionY','dwBrightness','dwContrast','dwCPType','dwCPCommand','dwCPStandard','dwCPKey','bCP_APSTriggerBits','bOEMCopyProtection']
 #    __slots__ = ('guid','dwOffset','dwCommand','dwFlags','dwMode','dwTVStandard','dwAvailableModes','dwAvailableTVStandard','dwFlickerFilter','dwOverScanX','dwOverScanY','dwMaxUnscaledX','dwMaxUnscaledY','dwPositionX','dwPositionY','dwBrightness','dwContrast','dwCPType','dwCPCommand','dwCPStandard','dwCPKey','bCP_APSTriggerBits','bOEMCopyProtection')
@@ -1915,11 +2596,17 @@ class DISPLAY_DEVICEW(LittleEndianStructure, metaclass=StructFieldsFromTypeHints
 # Alias Names: TRACKMOUSEEVENT
 # Alias Pointer Names: LPTRACKMOUSEEVENT
 
+
 def get_tagTRACKMOUSEEVENT(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return tagTRACKMOUSEEVENT.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(tagTRACKMOUSEEVENT.ARCH32)))
+        return tagTRACKMOUSEEVENT.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(tagTRACKMOUSEEVENT.ARCH32))
+        )
     else:
-        return tagTRACKMOUSEEVENT.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(tagTRACKMOUSEEVENT.ARCH64)))
+        return tagTRACKMOUSEEVENT.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(tagTRACKMOUSEEVENT.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get_TRACKMOUSEEVENT = get_tagTRACKMOUSEEVENT
@@ -1928,11 +2615,17 @@ def get_tagTRACKMOUSEEVENT(uc: Uc, address: int, em: EMU):
 LPTRACKMOUSEEVENT_32BIT = POINTER_32BIT
 LPTRACKMOUSEEVENT_64BIT = POINTER_64BIT
 
-class tagTRACKMOUSEEVENT:
 
+class tagTRACKMOUSEEVENT:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'HWND', 'DWORD']
-        rv = {2147483648: 'TME_CANCEL', 1: 'TME_HOVER', 2: 'TME_LEAVE', 16: 'TME_NONCLIENT', 1073741824: 'TME_QUERY'}
+        types = ["DWORD", "DWORD", "HWND", "DWORD"]
+        rv = {
+            2147483648: "TME_CANCEL",
+            1: "TME_HOVER",
+            2: "TME_LEAVE",
+            16: "TME_NONCLIENT",
+            1073741824: "TME_QUERY",
+        }
         lookUps = {1: rv}
 
         # Struct Members
@@ -1945,8 +2638,14 @@ class tagTRACKMOUSEEVENT:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'HWND', 'DWORD']
-        rv = {2147483648: 'TME_CANCEL', 1: 'TME_HOVER', 2: 'TME_LEAVE', 16: 'TME_NONCLIENT', 1073741824: 'TME_QUERY'}
+        types = ["DWORD", "DWORD", "HWND", "DWORD"]
+        rv = {
+            2147483648: "TME_CANCEL",
+            1: "TME_HOVER",
+            2: "TME_LEAVE",
+            16: "TME_NONCLIENT",
+            1073741824: "TME_QUERY",
+        }
         lookUps = {1: rv}
 
         # Struct Members
@@ -1963,19 +2662,25 @@ class tagTRACKMOUSEEVENT:
 # Alias Names: _ICONINFO
 # Alias Pointer Names:
 
+
 def get_ICONINFO(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return ICONINFO.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(ICONINFO.ARCH32)))
+        return ICONINFO.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(ICONINFO.ARCH32))
+        )
     else:
-        return ICONINFO.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(ICONINFO.ARCH64)))
+        return ICONINFO.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(ICONINFO.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__ICONINFO = get_ICONINFO
 
-class ICONINFO:
 
+class ICONINFO:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['BOOL', 'DWORD', 'DWORD', 'HBITMAP', 'HBITMAP']
+        types = ["BOOL", "DWORD", "DWORD", "HBITMAP", "HBITMAP"]
         lookUps = {}
 
         # Struct Members
@@ -1989,7 +2694,7 @@ class ICONINFO:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['BOOL', 'DWORD', 'DWORD', 'HBITMAP', 'HBITMAP']
+        types = ["BOOL", "DWORD", "DWORD", "HBITMAP", "HBITMAP"]
         lookUps = {}
 
         # Struct Members
@@ -2003,16 +2708,21 @@ class ICONINFO:
             uc.mem_write(address, bytes(self))
 
 
-
 # Struct tagMINMAXINFO
 # Alias Names: MINMAXINFO
 # Alias Pointer Names: PMINMAXINFO, LPMINMAXINFO
 
+
 def get_tagMINMAXINFO(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return tagMINMAXINFO.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(tagMINMAXINFO.ARCH32)))
+        return tagMINMAXINFO.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(tagMINMAXINFO.ARCH32))
+        )
     else:
-        return tagMINMAXINFO.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(tagMINMAXINFO.ARCH64)))
+        return tagMINMAXINFO.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(tagMINMAXINFO.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get_MINMAXINFO = get_tagMINMAXINFO
@@ -2023,10 +2733,10 @@ PMINMAXINFO_64BIT = POINTER_64BIT
 LPMINMAXINFO_32BIT = POINTER_32BIT
 LPMINMAXINFO_64BIT = POINTER_64BIT
 
-class tagMINMAXINFO:
 
+class tagMINMAXINFO:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['POINT', 'POINT', 'POINT', 'POINT', 'POINT']
+        types = ["POINT", "POINT", "POINT", "POINT", "POINT"]
         lookUps = {}
 
         # Struct Members
@@ -2040,7 +2750,7 @@ class tagMINMAXINFO:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['POINT', 'POINT', 'POINT', 'POINT', 'POINT']
+        types = ["POINT", "POINT", "POINT", "POINT", "POINT"]
         lookUps = {}
 
         # Struct Members
@@ -2058,11 +2768,17 @@ class tagMINMAXINFO:
 # Alias Names: SHELLEXECUTEINFOA
 # Alias Pointer Names: *LPSHELLEXECUTEINFOA
 
+
 def get_SHELLEXECUTEINFOA(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return SHELLEXECUTEINFOA.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(SHELLEXECUTEINFOA.ARCH32)))
+        return SHELLEXECUTEINFOA.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(SHELLEXECUTEINFOA.ARCH32))
+        )
     else:
-        return SHELLEXECUTEINFOA.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(SHELLEXECUTEINFOA.ARCH64)))
+        return SHELLEXECUTEINFOA.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(SHELLEXECUTEINFOA.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__SHELLEXECUTEINFOA = get_SHELLEXECUTEINFOA
@@ -2071,10 +2787,11 @@ def get_SHELLEXECUTEINFOA(uc: Uc, address: int, em: EMU):
 LPSHELLEXECUTEINFOA_32BIT = POINTER_32BIT
 LPSHELLEXECUTEINFOA_64BIT = POINTER_64BIT
 
+
 class SHELLEXECUTEINFOA_Helpers:
     # Sub Structures/Unions
     class Union_32BIT(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-        types = ['HANDLE', 'HANDLE']
+        types = ["HANDLE", "HANDLE"]
         lookUps = {}
 
         # Struct Members
@@ -2082,18 +2799,37 @@ class SHELLEXECUTEINFOA_Helpers:
         hMonitor: HANDLE_32BIT
 
     class Union_64BIT(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-        types = ['HANDLE', 'HANDLE']
+        types = ["HANDLE", "HANDLE"]
         lookUps = {}
 
         # Struct Members
         hIcon: HANDLE_64BIT
         hMonitor: HANDLE_64BIT
 
-class SHELLEXECUTEINFOA:
 
+class SHELLEXECUTEINFOA:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'ULONG', 'HWND', 'LPCSTR', 'LPCSTR', 'LPCSTR', 'LPCSTR', 'int', 'HINSTANCE', 'void', 'LPCSTR', 'HKEY', 'DWORD', 'union', 'HANDLE']
-        lookUps = {1: ReverseLookUps.ShellExecute.Mask, 7: ReverseLookUps.ShellExecute.cmdShow}
+        types = [
+            "DWORD",
+            "ULONG",
+            "HWND",
+            "LPCSTR",
+            "LPCSTR",
+            "LPCSTR",
+            "LPCSTR",
+            "int",
+            "HINSTANCE",
+            "void",
+            "LPCSTR",
+            "HKEY",
+            "DWORD",
+            "union",
+            "HANDLE",
+        ]
+        lookUps = {
+            1: ReverseLookUps.ShellExecute.Mask,
+            7: ReverseLookUps.ShellExecute.cmdShow,
+        }
 
         # Struct Members
         cbSize: DWORD
@@ -2116,8 +2852,27 @@ class SHELLEXECUTEINFOA:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'ULONG', 'HWND', 'LPCSTR', 'LPCSTR', 'LPCSTR', 'LPCSTR', 'int', 'HINSTANCE', 'void', 'LPCSTR', 'HKEY', 'DWORD', 'union', 'HANDLE']
-        lookUps = {1: ReverseLookUps.ShellExecute.Mask, 7: ReverseLookUps.ShellExecute.cmdShow}
+        types = [
+            "DWORD",
+            "ULONG",
+            "HWND",
+            "LPCSTR",
+            "LPCSTR",
+            "LPCSTR",
+            "LPCSTR",
+            "int",
+            "HINSTANCE",
+            "void",
+            "LPCSTR",
+            "HKEY",
+            "DWORD",
+            "union",
+            "HANDLE",
+        ]
+        lookUps = {
+            1: ReverseLookUps.ShellExecute.Mask,
+            7: ReverseLookUps.ShellExecute.cmdShow,
+        }
 
         # Struct Members
         cbSize: DWORD
@@ -2139,15 +2894,22 @@ class SHELLEXECUTEINFOA:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct _SHELLEXECUTEINFOW
 # Alias Names: SHELLEXECUTEINFOW
 # Alias Pointer Names: *LPSHELLEXECUTEINFOW
 
+
 def get_SHELLEXECUTEINFOW(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return SHELLEXECUTEINFOW.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(SHELLEXECUTEINFOW.ARCH32)))
+        return SHELLEXECUTEINFOW.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(SHELLEXECUTEINFOW.ARCH32))
+        )
     else:
-        return SHELLEXECUTEINFOW.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(SHELLEXECUTEINFOW.ARCH64)))
+        return SHELLEXECUTEINFOW.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(SHELLEXECUTEINFOW.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__SHELLEXECUTEINFOW = get_SHELLEXECUTEINFOW
@@ -2156,10 +2918,11 @@ def get_SHELLEXECUTEINFOW(uc: Uc, address: int, em: EMU):
 LPSHELLEXECUTEINFOW_32BIT = POINTER_32BIT
 LPSHELLEXECUTEINFOW_64BIT = POINTER_64BIT
 
+
 class SHELLEXECUTEINFOW_Helpers:
     # Sub Structures/Unions
     class Union_32BIT(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-        types = ['HANDLE', 'HANDLE']
+        types = ["HANDLE", "HANDLE"]
         lookUps = {}
 
         # Union Members
@@ -2167,18 +2930,37 @@ class SHELLEXECUTEINFOW_Helpers:
         hMonitor: HANDLE_32BIT
 
     class Union_64BIT(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-        types = ['HANDLE', 'HANDLE']
+        types = ["HANDLE", "HANDLE"]
         lookUps = {}
 
         # Union Members
         hIcon: HANDLE_64BIT
         hMonitor: HANDLE_64BIT
 
-class SHELLEXECUTEINFOW:
 
+class SHELLEXECUTEINFOW:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'ULONG', 'HWND', 'LPCWSTR', 'LPCWSTR', 'LPCWSTR', 'LPCWSTR', 'int', 'HINSTANCE', 'void', 'LPCWSTR', 'HKEY', 'DWORD', 'union', 'HANDLE']
-        lookUps = {1: ReverseLookUps.ShellExecute.Mask, 7: ReverseLookUps.ShellExecute.cmdShow}
+        types = [
+            "DWORD",
+            "ULONG",
+            "HWND",
+            "LPCWSTR",
+            "LPCWSTR",
+            "LPCWSTR",
+            "LPCWSTR",
+            "int",
+            "HINSTANCE",
+            "void",
+            "LPCWSTR",
+            "HKEY",
+            "DWORD",
+            "union",
+            "HANDLE",
+        ]
+        lookUps = {
+            1: ReverseLookUps.ShellExecute.Mask,
+            7: ReverseLookUps.ShellExecute.cmdShow,
+        }
 
         # Struct Members
         cbSize: DWORD
@@ -2201,8 +2983,27 @@ class SHELLEXECUTEINFOW:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'ULONG', 'HWND', 'LPCWSTR', 'LPCWSTR', 'LPCWSTR', 'LPCWSTR', 'int', 'HINSTANCE', 'void', 'LPCWSTR', 'HKEY', 'DWORD', 'union', 'HANDLE']
-        lookUps = {1: ReverseLookUps.ShellExecute.Mask, 7: ReverseLookUps.ShellExecute.cmdShow}
+        types = [
+            "DWORD",
+            "ULONG",
+            "HWND",
+            "LPCWSTR",
+            "LPCWSTR",
+            "LPCWSTR",
+            "LPCWSTR",
+            "int",
+            "HINSTANCE",
+            "void",
+            "LPCWSTR",
+            "HKEY",
+            "DWORD",
+            "union",
+            "HANDLE",
+        ]
+        lookUps = {
+            1: ReverseLookUps.ShellExecute.Mask,
+            7: ReverseLookUps.ShellExecute.cmdShow,
+        }
 
         # Struct Members
         cbSize: DWORD
@@ -2224,12 +3025,17 @@ class SHELLEXECUTEINFOW:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct WSAPROTOCOLCHAIN
 # Alias Names: _WSAPROTOCOLCHAIN
 # Alias Pointer Names: LPWSAPROTOCOLCHAIN
 
+
 def get_WSAPROTOCOLCHAIN(uc: Uc, address: int, em: EMU):
-    return WSAPROTOCOLCHAIN.from_buffer_copy(uc.mem_read(address, sizeof(WSAPROTOCOLCHAIN)))
+    return WSAPROTOCOLCHAIN.from_buffer_copy(
+        uc.mem_read(address, sizeof(WSAPROTOCOLCHAIN))
+    )
+
 
 # Struct Aliases:
 # get__WSAPROTOCOLCHAIN = get_WSAPROTOCOLCHAIN
@@ -2238,8 +3044,9 @@ def get_WSAPROTOCOLCHAIN(uc: Uc, address: int, em: EMU):
 LPWSAPROTOCOLCHAIN_32BIT = POINTER_32BIT
 LPWSAPROTOCOLCHAIN_64BIT = POINTER_64BIT
 
+
 class WSAPROTOCOLCHAIN(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['int', 'DWORD']
+    types = ["int", "DWORD"]
     lookUps = {}
 
     # Struct Members
@@ -2254,8 +3061,12 @@ class WSAPROTOCOLCHAIN(LittleEndianStructure, metaclass=StructFieldsFromTypeHint
 # Alias Names: _WSAPROTOCOL_INFOA
 # Alias Pointer Names: LPWSAPROTOCOL_INFOA
 
+
 def get_WSAPROTOCOL_INFOA(uc: Uc, address: int, em: EMU):
-    return WSAPROTOCOL_INFOA.from_buffer_copy(uc.mem_read(address, sizeof(WSAPROTOCOL_INFOA)))
+    return WSAPROTOCOL_INFOA.from_buffer_copy(
+        uc.mem_read(address, sizeof(WSAPROTOCOL_INFOA))
+    )
+
 
 # Struct Aliases:
 # get__WSAPROTOCOL_INFOA = get_WSAPROTOCOL_INFOA
@@ -2264,9 +3075,38 @@ def get_WSAPROTOCOL_INFOA(uc: Uc, address: int, em: EMU):
 LPWSAPROTOCOL_INFOA_32BIT = POINTER_32BIT
 LPWSAPROTOCOL_INFOA_64BIT = POINTER_64BIT
 
+
 class WSAPROTOCOL_INFOA(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'GUID', 'DWORD', 'WSAPROTOCOLCHAIN', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'DWORD', 'DWORD', 'CHAR']
-    lookUps = {0: ReverseLookUps.Socket.ServiceFlags, 9: ReverseLookUps.Socket.Af, 12: ReverseLookUps.Socket.Type, 13: ReverseLookUps.Socket.Protocol, 15: ReverseLookUps.Socket.NetworkByteOrder, 16: ReverseLookUps.Socket.SecurityScheme}
+    types = [
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "GUID",
+        "DWORD",
+        "WSAPROTOCOLCHAIN",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "DWORD",
+        "DWORD",
+        "CHAR",
+    ]
+    lookUps = {
+        0: ReverseLookUps.Socket.ServiceFlags,
+        9: ReverseLookUps.Socket.Af,
+        12: ReverseLookUps.Socket.Type,
+        13: ReverseLookUps.Socket.Protocol,
+        15: ReverseLookUps.Socket.NetworkByteOrder,
+        16: ReverseLookUps.Socket.SecurityScheme,
+    }
 
     # Struct Members
     dwServiceFlags1: DWORD
@@ -2288,17 +3128,22 @@ class WSAPROTOCOL_INFOA(LittleEndianStructure, metaclass=StructFieldsFromTypeHin
     iSecurityScheme: INT
     dwMessageSize: DWORD
     dwProviderReserved: DWORD
-    szProtocol: CHAR*256
+    szProtocol: CHAR * 256
 
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
+
 
 # Struct WSAPROTOCOL_INFOW
 # Alias Names: _WSAPROTOCOL_INFOW
 # Alias Pointer Names: LPWSAPROTOCOL_INFOW
 
+
 def get_WSAPROTOCOL_INFOW(uc: Uc, address: int, em: EMU):
-    return WSAPROTOCOL_INFOW.from_buffer_copy(uc.mem_read(address, sizeof(WSAPROTOCOL_INFOW)))
+    return WSAPROTOCOL_INFOW.from_buffer_copy(
+        uc.mem_read(address, sizeof(WSAPROTOCOL_INFOW))
+    )
+
 
 # Struct Aliases:
 # get__WSAPROTOCOL_INFOW = get_WSAPROTOCOL_INFOW
@@ -2307,9 +3152,38 @@ def get_WSAPROTOCOL_INFOW(uc: Uc, address: int, em: EMU):
 LPWSAPROTOCOL_INFOW_32BIT = POINTER_32BIT
 LPWSAPROTOCOL_INFOW_64BIT = POINTER_64BIT
 
+
 class WSAPROTOCOL_INFOW(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'GUID', 'DWORD', 'WSAPROTOCOLCHAIN', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'DWORD', 'DWORD', 'WCHAR']
-    lookUps = {0: ReverseLookUps.Socket.ServiceFlags, 9: ReverseLookUps.Socket.Af, 12: ReverseLookUps.Socket.Type, 13: ReverseLookUps.Socket.Protocol, 15: ReverseLookUps.Socket.NetworkByteOrder, 16: ReverseLookUps.Socket.SecurityScheme}
+    types = [
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "GUID",
+        "DWORD",
+        "WSAPROTOCOLCHAIN",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "DWORD",
+        "DWORD",
+        "WCHAR",
+    ]
+    lookUps = {
+        0: ReverseLookUps.Socket.ServiceFlags,
+        9: ReverseLookUps.Socket.Af,
+        12: ReverseLookUps.Socket.Type,
+        13: ReverseLookUps.Socket.Protocol,
+        15: ReverseLookUps.Socket.NetworkByteOrder,
+        16: ReverseLookUps.Socket.SecurityScheme,
+    }
 
     # Struct Members
     dwServiceFlags1: DWORD
@@ -2331,17 +3205,18 @@ class WSAPROTOCOL_INFOW(LittleEndianStructure, metaclass=StructFieldsFromTypeHin
     iSecurityScheme: INT
     dwMessageSize: DWORD
     dwProviderReserved: DWORD
-    szProtocol: WCHAR*256
+    szProtocol: WCHAR * 256
 
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
-# Struct OVERLAPPED 
+
+# Struct OVERLAPPED
 # Alias Names: _OVERLAPPED
 # Alias Pointer Names: LPWSAPROTOCOL_INFOW
 
 # def get_OVERLAPPED(uc: Uc, address: int, em: EMU):
-    # return OVERLAPPED.from_buffer_copy(uc.mem_read(address, sizeof(OVERLAPPED)))
+# return OVERLAPPED.from_buffer_copy(uc.mem_read(address, sizeof(OVERLAPPED)))
 
 # Struct Aliases:
 # get__OVERLAPPED = get_OVERLAPPED
@@ -2371,12 +3246,16 @@ class WSAPROTOCOL_INFOW(LittleEndianStructure, metaclass=StructFieldsFromTypeHin
 #     def writeToMemory(self, uc: Uc, address: int):
 #         uc.mem_write(address, bytes(self))
 
-# Struct WIN32_FIND_DATAA 
+# Struct WIN32_FIND_DATAA
 # Alias Names: _WIN32_FIND_DATAA
 # Alias Pointer Names: WIN32_FIND_DATAA
 
+
 def get_WIN32_FIND_DATAA(uc: Uc, address: int, em: EMU):
-    return WIN32_FIND_DATAA.from_buffer_copy(uc.mem_read(address, sizeof(WIN32_FIND_DATAA)))
+    return WIN32_FIND_DATAA.from_buffer_copy(
+        uc.mem_read(address, sizeof(WIN32_FIND_DATAA))
+    )
+
 
 # Struct Aliases:
 # get__OVERLAPPED = get_OVERLAPPED
@@ -2385,15 +3264,30 @@ def get_WIN32_FIND_DATAA(uc: Uc, address: int, em: EMU):
 # LPWSAPROTOCOL_INFOW_32BIT = POINTER_32BIT
 # LPWSAPROTOCOL_INFOW_64BIT = POINTER_64BIT
 
+
 class WIN32_FIND_DATAA(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD','FILETIME','FILETIME','FILETIME','DWORD','DWORD','DWORD','DWORD','WCHAR','WCHAR','DWORD','DWORD','WORD']
+    types = [
+        "DWORD",
+        "FILETIME",
+        "FILETIME",
+        "FILETIME",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "WCHAR",
+        "WCHAR",
+        "DWORD",
+        "DWORD",
+        "WORD",
+    ]
     lookUps = {}
-    #dwFileAttributes -> ReverseLookup from the files class
-    #create some file time structures for the next three
-    #Highword/lowword file size, if need help getting high low look @ filetime as filetime where it split the time into high and low
-    #cFileName = fileName, get this from the handle/filesystem
-    #Alt file name 1 period, no spaces, 1-8 characters in length followed by extension[1-3 length]
-    
+    # dwFileAttributes -> ReverseLookup from the files class
+    # create some file time structures for the next three
+    # Highword/lowword file size, if need help getting high low look @ filetime as filetime where it split the time into high and low
+    # cFileName = fileName, get this from the handle/filesystem
+    # Alt file name 1 period, no spaces, 1-8 characters in length followed by extension[1-3 length]
+
     # Struct Members
     dwFileAttributes: DWORD
     ftCreationTime: FILETIME
@@ -2422,12 +3316,17 @@ class WIN32_FIND_DATAA(LittleEndianStructure, metaclass=StructFieldsFromTypeHint
     #     self.cFileName = filename
     #     self.cAlternateFileName = altFileName
 
+
 # Struct WIN32_FIND_DATAW
 # Alias Names: _WIN32_FIND_DATAW
 # Alias Pointer Names: *PWIN32_FIND_DATAW, *LPWIN32_FIND_DATAW
 
+
 def get_WIN32_FIND_DATAW(uc: Uc, address: int, em: EMU):
-    return WIN32_FIND_DATAW.from_buffer_copy(uc.mem_read(address, sizeof(WIN32_FIND_DATAW)))
+    return WIN32_FIND_DATAW.from_buffer_copy(
+        uc.mem_read(address, sizeof(WIN32_FIND_DATAW))
+    )
+
 
 # Struct Aliases:
 # get__WIN32_FIND_DATAW = get_WIN32_FIND_DATAW
@@ -2438,8 +3337,23 @@ PWIN32_FIND_DATAW_64BIT = POINTER_64BIT
 LPWIN32_FIND_DATAW_32BIT = POINTER_32BIT
 LPWIN32_FIND_DATAW_64BIT = POINTER_64BIT
 
+
 class WIN32_FIND_DATAW(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'FILETIME', 'FILETIME', 'FILETIME', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'WCHAR', 'WCHAR', 'DWORD', 'DWORD','WORD']
+    types = [
+        "DWORD",
+        "FILETIME",
+        "FILETIME",
+        "FILETIME",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "WCHAR",
+        "WCHAR",
+        "DWORD",
+        "DWORD",
+        "WORD",
+    ]
     lookUps = {}
 
     # Struct Members
@@ -2460,15 +3374,22 @@ class WIN32_FIND_DATAW(LittleEndianStructure, metaclass=StructFieldsFromTypeHint
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct NETRESOURCEA
 # Alias Names: _NETRESOURCEA
 # Alias Pointer Names: LPNETRESOURCEA
 
+
 def get_NETRESOURCEA(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return NETRESOURCEA.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(NETRESOURCEA.ARCH32)))
+        return NETRESOURCEA.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(NETRESOURCEA.ARCH32))
+        )
     else:
-        return NETRESOURCEA.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(NETRESOURCEA.ARCH64)))
+        return NETRESOURCEA.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(NETRESOURCEA.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__NETRESOURCEA = get_NETRESOURCEA
@@ -2477,11 +3398,16 @@ def get_NETRESOURCEA(uc: Uc, address: int, em: EMU):
 LPNETRESOURCEA_32BIT = POINTER_32BIT
 LPNETRESOURCEA_64BIT = POINTER_64BIT
 
-class NETRESOURCEA:
 
+class NETRESOURCEA:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'LPSTR', 'LPSTR', 'LPSTR', 'LPSTR']
-        lookUps = {0: ReverseLookUps.Net.Scope, 1: ReverseLookUps.Net.Type, 2: ReverseLookUps.Net.Display, 3: ReverseLookUps.Net.Usage}
+        types = ["DWORD", "DWORD", "DWORD", "DWORD", "LPSTR", "LPSTR", "LPSTR", "LPSTR"]
+        lookUps = {
+            0: ReverseLookUps.Net.Scope,
+            1: ReverseLookUps.Net.Type,
+            2: ReverseLookUps.Net.Display,
+            3: ReverseLookUps.Net.Usage,
+        }
 
         # Struct Members
         dwScope: DWORD
@@ -2497,8 +3423,13 @@ class NETRESOURCEA:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'LPSTR', 'LPSTR', 'LPSTR', 'LPSTR']
-        lookUps = {0: ReverseLookUps.Net.Scope, 1: ReverseLookUps.Net.Type, 2: ReverseLookUps.Net.Display, 3: ReverseLookUps.Net.Usage}
+        types = ["DWORD", "DWORD", "DWORD", "DWORD", "LPSTR", "LPSTR", "LPSTR", "LPSTR"]
+        lookUps = {
+            0: ReverseLookUps.Net.Scope,
+            1: ReverseLookUps.Net.Type,
+            2: ReverseLookUps.Net.Display,
+            3: ReverseLookUps.Net.Usage,
+        }
 
         # Struct Members
         dwScope: DWORD
@@ -2513,15 +3444,22 @@ class NETRESOURCEA:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct NETRESOURCEW
 # Alias Names: _NETRESOURCEW
 # Alias Pointer Names: LPNETRESOURCEW
 
+
 def get_NETRESOURCEW(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return NETRESOURCEW.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(NETRESOURCEW.ARCH32)))
+        return NETRESOURCEW.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(NETRESOURCEW.ARCH32))
+        )
     else:
-        return NETRESOURCEW.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(NETRESOURCEW.ARCH64)))
+        return NETRESOURCEW.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(NETRESOURCEW.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__NETRESOURCEW = get_NETRESOURCEW
@@ -2530,11 +3468,25 @@ def get_NETRESOURCEW(uc: Uc, address: int, em: EMU):
 LPNETRESOURCEW_32BIT = POINTER_32BIT
 LPNETRESOURCEW_64BIT = POINTER_64BIT
 
-class NETRESOURCEW:
 
+class NETRESOURCEW:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'LPWSTR', 'LPWSTR', 'LPWSTR', 'LPWSTR']
-        lookUps = {0: ReverseLookUps.Net.Scope, 1: ReverseLookUps.Net.Type, 2: ReverseLookUps.Net.Display, 3: ReverseLookUps.Net.Usage}
+        types = [
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "LPWSTR",
+            "LPWSTR",
+            "LPWSTR",
+            "LPWSTR",
+        ]
+        lookUps = {
+            0: ReverseLookUps.Net.Scope,
+            1: ReverseLookUps.Net.Type,
+            2: ReverseLookUps.Net.Display,
+            3: ReverseLookUps.Net.Usage,
+        }
 
         # Struct Members
         dwScope: DWORD
@@ -2550,8 +3502,22 @@ class NETRESOURCEW:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'LPWSTR', 'LPWSTR', 'LPWSTR', 'LPWSTR']
-        lookUps = {0: ReverseLookUps.Net.Scope, 1: ReverseLookUps.Net.Type, 2: ReverseLookUps.Net.Display, 3: ReverseLookUps.Net.Usage}
+        types = [
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "LPWSTR",
+            "LPWSTR",
+            "LPWSTR",
+            "LPWSTR",
+        ]
+        lookUps = {
+            0: ReverseLookUps.Net.Scope,
+            1: ReverseLookUps.Net.Type,
+            2: ReverseLookUps.Net.Display,
+            3: ReverseLookUps.Net.Usage,
+        }
 
         # Struct Members
         dwScope: DWORD
@@ -2571,8 +3537,10 @@ class NETRESOURCEW:
 # Alias Names: _OSVERSIONINFOA
 # Alias Pointer Names: POSVERSIONINFOA, LPOSVERSIONINFOA
 
+
 def get_OSVERSIONINFOA(uc: Uc, address: int, em: EMU):
     return OSVERSIONINFOA.from_buffer_copy(uc.mem_read(address, sizeof(OSVERSIONINFOA)))
+
 
 # Struct Aliases:
 # get__OSVERSIONINFOA = get_OSVERSIONINFOA
@@ -2583,8 +3551,9 @@ POSVERSIONINFOA_64BIT = POINTER_64BIT
 LPOSVERSIONINFOA_32BIT = POINTER_32BIT
 LPOSVERSIONINFOA_64BIT = POINTER_64BIT
 
+
 class OSVERSIONINFOA(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'CHAR']
+    types = ["DWORD", "DWORD", "DWORD", "DWORD", "DWORD", "CHAR"]
     lookUps = {}
 
     # Struct Members
@@ -2603,8 +3572,10 @@ class OSVERSIONINFOA(LittleEndianStructure, metaclass=StructFieldsFromTypeHints)
 # Alias Names: _OSVERSIONINFOW, RTL_OSVERSIONINFOW
 # Alias Pointer Names: POSVERSIONINFOW, LPOSVERSIONINFOW, PRTL_OSVERSIONINFOW
 
+
 def get_OSVERSIONINFOW(uc: Uc, address: int, em: EMU):
     return OSVERSIONINFOW.from_buffer_copy(uc.mem_read(address, sizeof(OSVERSIONINFOW)))
+
 
 # Struct Aliases:
 # get__OSVERSIONINFOW = get_OSVERSIONINFOW
@@ -2618,8 +3589,9 @@ LPOSVERSIONINFOW_64BIT = POINTER_64BIT
 PRTL_OSVERSIONINFOW_32BIT = POINTER_32BIT
 PRTL_OSVERSIONINFOW_64BIT = POINTER_64BIT
 
+
 class OSVERSIONINFOW(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'WCHAR']
+    types = ["DWORD", "DWORD", "DWORD", "DWORD", "DWORD", "WCHAR"]
     lookUps = {}
 
     # Struct Members
@@ -2633,12 +3605,17 @@ class OSVERSIONINFOW(LittleEndianStructure, metaclass=StructFieldsFromTypeHints)
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct OSVERSIONINFOEXA
 # Alias Names: _OSVERSIONINFOEXA
 # Alias Pointer Names: POSVERSIONINFOEXA, LPOSVERSIONINFOEXA
 
+
 def get_OSVERSIONINFOEXA(uc: Uc, address: int, em: EMU):
-    return OSVERSIONINFOEXA.from_buffer_copy(uc.mem_read(address, sizeof(OSVERSIONINFOEXA)))
+    return OSVERSIONINFOEXA.from_buffer_copy(
+        uc.mem_read(address, sizeof(OSVERSIONINFOEXA))
+    )
+
 
 # Struct Aliases:
 # get__OSVERSIONINFOEXA = get_OSVERSIONINFOEXA
@@ -2649,8 +3626,21 @@ POSVERSIONINFOEXA_64BIT = POINTER_64BIT
 LPOSVERSIONINFOEXA_32BIT = POINTER_32BIT
 LPOSVERSIONINFOEXA_64BIT = POINTER_64BIT
 
+
 class OSVERSIONINFOEXA(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'CHAR', 'WORD', 'WORD', 'WORD', 'BYTE', 'BYTE']
+    types = [
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "CHAR",
+        "WORD",
+        "WORD",
+        "WORD",
+        "BYTE",
+        "BYTE",
+    ]
     lookUps = {}
 
     # Struct Members
@@ -2669,12 +3659,17 @@ class OSVERSIONINFOEXA(LittleEndianStructure, metaclass=StructFieldsFromTypeHint
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct OSVERSIONINFOEXW
 # Alias Names: _OSVERSIONINFOEXW, RTL_OSVERSIONINFOEXW
 # Alias Pointer Names: POSVERSIONINFOEXW, LPOSVERSIONINFOEXW, PRTL_OSVERSIONINFOEXW
 
+
 def get_OSVERSIONINFOEXW(uc: Uc, address: int, em: EMU):
-    return OSVERSIONINFOEXW.from_buffer_copy(uc.mem_read(address, sizeof(OSVERSIONINFOEXW)))
+    return OSVERSIONINFOEXW.from_buffer_copy(
+        uc.mem_read(address, sizeof(OSVERSIONINFOEXW))
+    )
+
 
 # Struct Aliases:
 # get__OSVERSIONINFOEXW = get_OSVERSIONINFOEXW
@@ -2688,8 +3683,21 @@ LPOSVERSIONINFOEXW_64BIT = POINTER_64BIT
 PRTL_OSVERSIONINFOEXW_32BIT = POINTER_32BIT
 PRTL_OSVERSIONINFOEXW_64BIT = POINTER_64BIT
 
+
 class OSVERSIONINFOEXW(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'WCHAR', 'WORD', 'WORD', 'WORD', 'BYTE', 'BYTE']
+    types = [
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "DWORD",
+        "WCHAR",
+        "WORD",
+        "WORD",
+        "WORD",
+        "BYTE",
+        "BYTE",
+    ]
     lookUps = {}
 
     # Struct Members
@@ -2713,11 +3721,17 @@ class OSVERSIONINFOEXW(LittleEndianStructure, metaclass=StructFieldsFromTypeHint
 # Alias Names: _CREATEFILE2_EXTENDED_PARAMETERS
 # Alias Pointer Names: PCREATEFILE2_EXTENDED_PARAMETERS, LPCREATEFILE2_EXTENDED_PARAMETERS
 
+
 def get_CREATEFILE2_EXTENDED_PARAMETERS(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return CREATEFILE2_EXTENDED_PARAMETERS.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(CREATEFILE2_EXTENDED_PARAMETERS.ARCH32)))
+        return CREATEFILE2_EXTENDED_PARAMETERS.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(CREATEFILE2_EXTENDED_PARAMETERS.ARCH32))
+        )
     else:
-        return CREATEFILE2_EXTENDED_PARAMETERS.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(CREATEFILE2_EXTENDED_PARAMETERS.ARCH64)))
+        return CREATEFILE2_EXTENDED_PARAMETERS.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(CREATEFILE2_EXTENDED_PARAMETERS.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__CREATEFILE2_EXTENDED_PARAMETERS = get_CREATEFILE2_EXTENDED_PARAMETERS
@@ -2728,11 +3742,11 @@ PCREATEFILE2_EXTENDED_PARAMETERS_64BIT = POINTER_64BIT
 LPCREATEFILE2_EXTENDED_PARAMETERS_32BIT = POINTER_32BIT
 LPCREATEFILE2_EXTENDED_PARAMETERS_64BIT = POINTER_64BIT
 
-class CREATEFILE2_EXTENDED_PARAMETERS:
 
+class CREATEFILE2_EXTENDED_PARAMETERS:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'LPSECURITY_ATTRIBUTES', 'HANDLE']
-        lookUps = {} # need lookups
+        types = ["DWORD", "DWORD", "DWORD", "DWORD", "LPSECURITY_ATTRIBUTES", "HANDLE"]
+        lookUps = {}  # need lookups
 
         # Struct Members
         dwSize: DWORD
@@ -2746,8 +3760,8 @@ class CREATEFILE2_EXTENDED_PARAMETERS:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'DWORD', 'DWORD', 'LPSECURITY_ATTRIBUTES', 'HANDLE']
-        lookUps = {} # need lookups
+        types = ["DWORD", "DWORD", "DWORD", "DWORD", "LPSECURITY_ATTRIBUTES", "HANDLE"]
+        lookUps = {}  # need lookups
 
         # Struct Members
         dwSize: DWORD
@@ -2760,6 +3774,7 @@ class CREATEFILE2_EXTENDED_PARAMETERS:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Pointer Param for COPYFILE2_EXTENDED_PARAMETERS
 PCOPYFILE2_PROGRESS_ROUTINE_32BIT = POINTER_32BIT
 PCOPYFILE2_PROGRESS_ROUTINE_64BIT = POINTER_64BIT
@@ -2768,20 +3783,26 @@ PCOPYFILE2_PROGRESS_ROUTINE_64BIT = POINTER_64BIT
 # Alias Names: _COPYFILE2_EXTENDED_PARAMETERS
 # Alias Pointer Names:
 
+
 def get_COPYFILE2_EXTENDED_PARAMETERS(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return COPYFILE2_EXTENDED_PARAMETERS.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(COPYFILE2_EXTENDED_PARAMETERS.ARCH32)))
+        return COPYFILE2_EXTENDED_PARAMETERS.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(COPYFILE2_EXTENDED_PARAMETERS.ARCH32))
+        )
     else:
-        return COPYFILE2_EXTENDED_PARAMETERS.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(COPYFILE2_EXTENDED_PARAMETERS.ARCH64)))
+        return COPYFILE2_EXTENDED_PARAMETERS.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(COPYFILE2_EXTENDED_PARAMETERS.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__COPYFILE2_EXTENDED_PARAMETERS = get_COPYFILE2_EXTENDED_PARAMETERS
 
-class COPYFILE2_EXTENDED_PARAMETERS:
 
+class COPYFILE2_EXTENDED_PARAMETERS:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'BOOL', 'PCOPYFILE2_PROGRESS_ROUTINE', 'PVOID']
-        lookUps = {} # Need Lookups
+        types = ["DWORD", "DWORD", "BOOL", "PCOPYFILE2_PROGRESS_ROUTINE", "PVOID"]
+        lookUps = {}  # Need Lookups
 
         # Struct Members
         dwSize: DWORD
@@ -2794,8 +3815,8 @@ class COPYFILE2_EXTENDED_PARAMETERS:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD', 'BOOL', 'PCOPYFILE2_PROGRESS_ROUTINE', 'PVOID']
-        lookUps = {} # Need Lookups
+        types = ["DWORD", "DWORD", "BOOL", "PCOPYFILE2_PROGRESS_ROUTINE", "PVOID"]
+        lookUps = {}  # Need Lookups
 
         # Struct Members
         dwSize: DWORD
@@ -2807,15 +3828,22 @@ class COPYFILE2_EXTENDED_PARAMETERS:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct INTERNET_BUFFERSA
 # Alias Names: _INTERNET_BUFFERSA
 # Alias Pointer Names: LPINTERNET_BUFFERSA
 
+
 def get_INTERNET_BUFFERSA(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return INTERNET_BUFFERSA.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(INTERNET_BUFFERSA.ARCH32)))
+        return INTERNET_BUFFERSA.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(INTERNET_BUFFERSA.ARCH32))
+        )
     else:
-        return INTERNET_BUFFERSA.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(INTERNET_BUFFERSA.ARCH64)))
+        return INTERNET_BUFFERSA.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(INTERNET_BUFFERSA.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__INTERNET_BUFFERSA = get_INTERNET_BUFFERSA
@@ -2824,10 +3852,21 @@ def get_INTERNET_BUFFERSA(uc: Uc, address: int, em: EMU):
 LPINTERNET_BUFFERSA_32BIT = POINTER_32BIT
 LPINTERNET_BUFFERSA_64BIT = POINTER_64BIT
 
-class INTERNET_BUFFERSA:
 
+class INTERNET_BUFFERSA:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPINTERNET_BUFFERSA', 'LPCSTR', 'DWORD', 'DWORD', 'LPVOID', 'DWORD', 'DWORD', 'DWORD', 'DWORD']
+        types = [
+            "DWORD",
+            "LPINTERNET_BUFFERSA",
+            "LPCSTR",
+            "DWORD",
+            "DWORD",
+            "LPVOID",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -2846,7 +3885,18 @@ class INTERNET_BUFFERSA:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPINTERNET_BUFFERSA', 'LPCSTR', 'DWORD', 'DWORD', 'LPVOID', 'DWORD', 'DWORD', 'DWORD', 'DWORD']
+        types = [
+            "DWORD",
+            "LPINTERNET_BUFFERSA",
+            "LPCSTR",
+            "DWORD",
+            "DWORD",
+            "LPVOID",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -2864,15 +3914,22 @@ class INTERNET_BUFFERSA:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct INTERNET_BUFFERSW
 # Alias Names: _INTERNET_BUFFERSW
 # Alias Pointer Names: LPINTERNET_BUFFERSW
 
+
 def get_INTERNET_BUFFERSW(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return INTERNET_BUFFERSW.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(INTERNET_BUFFERSW.ARCH32)))
+        return INTERNET_BUFFERSW.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(INTERNET_BUFFERSW.ARCH32))
+        )
     else:
-        return INTERNET_BUFFERSW.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(INTERNET_BUFFERSW.ARCH64)))
+        return INTERNET_BUFFERSW.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(INTERNET_BUFFERSW.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__INTERNET_BUFFERSW = get_INTERNET_BUFFERSW
@@ -2881,10 +3938,21 @@ def get_INTERNET_BUFFERSW(uc: Uc, address: int, em: EMU):
 LPINTERNET_BUFFERSW_32BIT = POINTER_32BIT
 LPINTERNET_BUFFERSW_64BIT = POINTER_64BIT
 
-class INTERNET_BUFFERSW:
 
+class INTERNET_BUFFERSW:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPINTERNET_BUFFERSW', 'LPCWSTR', 'DWORD', 'DWORD', 'LPVOID', 'DWORD', 'DWORD', 'DWORD', 'DWORD']
+        types = [
+            "DWORD",
+            "LPINTERNET_BUFFERSW",
+            "LPCWSTR",
+            "DWORD",
+            "DWORD",
+            "LPVOID",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -2903,7 +3971,18 @@ class INTERNET_BUFFERSW:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPINTERNET_BUFFERSW', 'LPCWSTR', 'DWORD', 'DWORD', 'LPVOID', 'DWORD', 'DWORD', 'DWORD', 'DWORD']
+        types = [
+            "DWORD",
+            "LPINTERNET_BUFFERSW",
+            "LPCWSTR",
+            "DWORD",
+            "DWORD",
+            "LPVOID",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -2921,12 +4000,17 @@ class INTERNET_BUFFERSW:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct MEMORY_PRIORITY_INFORMATION
 # Alias Names: _MEMORY_PRIORITY_INFORMATION
 # Alias Pointer Names: PMEMORY_PRIORITY_INFORMATION
 
+
 def get_MEMORY_PRIORITY_INFORMATION(uc: Uc, address: int, em: EMU):
-    return MEMORY_PRIORITY_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(MEMORY_PRIORITY_INFORMATION)))
+    return MEMORY_PRIORITY_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(MEMORY_PRIORITY_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__MEMORY_PRIORITY_INFORMATION = get_MEMORY_PRIORITY_INFORMATION
@@ -2935,8 +4019,11 @@ def get_MEMORY_PRIORITY_INFORMATION(uc: Uc, address: int, em: EMU):
 PMEMORY_PRIORITY_INFORMATION_32BIT = POINTER_32BIT
 PMEMORY_PRIORITY_INFORMATION_64BIT = POINTER_64BIT
 
-class MEMORY_PRIORITY_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['ULONG']
+
+class MEMORY_PRIORITY_INFORMATION(
+    LittleEndianStructure, metaclass=StructFieldsFromTypeHints
+):
+    types = ["ULONG"]
     lookUps = {0: ReverseLookUps.Thread.MEMORY_PRIORITY}
 
     # Struct Members
@@ -2945,12 +4032,15 @@ class MEMORY_PRIORITY_INFORMATION(LittleEndianStructure, metaclass=StructFieldsF
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct LUID
 # Alias Names: _LUID
 # Alias Pointer Names: PLUID
 
+
 def get_LUID(uc: Uc, address: int, em: EMU):
     return LUID.from_buffer_copy(uc.mem_read(address, sizeof(LUID)))
+
 
 # Struct Aliases:
 # get__LUID = get_LUID
@@ -2959,8 +4049,9 @@ def get_LUID(uc: Uc, address: int, em: EMU):
 PLUID_32BIT = POINTER_32BIT
 PLUID_64BIT = POINTER_64BIT
 
+
 class LUID(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'LONG']
+    types = ["DWORD", "LONG"]
     lookUps = {}
 
     # Struct Members
@@ -2970,12 +4061,17 @@ class LUID(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct LUID_AND_ATTRIBUTES
 # Alias Names: _LUID_AND_ATTRIBUTES
 # Alias Pointer Names: PLUID_AND_ATTRIBUTES
 
+
 def get_LUID_AND_ATTRIBUTES(uc: Uc, address: int, em: EMU):
-    return LUID_AND_ATTRIBUTES.from_buffer_copy(uc.mem_read(address, sizeof(LUID_AND_ATTRIBUTES)))
+    return LUID_AND_ATTRIBUTES.from_buffer_copy(
+        uc.mem_read(address, sizeof(LUID_AND_ATTRIBUTES))
+    )
+
 
 # Struct Aliases:
 # get__LUID_AND_ATTRIBUTES = get_LUID_AND_ATTRIBUTES
@@ -2984,8 +4080,9 @@ def get_LUID_AND_ATTRIBUTES(uc: Uc, address: int, em: EMU):
 PLUID_AND_ATTRIBUTES_32BIT = POINTER_32BIT
 PLUID_AND_ATTRIBUTES_64BIT = POINTER_64BIT
 
+
 class LUID_AND_ATTRIBUTES(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LUID', 'DWORD']
+    types = ["LUID", "DWORD"]
     lookUps = {}
 
     # Struct Members
@@ -2995,12 +4092,17 @@ class LUID_AND_ATTRIBUTES(LittleEndianStructure, metaclass=StructFieldsFromTypeH
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct TOKEN_PRIVILEGES
 # Alias Names: _TOKEN_PRIVILEGES
 # Alias Pointer Names: PTOKEN_PRIVILEGES
 
+
 def get_TOKEN_PRIVILEGES(uc: Uc, address: int, em: EMU):
-    return TOKEN_PRIVILEGES.from_buffer_copy(uc.mem_read(address, sizeof(TOKEN_PRIVILEGES)))
+    return TOKEN_PRIVILEGES.from_buffer_copy(
+        uc.mem_read(address, sizeof(TOKEN_PRIVILEGES))
+    )
+
 
 # Struct Aliases:
 # get__TOKEN_PRIVILEGES = get_TOKEN_PRIVILEGES
@@ -3009,11 +4111,12 @@ def get_TOKEN_PRIVILEGES(uc: Uc, address: int, em: EMU):
 PTOKEN_PRIVILEGES_32BIT = POINTER_32BIT
 PTOKEN_PRIVILEGES_64BIT = POINTER_64BIT
 
+
 class TOKEN_PRIVILEGES(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'LUID_AND_ATTRIBUTES']
+    types = ["DWORD", "LUID_AND_ATTRIBUTES"]
     lookUps = {}
 
-    ANYSIZE_ARRAY = 1 # Need to look into how to create this
+    ANYSIZE_ARRAY = 1  # Need to look into how to create this
 
     # Struct Members
     PrivilegeCount: DWORD
@@ -3027,11 +4130,17 @@ class TOKEN_PRIVILEGES(LittleEndianStructure, metaclass=StructFieldsFromTypeHint
 # Alias Names: _INTERNET_CACHE_ENTRY_INFOA
 # Alias Pointer Names: LPINTERNET_CACHE_ENTRY_INFOA
 
+
 def get_INTERNET_BUFFERSW(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return INTERNET_BUFFERSW.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(INTERNET_BUFFERSW.ARCH32)))
+        return INTERNET_BUFFERSW.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(INTERNET_BUFFERSW.ARCH32))
+        )
     else:
-        return INTERNET_BUFFERSW.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(INTERNET_BUFFERSW.ARCH64)))
+        return INTERNET_BUFFERSW.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(INTERNET_BUFFERSW.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__INTERNET_CACHE_ENTRY_INFOA = get_INTERNET_CACHE_ENTRY_INFOA
@@ -3040,18 +4149,36 @@ def get_INTERNET_BUFFERSW(uc: Uc, address: int, em: EMU):
 LPINTERNET_CACHE_ENTRY_INFOA_32BIT = POINTER_32BIT
 LPINTERNET_CACHE_ENTRY_INFOA_64BIT = POINTER_64BIT
 
+
 class INTERNET_CACHE_ENTRY_INFOA_Helpers:
     class union(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-        type = ['DWORD', 'DWORD']
+        type = ["DWORD", "DWORD"]
         lookUps = {}
 
         dwReserved: DWORD
         dwExemptDelta: DWORD
 
-class INTERNET_CACHE_ENTRY_INFOA:
 
+class INTERNET_CACHE_ENTRY_INFOA:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPSTR', 'LPSTR', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'FILETIME', 'FILETIME', 'FILETIME', 'FILETIME', 'LPSTR', 'DWORD', 'LPSTR', 'union']
+        types = [
+            "DWORD",
+            "LPSTR",
+            "LPSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "FILETIME",
+            "FILETIME",
+            "FILETIME",
+            "FILETIME",
+            "LPSTR",
+            "DWORD",
+            "LPSTR",
+            "union",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -3070,21 +4197,27 @@ class INTERNET_CACHE_ENTRY_INFOA:
         lpHeaderInfo: LPSTR_32BIT
         dwHeaderInfoSize: DWORD
         lpszFileExtension: LPSTR_32BIT
-        DUMMYUNIONNAME:  INTERNET_CACHE_ENTRY_INFOA_Helpers.union
+        DUMMYUNIONNAME: INTERNET_CACHE_ENTRY_INFOA_Helpers.union
 
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
 
 # Struct IO_STATUS_BLOCK
-# Alias Names: 
-# Alias Pointer Names: 
+# Alias Names:
+# Alias Pointer Names:
+
 
 def get_IO_STATUS_BLOCK(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return IO_STATUS_BLOCK.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(IO_STATUS_BLOCK.ARCH32)))
+        return IO_STATUS_BLOCK.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(IO_STATUS_BLOCK.ARCH32))
+        )
     else:
-        return IO_STATUS_BLOCK.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(IO_STATUS_BLOCK.ARCH64)))
+        return IO_STATUS_BLOCK.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(IO_STATUS_BLOCK.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__INTERNET_BUFFERSA = get_INTERNET_BUFFERSA
@@ -3093,10 +4226,11 @@ def get_IO_STATUS_BLOCK(uc: Uc, address: int, em: EMU):
 PIO_STATUS_BLOCK_32BIT = POINTER_32BIT
 PIO_STATUS_BLOCK_64BIT = POINTER_64BIT
 
+
 class IO_STATUS_BLOCK_Helpers:
     # Sub Structures/Unions
     class Union_32BIT(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-        types = ['NTSTATUS', 'PVOID']
+        types = ["NTSTATUS", "PVOID"]
         lookUps = {}
 
         # Union Members
@@ -3104,17 +4238,17 @@ class IO_STATUS_BLOCK_Helpers:
         Pointer: PVOID_32BIT
 
     class Union_64BIT(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-        types = ['NTSTATUS', 'PVOID']
+        types = ["NTSTATUS", "PVOID"]
         lookUps = {}
 
         # Union Members
         Status: LONG
         Pointer: PVOID_64BIT
 
-class IO_STATUS_BLOCK:
 
+class IO_STATUS_BLOCK:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['union', 'ULONG_PTR']
+        types = ["union", "ULONG_PTR"]
         lookUps = {}
 
         # Struct Members
@@ -3125,7 +4259,7 @@ class IO_STATUS_BLOCK:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['union', 'ULONG_PTR']
+        types = ["union", "ULONG_PTR"]
         lookUps = {}
 
         # Struct Members
@@ -3135,16 +4269,22 @@ class IO_STATUS_BLOCK:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct INTERNET_CACHE_ENTRY_INFOW
 # Alias Names: _INTERNET_CACHE_ENTRY_INFOW
 # Alias Pointer Names: LPINTERNET_CACHE_ENTRY_INFOW
 
+
 def get_INTERNET_CACHE_ENTRY_INFOW(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return INTERNET_CACHE_ENTRY_INFOW.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(INTERNET_CACHE_ENTRY_INFOW.ARCH32)))
+        return INTERNET_CACHE_ENTRY_INFOW.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(INTERNET_CACHE_ENTRY_INFOW.ARCH32))
+        )
 
     else:
-        return INTERNET_CACHE_ENTRY_INFOW.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(INTERNET_CACHE_ENTRY_INFOW.ARCH64)))
+        return INTERNET_CACHE_ENTRY_INFOW.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(INTERNET_CACHE_ENTRY_INFOW.ARCH64))
+        )
 
 
 # Struct Aliases:
@@ -3154,19 +4294,37 @@ def get_INTERNET_CACHE_ENTRY_INFOW(uc: Uc, address: int, em: EMU):
 LPINTERNET_CACHE_ENTRY_INFOW_32BIT = POINTER_32BIT
 LPINTERNET_CACHE_ENTRY_INFOW_64BIT = POINTER_64BIT
 
+
 class INTERNET_CACHE_ENTRY_INFOW_Helpers:
     class union(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-        types = ['DWORD', 'DWORD']
+        types = ["DWORD", "DWORD"]
         lookUps = {}
 
         # Union Members
         dwReserved: DWORD
         dwExemptDelta: DWORD
 
-class INTERNET_CACHE_ENTRY_INFOW:
 
+class INTERNET_CACHE_ENTRY_INFOW:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPWSTR', 'LPWSTR', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'FILETIME', 'FILETIME', 'FILETIME', 'FILETIME', 'LPWSTR', 'DWORD', 'LPWSTR', 'union']
+        types = [
+            "DWORD",
+            "LPWSTR",
+            "LPWSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "FILETIME",
+            "FILETIME",
+            "FILETIME",
+            "FILETIME",
+            "LPWSTR",
+            "DWORD",
+            "LPWSTR",
+            "union",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -3192,7 +4350,24 @@ class INTERNET_CACHE_ENTRY_INFOW:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['DWORD', 'LPWSTR', 'LPWSTR', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'DWORD', 'FILETIME', 'FILETIME', 'FILETIME', 'FILETIME', 'LPWSTR', 'DWORD', 'LPWSTR', 'union']
+        types = [
+            "DWORD",
+            "LPWSTR",
+            "LPWSTR",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "DWORD",
+            "FILETIME",
+            "FILETIME",
+            "FILETIME",
+            "FILETIME",
+            "LPWSTR",
+            "DWORD",
+            "LPWSTR",
+            "union",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -3217,16 +4392,23 @@ class INTERNET_CACHE_ENTRY_INFOW:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct CLIENT_ID
 # Alias Names: _CLIENT_ID
-# Alias Pointer Names: PCLIENT_ID 
+# Alias Pointer Names: PCLIENT_ID
+
 
 def get_CLIENT_ID(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return CLIENT_ID.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(CLIENT_ID.ARCH32)))
+        return CLIENT_ID.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(CLIENT_ID.ARCH32))
+        )
 
     else:
-        return CLIENT_ID.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(CLIENT_ID.ARCH64)))
+        return CLIENT_ID.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(CLIENT_ID.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__LUID = get_LUID
@@ -3235,10 +4417,10 @@ def get_CLIENT_ID(uc: Uc, address: int, em: EMU):
 PCLIENT_ID_32BIT = POINTER_32BIT
 PCLIENT_ID_64BIT = POINTER_64BIT
 
-class CLIENT_ID(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
 
+class CLIENT_ID(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['HANDLE', 'HANDLE']
+        types = ["HANDLE", "HANDLE"]
         lookUps = {}
 
         # Struct Members
@@ -3249,7 +4431,7 @@ class CLIENT_ID(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['HANDLE', 'HANDLE']
+        types = ["HANDLE", "HANDLE"]
         lookUps = {}
 
         # Struct Members
@@ -3257,14 +4439,17 @@ class CLIENT_ID(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
         UniqueThread: HANDLE_64BIT
 
         def writeToMemory(self, uc: Uc, address: int):
-            uc.mem_write(address, bytes(self))    
+            uc.mem_write(address, bytes(self))
+
 
 # Struct MIB_IPNETROW
 # Alias Names: _MIB_IPNETROW
 # Alias Pointer Names: PMIB_IPNETROW
 
+
 def get_MIB_IPNETROW(uc: Uc, address: int, em: EMU):
     return MIB_IPNETROW.from_buffer_copy(uc.mem_read(address, sizeof(MIB_IPNETROW)))
+
 
 # Struct Aliases:
 # get__MIB_IPNETROW_LH = get_MIB_IPNETROW_LH
@@ -3273,16 +4458,18 @@ def get_MIB_IPNETROW(uc: Uc, address: int, em: EMU):
 PMIB_IPNETROW_32BIT = POINTER_32BIT
 PMIB_IPNETROW_64BIT = POINTER_64BIT
 
+
 class MIB_IPNETROW_Helpers:
     class union(LittleEndianUnion, metaclass=UnionFieldsFromTypeHints):
-        types = ['DWORD', 'MIB_IPNET_TYPE']
+        types = ["DWORD", "MIB_IPNET_TYPE"]
         lookUps = {0: ReverseLookUps.IPNET.TYPE, 1: ReverseLookUps.IPNET.TYPE}
 
         dwType: DWORD
         Type: DWORD
 
+
 class MIB_IPNETROW(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['IF_INDEX', 'DWORD', 'UCHAR', 'DWORD', 'union']
+    types = ["IF_INDEX", "DWORD", "UCHAR", "DWORD", "union"]
     lookUps = {}
 
     MAXLEN_PHYSADDR = 8
@@ -3297,12 +4484,15 @@ class MIB_IPNETROW(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct MIB_IPNETTABLE
 # Alias Names: _MIB_IPNETTABLE
 # Alias Pointer Names: PMIB_IPNETTABLE
 
+
 def get_MIB_IPNETTABLE(uc: Uc, address: int, em: EMU):
     return MIB_IPNETTABLE.from_buffer_copy(uc.mem_read(address, sizeof(MIB_IPNETTABLE)))
+
 
 # Struct Aliases:
 # get__MIB_IPNETTABLE = get_MIB_IPNETTABLE
@@ -3311,8 +4501,9 @@ def get_MIB_IPNETTABLE(uc: Uc, address: int, em: EMU):
 PMIB_IPNETTABLE_32BIT = POINTER_32BIT
 PMIB_IPNETTABLE_64BIT = POINTER_64BIT
 
+
 class MIB_IPNETTABLE(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['DWORD', 'MIB_IPNETROW']
+    types = ["DWORD", "MIB_IPNETROW"]
     lookUps = {}
 
     ANY_SIZE = 1
@@ -3324,12 +4515,17 @@ class MIB_IPNETTABLE(LittleEndianStructure, metaclass=StructFieldsFromTypeHints)
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct APP_MEMORY_INFORMATION
 # Alias Names: _APP_MEMORY_INFORMATION
 # Alias Pointer Names: PAPP_MEMORY_INFORMATION
 
+
 def get_APP_MEMORY_INFORMATION(uc: Uc, address: int, em: EMU):
-    return APP_MEMORY_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(APP_MEMORY_INFORMATION)))
+    return APP_MEMORY_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(APP_MEMORY_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__APP_MEMORY_INFORMATION = get_APP_MEMORY_INFORMATION
@@ -3338,8 +4534,11 @@ def get_APP_MEMORY_INFORMATION(uc: Uc, address: int, em: EMU):
 PAPP_MEMORY_INFORMATION_32BIT = POINTER_32BIT
 PAPP_MEMORY_INFORMATION_64BIT = POINTER_64BIT
 
-class APP_MEMORY_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['ULONG64', 'ULONG64', 'ULONG64', 'ULONG64']
+
+class APP_MEMORY_INFORMATION(
+    LittleEndianStructure, metaclass=StructFieldsFromTypeHints
+):
+    types = ["ULONG64", "ULONG64", "ULONG64", "ULONG64"]
     lookUps = {}
 
     # Struct Members
@@ -3356,11 +4555,17 @@ class APP_MEMORY_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTy
 # Alias Names: _MEMORY_BASIC_INFORMATION
 # Alias Pointer Names: PMEMORY_BASIC_INFORMATION
 
+
 def get_MEMORY_BASIC_INFORMATION(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return MEMORY_BASIC_INFORMATION.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(MEMORY_BASIC_INFORMATION.ARCH32)))
+        return MEMORY_BASIC_INFORMATION.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(MEMORY_BASIC_INFORMATION.ARCH32))
+        )
     else:
-        return MEMORY_BASIC_INFORMATION.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(MEMORY_BASIC_INFORMATION.ARCH64)))
+        return MEMORY_BASIC_INFORMATION.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(MEMORY_BASIC_INFORMATION.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get__MEMORY_BASIC_INFORMATION = get_MEMORY_BASIC_INFORMATION
@@ -3369,10 +4574,10 @@ def get_MEMORY_BASIC_INFORMATION(uc: Uc, address: int, em: EMU):
 PMEMORY_BASIC_INFORMATION_32BIT = POINTER_32BIT
 PMEMORY_BASIC_INFORMATION_64BIT = POINTER_64BIT
 
-class MEMORY_BASIC_INFORMATION:
 
+class MEMORY_BASIC_INFORMATION:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['PVOID', 'PVOID', 'DWORD', 'WORD', 'SIZE_T', 'DWORD', 'DWORD', 'DWORD']
+        types = ["PVOID", "PVOID", "DWORD", "WORD", "SIZE_T", "DWORD", "DWORD", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -3389,7 +4594,7 @@ class MEMORY_BASIC_INFORMATION:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['PVOID', 'PVOID', 'DWORD', 'WORD', 'SIZE_T', 'DWORD', 'DWORD', 'DWORD']
+        types = ["PVOID", "PVOID", "DWORD", "WORD", "SIZE_T", "DWORD", "DWORD", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -3410,11 +4615,17 @@ class MEMORY_BASIC_INFORMATION:
 # Alias Names: CREATESTRUCTA
 # Alias Pointer Names: LPCREATESTRUCTA
 
+
 def get_CREATESTRUCTA(uc: Uc, address: int, em: EMU):
     if em.arch == 32:
-        return CREATESTRUCTA.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(CREATESTRUCTA.ARCH32)))
+        return CREATESTRUCTA.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(CREATESTRUCTA.ARCH32))
+        )
     else:
-        return CREATESTRUCTA.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(CREATESTRUCTA.ARCH64)))
+        return CREATESTRUCTA.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(CREATESTRUCTA.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get_CREATESTRUCTA = get_tagCREATESTRUCTA
@@ -3423,10 +4634,23 @@ def get_CREATESTRUCTA(uc: Uc, address: int, em: EMU):
 LPCREATESTRUCTA_32BIT = POINTER_32BIT
 LPCREATESTRUCTA_64BIT = POINTER_64BIT
 
-class CREATESTRUCTA:
 
+class CREATESTRUCTA:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LPVOID', 'HINSTANCE', 'HMENU', 'HWND', 'int', 'int', 'int', 'int', 'LONG', 'LPCSTR', 'LPCSTR', 'DWORD']
+        types = [
+            "LPVOID",
+            "HINSTANCE",
+            "HMENU",
+            "HWND",
+            "int",
+            "int",
+            "int",
+            "int",
+            "LONG",
+            "LPCSTR",
+            "LPCSTR",
+            "DWORD",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -3447,7 +4671,20 @@ class CREATESTRUCTA:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['LPVOID', 'HINSTANCE', 'HMENU', 'HWND', 'int', 'int', 'int', 'int', 'LONG', 'LPCSTR', 'LPCSTR', 'DWORD']
+        types = [
+            "LPVOID",
+            "HINSTANCE",
+            "HMENU",
+            "HWND",
+            "int",
+            "int",
+            "int",
+            "int",
+            "LONG",
+            "LPCSTR",
+            "LPCSTR",
+            "DWORD",
+        ]
         lookUps = {}
 
         # Struct Members
@@ -3467,12 +4704,17 @@ class CREATESTRUCTA:
         def writeToMemory(self, uc: Uc, address: int):
             uc.mem_write(address, bytes(self))
 
+
 # Struct KEY_BASIC_INFORMATION
 # Alias Names: _KEY_BASIC_INFORMATION
 # Alias Pointer Names: PKEY_BASIC_INFORMATION
 
+
 def get_KEY_BASIC_INFORMATION(uc: Uc, address: int, em: EMU):
-    return KEY_BASIC_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(KEY_BASIC_INFORMATION)))
+    return KEY_BASIC_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(KEY_BASIC_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__KEY_BASIC_INFORMATION = get_KEY_BASIC_INFORMATION
@@ -3481,8 +4723,9 @@ def get_KEY_BASIC_INFORMATION(uc: Uc, address: int, em: EMU):
 PKEY_BASIC_INFORMATION_32BIT = POINTER_32BIT
 PKEY_BASIC_INFORMATION_64BIT = POINTER_64BIT
 
+
 class KEY_BASIC_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LARGE_INTEGER', 'ULONG', 'ULONG', 'WCHAR']
+    types = ["LARGE_INTEGER", "ULONG", "ULONG", "WCHAR"]
     lookUps = {}
 
     # Struct Members
@@ -3499,8 +4742,12 @@ class KEY_BASIC_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTyp
 # Alias Names: _KEY_NODE_INFORMATION
 # Alias Pointer Names: PKEY_NODE_INFORMATION
 
+
 def get_KEY_NODE_INFORMATION(uc: Uc, address: int, em: EMU):
-    return KEY_NODE_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(KEY_NODE_INFORMATION)))
+    return KEY_NODE_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(KEY_NODE_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__KEY_NODE_INFORMATION = get_KEY_NODE_INFORMATION
@@ -3509,8 +4756,9 @@ def get_KEY_NODE_INFORMATION(uc: Uc, address: int, em: EMU):
 PKEY_NODE_INFORMATION_32BIT = POINTER_32BIT
 PKEY_NODE_INFORMATION_64BIT = POINTER_64BIT
 
+
 class KEY_NODE_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LARGE_INTEGER', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'WCHAR']
+    types = ["LARGE_INTEGER", "ULONG", "ULONG", "ULONG", "ULONG", "WCHAR"]
     lookUps = {}
 
     # Struct Members
@@ -3524,12 +4772,17 @@ class KEY_NODE_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromType
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct KEY_CACHED_INFORMATION
 # Alias Names: _KEY_CACHED_INFORMATION
 # Alias Pointer Names: PKEY_CACHED_INFORMATION
 
+
 def get_KEY_CACHED_INFORMATION(uc: Uc, address: int, em: EMU):
-    return KEY_CACHED_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(KEY_CACHED_INFORMATION)))
+    return KEY_CACHED_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(KEY_CACHED_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__KEY_CACHED_INFORMATION = get_KEY_CACHED_INFORMATION
@@ -3538,8 +4791,20 @@ def get_KEY_CACHED_INFORMATION(uc: Uc, address: int, em: EMU):
 PKEY_CACHED_INFORMATION_32BIT = POINTER_32BIT
 PKEY_CACHED_INFORMATION_64BIT = POINTER_64BIT
 
-class KEY_CACHED_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LARGE_INTEGER', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG']
+
+class KEY_CACHED_INFORMATION(
+    LittleEndianStructure, metaclass=StructFieldsFromTypeHints
+):
+    types = [
+        "LARGE_INTEGER",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+    ]
     lookUps = {}
 
     # Struct Members
@@ -3555,12 +4820,17 @@ class KEY_CACHED_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTy
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct KEY_NAME_INFORMATION
 # Alias Names: _KEY_NAME_INFORMATION
 # Alias Pointer Names: PKEY_NAME_INFORMATION
 
+
 def get_KEY_NAME_INFORMATION(uc: Uc, address: int, em: EMU):
-    return KEY_NAME_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(KEY_NAME_INFORMATION)))
+    return KEY_NAME_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(KEY_NAME_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__KEY_NAME_INFORMATION = get_KEY_NAME_INFORMATION
@@ -3569,8 +4839,9 @@ def get_KEY_NAME_INFORMATION(uc: Uc, address: int, em: EMU):
 PKEY_NAME_INFORMATION_32BIT = POINTER_32BIT
 PKEY_NAME_INFORMATION_64BIT = POINTER_64BIT
 
+
 class KEY_NAME_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['ULONG', 'WCHAR']
+    types = ["ULONG", "WCHAR"]
     lookUps = {}
 
     # Struct Members
@@ -3580,12 +4851,17 @@ class KEY_NAME_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromType
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct KEY_FULL_INFORMATION
 # Alias Names: _KEY_FULL_INFORMATION
 # Alias Pointer Names: PKEY_FULL_INFORMATION
 
+
 def get_KEY_FULL_INFORMATION(uc: Uc, address: int, em: EMU):
-    return KEY_FULL_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(KEY_FULL_INFORMATION)))
+    return KEY_FULL_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(KEY_FULL_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__KEY_FULL_INFORMATION = get_KEY_FULL_INFORMATION
@@ -3594,8 +4870,21 @@ def get_KEY_FULL_INFORMATION(uc: Uc, address: int, em: EMU):
 PKEY_FULL_INFORMATION_32BIT = POINTER_32BIT
 PKEY_FULL_INFORMATION_64BIT = POINTER_64BIT
 
+
 class KEY_FULL_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LARGE_INTEGER', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'WCHAR']
+    types = [
+        "LARGE_INTEGER",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "ULONG",
+        "WCHAR",
+    ]
     lookUps = {}
 
     # Struct Members
@@ -3614,15 +4903,22 @@ class KEY_FULL_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromType
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct tagMSG
 # Alias Names: MSG, NPMSG
 # Alias Pointer Names: PMSG, LPMSG
 
+
 def get_tagMSG(uc: Uc, address: int, em):
     if em.arch == 32:
-        return tagMSG.ARCH32.from_buffer_copy(uc.mem_read(address, sizeof(tagMSG.ARCH32)))
+        return tagMSG.ARCH32.from_buffer_copy(
+            uc.mem_read(address, sizeof(tagMSG.ARCH32))
+        )
     else:
-        return tagMSG.ARCH64.from_buffer_copy(uc.mem_read(address, sizeof(tagMSG.ARCH64)))
+        return tagMSG.ARCH64.from_buffer_copy(
+            uc.mem_read(address, sizeof(tagMSG.ARCH64))
+        )
+
 
 # Struct Aliases:
 # get_MSG = get_tagMSG
@@ -3634,10 +4930,10 @@ PMSG_64BIT = POINTER_64BIT
 LPMSG_32BIT = POINTER_32BIT
 LPMSG_64BIT = POINTER_64BIT
 
-class tagMSG:
 
+class tagMSG:
     class ARCH32(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['HWND', 'UINT', 'WPARAM', 'LPARAM', 'DWORD', 'POINT', 'DWORD']
+        types = ["HWND", "UINT", "WPARAM", "LPARAM", "DWORD", "POINT", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -3653,7 +4949,7 @@ class tagMSG:
             uc.mem_write(address, bytes(self))
 
     class ARCH64(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-        types = ['HWND', 'UINT', 'WPARAM', 'LPARAM', 'DWORD', 'POINT', 'DWORD']
+        types = ["HWND", "UINT", "WPARAM", "LPARAM", "DWORD", "POINT", "DWORD"]
         lookUps = {}
 
         # Struct Members
@@ -3673,8 +4969,12 @@ class tagMSG:
 # Alias Names: _KEY_VIRTUALIZATION_INFORMATION
 # Alias Pointer Names: PKEY_VIRTUALIZATION_INFORMATION
 
+
 def get_KEY_VIRTUALIZATION_INFORMATION(uc: Uc, address: int, em: EMU):
-    return KEY_VIRTUALIZATION_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(KEY_VIRTUALIZATION_INFORMATION)))
+    return KEY_VIRTUALIZATION_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(KEY_VIRTUALIZATION_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__KEY_VIRTUALIZATION_INFORMATION = get_KEY_VIRTUALIZATION_INFORMATION
@@ -3683,31 +4983,44 @@ def get_KEY_VIRTUALIZATION_INFORMATION(uc: Uc, address: int, em: EMU):
 PKEY_VIRTUALIZATION_INFORMATION_32BIT = POINTER_32BIT
 PKEY_VIRTUALIZATION_INFORMATION_64BIT = POINTER_64BIT
 
+
 class KEY_VIRTUALIZATION_INFORMATION(LittleEndianStructure):
-    types = ['ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG']
+    types = ["ULONG", "ULONG", "ULONG", "ULONG", "ULONG", "ULONG"]
     lookUps = {}
 
-    __annotations__ = {'VirtualizationCandidate': ULONG, 'VirtualizationEnabled': ULONG, 'VirtualTarget': ULONG, 'VirtualStore': ULONG, 'VirtualSource': ULONG, 'Reserved': ULONG}
+    __annotations__ = {
+        "VirtualizationCandidate": ULONG,
+        "VirtualizationEnabled": ULONG,
+        "VirtualTarget": ULONG,
+        "VirtualStore": ULONG,
+        "VirtualSource": ULONG,
+        "Reserved": ULONG,
+    }
 
     # Struct Members Uses Mask
     _fields_ = [
-        ('VirtualizationCandidate', ULONG, 1),
-        ('VirtualizationEnabled', ULONG, 1),
-        ('VirtualTarget', ULONG, 1),
-        ('VirtualStore', ULONG, 1),
-        ('VirtualSource', ULONG, 1),
-        ('Reserved', ULONG, 27),
+        ("VirtualizationCandidate", ULONG, 1),
+        ("VirtualizationEnabled", ULONG, 1),
+        ("VirtualTarget", ULONG, 1),
+        ("VirtualStore", ULONG, 1),
+        ("VirtualSource", ULONG, 1),
+        ("Reserved", ULONG, 27),
     ]
 
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct KEY_VALUE_PARTIAL_INFORMATION
 # Alias Names: _KEY_VALUE_PARTIAL_INFORMATION
 # Alias Pointer Names: PKEY_VALUE_PARTIAL_INFORMATION
 
+
 def get_KEY_VALUE_PARTIAL_INFORMATION(uc: Uc, address: int, em: EMU):
-    return KEY_VALUE_PARTIAL_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(KEY_VALUE_PARTIAL_INFORMATION)))
+    return KEY_VALUE_PARTIAL_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(KEY_VALUE_PARTIAL_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__KEY_VALUE_PARTIAL_INFORMATION = get_KEY_VALUE_PARTIAL_INFORMATION
@@ -3716,8 +5029,11 @@ def get_KEY_VALUE_PARTIAL_INFORMATION(uc: Uc, address: int, em: EMU):
 PKEY_VALUE_PARTIAL_INFORMATION_32BIT = POINTER_32BIT
 PKEY_VALUE_PARTIAL_INFORMATION_64BIT = POINTER_64BIT
 
-class KEY_VALUE_PARTIAL_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['ULONG', 'ULONG', 'ULONG', 'UCHAR']
+
+class KEY_VALUE_PARTIAL_INFORMATION(
+    LittleEndianStructure, metaclass=StructFieldsFromTypeHints
+):
+    types = ["ULONG", "ULONG", "ULONG", "UCHAR"]
     lookUps = {}
 
     # Struct Members
@@ -3729,12 +5045,17 @@ class KEY_VALUE_PARTIAL_INFORMATION(LittleEndianStructure, metaclass=StructField
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct KEY_VALUE_FULL_INFORMATION
 # Alias Names: _KEY_VALUE_FULL_INFORMATION
 # Alias Pointer Names: PKEY_VALUE_FULL_INFORMATION
 
+
 def get_KEY_VALUE_FULL_INFORMATION(uc: Uc, address: int, em: EMU):
-    return KEY_VALUE_FULL_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(KEY_VALUE_FULL_INFORMATION)))
+    return KEY_VALUE_FULL_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(KEY_VALUE_FULL_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__KEY_VALUE_FULL_INFORMATION = get_KEY_VALUE_FULL_INFORMATION
@@ -3743,8 +5064,11 @@ def get_KEY_VALUE_FULL_INFORMATION(uc: Uc, address: int, em: EMU):
 PKEY_VALUE_FULL_INFORMATION_32BIT = POINTER_32BIT
 PKEY_VALUE_FULL_INFORMATION_64BIT = POINTER_64BIT
 
-class KEY_VALUE_FULL_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['ULONG', 'ULONG', 'ULONG', 'ULONG', 'ULONG', 'WCHAR']
+
+class KEY_VALUE_FULL_INFORMATION(
+    LittleEndianStructure, metaclass=StructFieldsFromTypeHints
+):
+    types = ["ULONG", "ULONG", "ULONG", "ULONG", "ULONG", "WCHAR"]
     lookUps = {}
 
     # Struct Members
@@ -3758,12 +5082,17 @@ class KEY_VALUE_FULL_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFr
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct KEY_VALUE_BASIC_INFORMATION
 # Alias Names: _KEY_VALUE_BASIC_INFORMATION
 # Alias Pointer Names: PKEY_VALUE_BASIC_INFORMATION
 
+
 def get_KEY_VALUE_BASIC_INFORMATION(uc: Uc, address: int, em: EMU):
-    return KEY_VALUE_BASIC_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(KEY_VALUE_BASIC_INFORMATION)))
+    return KEY_VALUE_BASIC_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(KEY_VALUE_BASIC_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__KEY_VALUE_BASIC_INFORMATION = get_KEY_VALUE_BASIC_INFORMATION
@@ -3772,8 +5101,11 @@ def get_KEY_VALUE_BASIC_INFORMATION(uc: Uc, address: int, em: EMU):
 PKEY_VALUE_BASIC_INFORMATION_32BIT = POINTER_32BIT
 PKEY_VALUE_BASIC_INFORMATION_64BIT = POINTER_64BIT
 
-class KEY_VALUE_BASIC_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['ULONG', 'ULONG', 'ULONG', 'WCHAR']
+
+class KEY_VALUE_BASIC_INFORMATION(
+    LittleEndianStructure, metaclass=StructFieldsFromTypeHints
+):
+    types = ["ULONG", "ULONG", "ULONG", "WCHAR"]
     lookUps = {}
 
     # Struct Members
@@ -3785,12 +5117,17 @@ class KEY_VALUE_BASIC_INFORMATION(LittleEndianStructure, metaclass=StructFieldsF
     def writeToMemory(self, uc: Uc, address: int):
         uc.mem_write(address, bytes(self))
 
+
 # Struct KEY_WRITE_TIME_INFORMATION
 # Alias Names: _KEY_WRITE_TIME_INFORMATION
 # Alias Pointer Names: PKEY_WRITE_TIME_INFORMATION
 
+
 def get_KEY_WRITE_TIME_INFORMATION(uc: Uc, address: int, em: EMU):
-    return KEY_WRITE_TIME_INFORMATION.from_buffer_copy(uc.mem_read(address, sizeof(KEY_WRITE_TIME_INFORMATION)))
+    return KEY_WRITE_TIME_INFORMATION.from_buffer_copy(
+        uc.mem_read(address, sizeof(KEY_WRITE_TIME_INFORMATION))
+    )
+
 
 # Struct Aliases:
 # get__KEY_WRITE_TIME_INFORMATION = get_KEY_WRITE_TIME_INFORMATION
@@ -3799,8 +5136,11 @@ def get_KEY_WRITE_TIME_INFORMATION(uc: Uc, address: int, em: EMU):
 PKEY_WRITE_TIME_INFORMATION_32BIT = POINTER_32BIT
 PKEY_WRITE_TIME_INFORMATION_64BIT = POINTER_64BIT
 
-class KEY_WRITE_TIME_INFORMATION(LittleEndianStructure, metaclass=StructFieldsFromTypeHints):
-    types = ['LARGE_INTEGER']
+
+class KEY_WRITE_TIME_INFORMATION(
+    LittleEndianStructure, metaclass=StructFieldsFromTypeHints
+):
+    types = ["LARGE_INTEGER"]
     lookUps = {}
 
     # Struct Members

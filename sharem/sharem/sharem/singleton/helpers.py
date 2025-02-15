@@ -4,7 +4,7 @@ from typing import Any
 
 class Singleton(ABCMeta):
     """
-    
+
     This class is a standard implementation of the Single Pattern
     (Note: Has not been tested for Thread Saftey)
 
