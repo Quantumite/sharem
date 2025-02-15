@@ -46,3 +46,5 @@ sharem/sharem/sharem/foundDLLAddresses64.json
 
 .venv
 .mypy_cache
+
+ssdeep
